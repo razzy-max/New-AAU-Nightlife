@@ -119,7 +119,7 @@ router.post('/', protect, admin, upload.fields([
   }
 
   try {
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = `https://${req.get('host')}`;
     const blogData = {
       ...req.body,
       image: req.files.image ? `${baseUrl}/uploads/${req.files.image[0].filename}` : req.body.image,

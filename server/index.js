@@ -44,7 +44,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static files for uploads (we'll create uploads directory)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const uploadsPath = path.join(__dirname, '../uploads');
+console.log('Uploads path:', uploadsPath);
+console.log('Uploads directory exists:', fs.existsSync(uploadsPath));
+app.use('/uploads', express.static(uploadsPath));
+
+// Test endpoint for uploads
+app.get('/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const uploadsPath = path.join(__dirname, '../uploads');
+  const exists = fs.existsSync(uploadsPath);
+  const files = exists ? fs.readdirSync(uploadsPath) : [];
+  res.json({ uploadsPath, exists, files });
+});
 
 // Serve static files from public directory
 app.use(express.static('public'));
