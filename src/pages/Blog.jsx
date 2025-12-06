@@ -1,43 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 function Blog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showSidebar, setShowSidebar] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const posts = [
-    {
-      id: 1,
-      title: 'Campus Life at AAU: A Student\'s Perspective',
-      excerpt: 'Exploring the vibrant student life at Ambrose Alli University. From academic challenges to social events, discover what makes AAU special.\n\nIn this post, we dive into the daily experiences of students navigating campus life.',
-      author: 'John Doe',
-      date: '2024-11-15',
-      category: 'General',
-      image: '/blog/blog1.jpg',
-      fullContent: 'Full content for Campus Life at AAU...'
-    },
-    {
-      id: 2,
-      title: 'Nightlife Tips: Enjoying Safely',
-      excerpt: 'Essential tips for enjoying AAU\'s nightlife scene responsibly. Learn about safety measures, transportation options, and making the most of your evenings.\n\nSafety first: Always have a plan, stay with friends, and know your limits.',
-      author: 'Jane Smith',
-      date: '2024-11-20',
-      category: 'Events',
-      image: '/blog/blog2.jpg',
-      fullContent: 'Full content for Nightlife Tips...'
-    },
-    {
-      id: 3,
-      title: 'Career Opportunities in the Nightlife Industry',
-      excerpt: 'Discover exciting career paths in event management, hospitality, and entertainment. From bartending to event coordination, explore job prospects.\n\nThe nightlife industry offers diverse opportunities for creative and outgoing individuals.',
-      author: 'Mike Johnson',
-      date: '2024-11-25',
-      category: 'Jobs',
-      image: '/blog/blog3.jpg',
-      fullContent: 'Full content for Career Opportunities...'
-    }
-  ];
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/blogs`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch blogs');
+        }
+        const data = await response.json();
+        setPosts(data.blogs || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   const categories = ['All', 'Events', 'Jobs', 'General'];
 
@@ -47,6 +37,14 @@ function Blog() {
     const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  if (loading) {
+    return <div className="loading">Loading blogs...</div>;
+  }
+
+  if (error) {
+    return <div className="error">Error: {error}</div>;
+  }
 
   return (
     <div>
@@ -84,7 +82,7 @@ function Blog() {
           <main className="blogs-main">
             <div className="blogs-grid">
               {filteredPosts.map(post => (
-                <div key={post.id} className="blog-card">
+                <div key={post._id} className="blog-card">
                   <div className="blog-image">
                     <img src={post.image} alt={post.title} loading="lazy" />
                   </div>
@@ -92,10 +90,10 @@ function Blog() {
                     <h3>{post.title}</h3>
                     <div className="blog-meta">
                       <span className="author">By {post.author}</span>
-                      <span className="date">{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span className="date">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                     <p className="blog-excerpt">{post.excerpt}</p>
-                    <Link to={`/blog/${post.id}`} className="read-more-btn">Read More</Link>
+                    <Link to={`/blog/${post._id}`} className="read-more-btn">Read More</Link>
                   </div>
                 </div>
               ))}
