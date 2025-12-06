@@ -78,19 +78,28 @@ function AdminEvents() {
   return (
     <div className="admin-events">
       <div className="admin-header">
-        <div className="admin-nav" style={{ marginTop: '20px', marginBottom: '10px' }}>
+        <div className="admin-nav" style={{
+          marginTop: '100px',
+          marginBottom: '20px',
+          position: 'relative',
+          zIndex: '1000',
+          padding: '10px'
+        }}>
           <button
             onClick={() => navigate('/admin')}
             className="back-btn"
             style={{
-              padding: '10px 20px',
+              padding: '12px 24px',
               backgroundColor: '#007bff',
               color: 'white',
               border: 'none',
               borderRadius: '5px',
               cursor: 'pointer',
               fontSize: '16px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              position: 'relative',
+              zIndex: '1001'
             }}
           >
             &larr; Back to Dashboard
