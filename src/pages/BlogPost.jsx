@@ -7,22 +7,7 @@ function BlogPost() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      name: 'Alice Johnson',
-      email: 'alice@example.com',
-      comment: 'Great article! Very informative.',
-      date: '2024-11-26'
-    },
-    {
-      id: 2,
-      name: 'Bob Smith',
-      email: 'bob@example.com',
-      comment: 'Thanks for sharing this.',
-      date: '2024-11-27'
-    }
-  ]);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
 
   useEffect(() => {
@@ -41,19 +26,56 @@ function BlogPost() {
       }
     };
 
+    const fetchComments = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/comments?contentType=blog&contentId=${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setComments(data);
+        }
+      } catch (err) {
+        console.error('Error fetching comments:', err);
+      }
+    };
+
     fetchPost();
+    fetchComments();
   }, [id]);
 
-  const handleCommentSubmit = (e) => {
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (newComment.name && newComment.email && newComment.comment) {
-      const comment = {
-        id: comments.length + 1,
-        ...newComment,
-        date: new Date().toISOString().split('T')[0]
-      };
-      setComments([...comments, comment]);
-      setNewComment({ name: '', email: '', comment: '' });
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: newComment.comment,
+            author: newComment.name,
+            email: newComment.email,
+            contentType: 'blog',
+            contentId: id,
+          }),
+        });
+
+        if (response.ok) {
+          // Refresh comments after submission
+          const commentsResponse = await fetch(`${API_BASE_URL}/api/comments?contentType=blog&contentId=${id}`);
+          if (commentsResponse.ok) {
+            const data = await commentsResponse.json();
+            setComments(data);
+          }
+          setNewComment({ name: '', email: '', comment: '' });
+          alert('Comment submitted! It will be visible after admin approval.');
+        } else {
+          alert('Failed to submit comment. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error submitting comment:', error);
+        alert('Error submitting comment. Please try again.');
+      }
     }
   };
 
@@ -124,12 +146,12 @@ function BlogPost() {
         <h2>Comments</h2>
         <div className="comments-list">
           {comments.map(comment => (
-            <div key={comment.id} className="comment-card">
+            <div key={comment._id} className="comment-card">
               <div className="comment-header">
-                <span className="comment-author">{comment.name}</span>
-                <span className="comment-date">{new Date(comment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span className="comment-author">{comment.author}</span>
+                <span className="comment-date">{new Date(comment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
-              <p className="comment-text">{comment.comment}</p>
+              <p className="comment-text">{comment.content}</p>
             </div>
           ))}
         </div>
