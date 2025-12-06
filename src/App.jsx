@@ -12,6 +12,9 @@ import AdminBlogs from './pages/AdminBlogs';
 import AdminEvents from './pages/AdminEvents';
 import AdminJobs from './pages/AdminJobs';
 import AdminComments from './pages/AdminComments';
+import AdminNewBlog from './pages/AdminNewBlog';
+import AdminNewEvent from './pages/AdminNewEvent';
+import AdminNewJob from './pages/AdminNewJob';
 
 function App() {
   return (
@@ -26,8 +29,11 @@ function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/blogs" element={<AdminBlogs />} />
+        <Route path="/admin/blogs/new" element={<AdminNewBlog />} />
         <Route path="/admin/events" element={<AdminEvents />} />
+        <Route path="/admin/events/new" element={<AdminNewEvent />} />
         <Route path="/admin/jobs" element={<AdminJobs />} />
+        <Route path="/admin/jobs/new" element={<AdminNewJob />} />
         <Route path="/admin/comments" element={<AdminComments />} />
       </Routes>
       <Footer />
