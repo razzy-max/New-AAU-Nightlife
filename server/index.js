@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static files for uploads (we'll create uploads directory)
 const uploadsPath = path.join(process.cwd(), 'uploads');
-console.log('Uploads path:', uploadsPath);
+console.log('Static serving uploads from:', uploadsPath);
 console.log('Uploads directory exists:', fs.existsSync(uploadsPath));
 app.use('/uploads', express.static(uploadsPath));
 
