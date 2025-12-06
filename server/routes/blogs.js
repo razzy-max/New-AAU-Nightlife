@@ -2,15 +2,19 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import multer from 'multer';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import Blog from '../models/Blog.js';
 import { protect, admin } from '../middleware/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, path.join(__dirname, '../uploads/'));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

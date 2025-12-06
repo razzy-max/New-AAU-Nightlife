@@ -1,7 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import models
 import User from './models/User.js';
@@ -20,6 +26,13 @@ import carouselRoutes from './routes/carousel.js';
 import commentRoutes from './routes/comments.js';
 
 dotenv.config();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Uploads directory created');
+}
 
 connectDB();
 
