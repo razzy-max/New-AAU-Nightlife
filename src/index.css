@@ -12,6 +12,13 @@
   box-sizing: border-box;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
 body {
   font-family: 'Georgia', serif; /* Elegant serif for headings */
   line-height: 1.6;
@@ -1522,6 +1529,11 @@ footer {
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Reduce section padding on mobile to match navbar */
+  .section {
+    padding: 2rem 1rem;
   }
 }
 
