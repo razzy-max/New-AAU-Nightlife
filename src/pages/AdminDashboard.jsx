@@ -74,6 +74,9 @@ function AdminDashboard() {
   return (
     <div className="admin-dashboard">
       <div className="admin-header">
+        <div className="admin-nav">
+          <Link to="/" className="back-to-site-btn">← Back to Website</Link>
+        </div>
         <h1>Admin Dashboard</h1>
         <div className="admin-actions">
           <span>Welcome, {user.username}</span>

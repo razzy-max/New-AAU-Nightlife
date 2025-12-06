@@ -109,8 +109,10 @@ function AdminComments() {
   return (
     <div className="admin-comments">
       <div className="admin-header">
+        <div className="admin-nav">
+          <Link to="/admin" className="back-btn">&larr; Back to Dashboard</Link>
+        </div>
         <h1>Manage Comments</h1>
-        <Link to="/admin" className="back-link">&larr; Back to Dashboard</Link>
       </div>
 
       <div className="admin-actions">
