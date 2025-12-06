@@ -119,10 +119,11 @@ router.post('/', protect, admin, upload.fields([
   }
 
   try {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const blogData = {
       ...req.body,
-      image: req.files.image ? `/uploads/${req.files.image[0].filename}` : req.body.image,
-      video: req.files.video ? `/uploads/${req.files.video[0].filename}` : null,
+      image: req.files.image ? `${baseUrl}/uploads/${req.files.image[0].filename}` : req.body.image,
+      video: req.files.video ? `${baseUrl}/uploads/${req.files.video[0].filename}` : null,
       tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
     };
 

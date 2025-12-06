@@ -29,7 +29,7 @@ function Blog() {
     fetchBlogs();
   }, []);
 
-  const categories = ['All', 'Events', 'Jobs', 'General'];
+  const categories = ['All', 'General', 'Events', 'Jobs', 'Sports', 'Academics'];
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
