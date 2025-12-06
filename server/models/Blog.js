@@ -21,11 +21,15 @@ const blogSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['General', 'Events', 'Jobs'],
+    enum: ['General', 'Events', 'Jobs', 'Sports', 'Academics'],
   },
   image: {
-    type: String, // URL to image
+    type: String, // Path to uploaded image file
     required: true,
+  },
+  video: {
+    type: String, // Path to uploaded video file (optional)
+    default: null,
   },
   tags: [{
     type: String,

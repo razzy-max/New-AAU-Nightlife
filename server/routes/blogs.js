@@ -1,9 +1,46 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import multer from 'multer';
+import path from 'path';
 import Blog from '../models/Blog.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'image') {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed for image field'));
+      }
+    } else if (file.fieldname === 'video') {
+      if (file.mimetype.startsWith('video/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only video files are allowed for video field'));
+      }
+    } else {
+      cb(new Error('Unexpected field'));
+    }
+  }
+});
 
 // @desc    Get all blogs
 // @route   GET /api/blogs
@@ -62,13 +99,15 @@ router.get('/:id', async (req, res) => {
 // @desc    Create a blog
 // @route   POST /api/blogs
 // @access  Private/Admin
-router.post('/', protect, admin, [
+router.post('/', protect, admin, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), [
   body('title').trim().isLength({ min: 1 }),
   body('excerpt').trim().isLength({ min: 1 }),
   body('content').trim().isLength({ min: 1 }),
   body('author').trim().isLength({ min: 1 }),
-  body('category').isIn(['General', 'Events', 'Jobs']),
-  body('image').trim().isLength({ min: 1 }),
+  body('category').isIn(['General', 'Events', 'Jobs', 'Sports', 'Academics']),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -76,7 +115,14 @@ router.post('/', protect, admin, [
   }
 
   try {
-    const blog = new Blog(req.body);
+    const blogData = {
+      ...req.body,
+      image: req.files.image ? `/uploads/${req.files.image[0].filename}` : req.body.image,
+      video: req.files.video ? `/uploads/${req.files.video[0].filename}` : null,
+      tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
+    };
+
+    const blog = new Blog(blogData);
     const createdBlog = await blog.save();
     res.status(201).json(createdBlog);
   } catch (error) {

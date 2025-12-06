@@ -10,11 +10,12 @@ function AdminNewBlog() {
     content: '',
     author: '',
     category: 'General',
-    image: '',
     tags: '',
     featured: false,
     published: true
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -32,7 +33,7 @@ function AdminNewBlog() {
     if (!formData.excerpt.trim()) newErrors.excerpt = 'Excerpt is required';
     if (!formData.content.trim()) newErrors.content = 'Content is required';
     if (!formData.author.trim()) newErrors.author = 'Author is required';
-    if (!formData.image.trim()) newErrors.image = 'Image URL is required';
+    if (!imageFile) newErrors.image = 'Image file is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -45,16 +46,31 @@ function AdminNewBlog() {
     setLoading(true);
     try {
       const token = localStorage.getItem('adminToken');
+      const formDataToSend = new FormData();
+
+      // Add text fields
+      Object.keys(formData).forEach(key => {
+        if (key === 'tags') {
+          formDataToSend.append(key, formData[key]);
+        } else {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+
+      // Add files
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
+      if (videoFile) {
+        formDataToSend.append('video', videoFile);
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/blogs`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-        }),
+        body: formDataToSend,
       });
 
       if (response.ok) {
@@ -141,22 +157,34 @@ function AdminNewBlog() {
               <option value="General">General</option>
               <option value="Events">Events</option>
               <option value="Jobs">Jobs</option>
+              <option value="Sports">Sports</option>
+              <option value="Academics">Academics</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="image">Image URL *</label>
+            <label htmlFor="image">Image File *</label>
             <input
-              type="url"
+              type="file"
               id="image"
               name="image"
-              value={formData.image}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files[0])}
               required
             />
             {errors.image && <span className="error">{errors.image}</span>}
           </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="video">Video File (Optional)</label>
+          <input
+            type="file"
+            id="video"
+            name="video"
+            accept="video/*"
+            onChange={(e) => setVideoFile(e.target.files[0])}
+          />
         </div>
 
         <div className="form-group">
