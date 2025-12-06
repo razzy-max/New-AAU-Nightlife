@@ -705,6 +705,8 @@ footer {
 
 .section {
   padding: 4rem 2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .events-header {
