@@ -28,7 +28,7 @@ import commentRoutes from './routes/comments.js';
 dotenv.config();
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log('Uploads directory created');
@@ -44,7 +44,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static files for uploads (we'll create uploads directory)
-const uploadsPath = path.join(__dirname, '../uploads');
+const uploadsPath = path.join(process.cwd(), 'uploads');
 console.log('Uploads path:', uploadsPath);
 console.log('Uploads directory exists:', fs.existsSync(uploadsPath));
 app.use('/uploads', express.static(uploadsPath));
