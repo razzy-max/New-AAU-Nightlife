@@ -1518,8 +1518,14 @@ footer {
   }
 
   .countdown-container {
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 1rem;
+    justify-content: center;
+  }
+
+  .countdown-item {
+    flex: 0 0 auto;
+    min-width: 80px;
   }
 
   .social-links {
