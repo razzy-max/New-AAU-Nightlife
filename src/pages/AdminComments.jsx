@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
 function AdminComments() {
+  const navigate = useNavigate();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedComments, setSelectedComments] = useState([]);
@@ -110,7 +111,7 @@ function AdminComments() {
     <div className="admin-comments">
       <div className="admin-header">
         <div className="admin-nav">
-          <Link to="/admin" className="back-btn">&larr; Back to Dashboard</Link>
+          <button onClick={() => navigate('/admin')} className="back-btn">&larr; Back to Dashboard</button>
         </div>
         <h1>Manage Comments</h1>
       </div>

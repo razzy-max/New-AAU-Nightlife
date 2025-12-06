@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
 function AdminBlogs() {
+  const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +79,7 @@ function AdminBlogs() {
     <div className="admin-blogs">
       <div className="admin-header">
         <div className="admin-nav">
-          <Link to="/admin" className="back-btn">&larr; Back to Dashboard</Link>
+          <button onClick={() => navigate('/admin')} className="back-btn">&larr; Back to Dashboard</button>
         </div>
         <h1>Manage Blogs</h1>
         <div className="admin-actions">
