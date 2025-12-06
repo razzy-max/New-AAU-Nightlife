@@ -8,6 +8,10 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminBlogs from './pages/AdminBlogs';
+import AdminEvents from './pages/AdminEvents';
+import AdminJobs from './pages/AdminJobs';
+import AdminComments from './pages/AdminComments';
 
 function App() {
   return (
@@ -21,6 +25,10 @@ function App() {
         <Route path="/blog/:id" element={<BlogPost />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/blogs" element={<AdminBlogs />} />
+        <Route path="/admin/events" element={<AdminEvents />} />
+        <Route path="/admin/jobs" element={<AdminJobs />} />
+        <Route path="/admin/comments" element={<AdminComments />} />
       </Routes>
       <Footer />
     </Router>
