@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 function BlogPost() {
   const { id } = useParams();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [comments, setComments] = useState([
     {
       id: 1,
@@ -21,29 +25,24 @@ function BlogPost() {
   ]);
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
 
-  // Mock data - in real app, fetch by ID
-  const post = {
-    id: parseInt(id),
-    title: 'Campus Life at AAU: A Student\'s Perspective',
-    author: 'John Doe',
-    date: '2024-11-15',
-    category: 'General',
-    image: '/blog/blog1.jpg',
-    fullContent: `Exploring the vibrant student life at Ambrose Alli University. From academic challenges to social events, discover what makes AAU special.
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/blogs/${id}`);
+        if (!response.ok) {
+          throw new Error('Blog post not found');
+        }
+        const data = await response.json();
+        setPost(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-In this comprehensive guide, we dive deep into the daily experiences of students navigating campus life at AAU. Whether you're a freshman just starting out or a senior preparing for graduation, this post covers everything you need to know about making the most of your university experience.
-
-## Academic Life
-AAU offers a wide range of programs designed to prepare students for successful careers. The faculty is dedicated to providing quality education with practical applications.
-
-## Social Scene
-The social life at AAU is vibrant and diverse. From student organizations to cultural events, there's always something happening on campus.
-
-## Nightlife and Entertainment
-As part of the AAU Nightlife community, students have access to various entertainment options that balance fun with responsibility.
-
-Remember to always prioritize your safety and well-being while enjoying campus activities.`
-  };
+    fetchPost();
+  }, [id]);
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -63,6 +62,18 @@ Remember to always prioritize your safety and well-being while enjoying campus a
     { id: 3, title: 'Career Opportunities in the Nightlife Industry', image: '/blog/blog3.jpg' }
   ];
 
+  if (loading) {
+    return <div className="loading">Loading blog post...</div>;
+  }
+
+  if (error) {
+    return <div className="error">Error: {error}</div>;
+  }
+
+  if (!post) {
+    return <div className="error">Blog post not found</div>;
+  }
+
   return (
     <div>
       <section className="blog-post-header">
@@ -70,7 +81,7 @@ Remember to always prioritize your safety and well-being while enjoying campus a
         <h1>{post.title}</h1>
         <div className="post-meta">
           <span className="author">By {post.author}</span>
-          <span className="date">{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <span className="date">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           <span className="category">{post.category}</span>
         </div>
       </section>
@@ -80,7 +91,7 @@ Remember to always prioritize your safety and well-being while enjoying campus a
             <img src={post.image} alt={post.title} loading="lazy" />
           </div>
           <div className="post-text">
-            {post.fullContent.split('\n').map((paragraph, index) => (
+            {post.content.split('\n').map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>

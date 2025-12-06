@@ -391,7 +391,7 @@ button:hover {
 .blog-post-content {
   max-width: 1750px;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
   display: grid;
   grid-template-columns: 1fr 370px;
   gap: 1.5rem;
