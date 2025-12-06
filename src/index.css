@@ -698,8 +698,6 @@ footer {
 
 .section {
   padding: 4rem 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .events-header {
@@ -1524,35 +1522,6 @@ footer {
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Fix horizontal space on homepage mobile */
-  body {
-    width: 100%;
-    overflow-x: hidden;
-  }
-
-  .section {
-    padding: 4rem 1rem;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .events-preview-grid,
-  .blogs-preview-grid,
-  .jobs-preview-grid,
-  .stats-grid {
-    width: 100%;
-    margin: 2rem 0;
-    padding: 0;
-  }
-
-  .hero {
-    width: 100%;
-  }
-
-  .carousel {
-    width: 100%;
   }
 }
 
