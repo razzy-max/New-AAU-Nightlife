@@ -11,16 +11,8 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), 'uploads/'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for file uploads (memory storage for MongoDB)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -119,11 +111,26 @@ router.post('/', protect, admin, upload.fields([
   }
 
   try {
-    const baseUrl = `https://${req.get('host')}`;
+    // Convert uploaded files to base64 data URLs
+    let imageData = req.body.image; // Default to provided image URL
+    let videoData = null;
+
+    if (req.files.image && req.files.image[0]) {
+      const imageBuffer = req.files.image[0].buffer;
+      const imageMimeType = req.files.image[0].mimetype;
+      imageData = `data:${imageMimeType};base64,${imageBuffer.toString('base64')}`;
+    }
+
+    if (req.files.video && req.files.video[0]) {
+      const videoBuffer = req.files.video[0].buffer;
+      const videoMimeType = req.files.video[0].mimetype;
+      videoData = `data:${videoMimeType};base64,${videoBuffer.toString('base64')}`;
+    }
+
     const blogData = {
       ...req.body,
-      image: req.files.image ? `${baseUrl}/uploads/${req.files.image[0].filename}` : req.body.image,
-      video: req.files.video ? `${baseUrl}/uploads/${req.files.video[0].filename}` : null,
+      image: imageData,
+      video: videoData,
       tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
     };
 
