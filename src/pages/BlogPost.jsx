@@ -85,7 +85,14 @@ function BlogPost() {
   ];
 
   if (loading) {
-    return <div className="loading">Loading blog post...</div>;
+    return (
+      <div className="loading">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading blog post...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

@@ -1598,6 +1598,39 @@ footer {
   }
 }
 
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(218, 165, 32, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 1.2rem;
+  color: var(--secondary-color);
+}
+
+.loading-container {
+  text-align: center;
+}
+
+.loading-container .loading-spinner {
+  margin: 0 auto 20px;
+}
+
 /* Admin Styles */
 .admin-login {
   min-height: 100vh;

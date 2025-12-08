@@ -39,7 +39,14 @@ function Blog() {
   });
 
   if (loading) {
-    return <div className="loading">Loading blogs...</div>;
+    return (
+      <div className="loading">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading blogs...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
