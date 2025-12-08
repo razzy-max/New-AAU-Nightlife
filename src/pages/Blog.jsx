@@ -91,7 +91,13 @@ function Blog() {
               {filteredPosts.map(post => (
                 <div key={post._id} className="blog-card">
                   <div className="blog-image">
-                    <img src={post.image} alt={post.title} loading="lazy" />
+                    <img
+                      src={post.image}
+                      alt={post.title}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ aspectRatio: '16/9' }}
+                    />
                   </div>
                   <div className="blog-content">
                     <h3>{post.title}</h3>

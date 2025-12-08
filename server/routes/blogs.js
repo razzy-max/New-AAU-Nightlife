@@ -62,7 +62,14 @@ router.get('/', async (req, res) => {
     const blogs = await Blog.find(query)
       .sort({ createdAt: -1 })
       .limit(pageSize)
-      .skip(pageSize * (page - 1));
+      .skip(pageSize * (page - 1))
+      .select('-video'); // Exclude video field for list view to reduce payload
+
+    // Add cache headers for better performance
+    res.set({
+      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+      'ETag': `"blogs-${page}-${category}-${search}-${count}"`
+    });
 
     res.json({
       blogs,

@@ -117,7 +117,13 @@ function BlogPost() {
       <section className="blog-post-content">
         <div className="post-main">
           <div className="post-image">
-            <img src={post.image} alt={post.title} loading="lazy" />
+            <img
+              src={post.image}
+              alt={post.title}
+              loading="lazy"
+              decoding="async"
+              style={{ aspectRatio: '16/9' }}
+            />
           </div>
           <div className="post-text">
             {post.content.split('\n').map((paragraph, index) => (
