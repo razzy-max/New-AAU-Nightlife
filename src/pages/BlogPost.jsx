@@ -117,6 +117,21 @@ function BlogPost() {
               <p key={index}>{paragraph}</p>
             ))}
           </div>
+
+          {/* Video display after content */}
+          {post.video && (
+            <div className="post-video">
+              <video
+                controls
+                preload="metadata"
+                className="blog-video"
+                poster={post.image} // Use blog image as poster if available
+              >
+                <source src={post.video} type={post.video.split(';')[0].split(':')[1]} />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          )}
         </div>
         <aside className="post-sidebar">
           <div className="author-bio">
