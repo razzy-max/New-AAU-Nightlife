@@ -8,15 +8,7 @@ import { protect, admin } from '../middleware/auth.js';
 const router = express.Router();
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'event-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -94,7 +86,7 @@ router.post('/', protect, admin, upload.single('image'), [
   body('title').trim().isLength({ min: 1 }),
   body('description').trim().isLength({ min: 1 }),
   body('shortDescription').trim().isLength({ min: 1 }),
-  body('date').isISO8601(),
+  body('date').optional().isISO8601(),
   body('time').trim().isLength({ min: 1 }),
   body('location').trim().isLength({ min: 1 }),
   body('contactEmail').isEmail(),
@@ -105,12 +97,33 @@ router.post('/', protect, admin, upload.single('image'), [
   }
 
   try {
+    let imagePath = req.body.image; // Default to provided URL
+
+    if (req.file) {
+      // Save file to disk
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const filename = 'event-' + uniqueSuffix + path.extname(req.file.originalname);
+      const filepath = path.join(process.cwd(), 'uploads', filename);
+
+      // Ensure uploads directory exists
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      if (!require('fs').existsSync(uploadsDir)) {
+        require('fs').mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      // Write file to disk
+      require('fs').writeFileSync(filepath, req.file.buffer);
+      imagePath = `/uploads/${filename}`;
+    }
+
     const eventData = {
       ...req.body,
-      image: req.file ? `/uploads/${req.file.filename}` : req.body.image,
+      image: imagePath,
       price: parseFloat(req.body.price) || 0,
       featured: req.body.featured === 'true' || req.body.featured === true,
-      published: req.body.published === 'true' || req.body.published === true
+      published: req.body.published === 'true' || req.body.published === true,
+      date: req.body.date ? new Date(req.body.date) : undefined,
+      time: req.body.time || undefined
     };
 
     const event = new Event(eventData);
