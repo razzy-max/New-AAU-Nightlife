@@ -27,8 +27,8 @@ const eventSchema = new mongoose.Schema({
     required: true,
   },
   image: {
-    type: String, // URL to image
-    required: true,
+    type: String, // Base64 data URL or URL to image
+    default: '/events/default-event.jpg',
   },
   capacity: {
     type: Number,
@@ -45,7 +45,7 @@ const eventSchema = new mongoose.Schema({
   },
   organizer: {
     type: String,
-    required: true,
+    default: 'AAU Nightlife',
   },
   contactEmail: {
     type: String,
