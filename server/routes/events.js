@@ -97,28 +97,18 @@ router.post('/', protect, admin, upload.single('image'), [
   }
 
   try {
-    let imagePath = req.body.image; // Default to provided URL
+    // Convert uploaded file to base64 data URL (like blogs)
+    let imageData = req.body.image; // Default to provided image URL
 
     if (req.file) {
-      // Save file to disk
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const filename = 'event-' + uniqueSuffix + path.extname(req.file.originalname);
-      const filepath = path.join(process.cwd(), 'uploads', filename);
-
-      // Ensure uploads directory exists
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      if (!require('fs').existsSync(uploadsDir)) {
-        require('fs').mkdirSync(uploadsDir, { recursive: true });
-      }
-
-      // Write file to disk
-      require('fs').writeFileSync(filepath, req.file.buffer);
-      imagePath = `/uploads/${filename}`;
+      const imageBuffer = req.file.buffer;
+      const imageMimeType = req.file.mimetype;
+      imageData = `data:${imageMimeType};base64,${imageBuffer.toString('base64')}`;
     }
 
     const eventData = {
       ...req.body,
-      image: imagePath,
+      image: imageData,
       price: parseFloat(req.body.price) || 0,
       featured: req.body.featured === 'true' || req.body.featured === true,
       published: req.body.published === 'true' || req.body.published === true,
@@ -197,6 +187,28 @@ router.get('/upcoming/list', async (req, res) => {
     })
       .sort({ date: 1 })
       .limit(3);
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Get featured events
+// @route   GET /api/events/featured/list
+// @access  Public
+router.get('/featured/list', async (req, res) => {
+  try {
+    const events = await Event.find({ featured: true, published: true })
+      .sort({ createdAt: -1 })
+      .limit(3);
+
+    // Cache featured events for 10 minutes
+    res.set({
+      'Cache-Control': 'public, max-age=600, s-maxage=300',
+      'ETag': `"featured-events-${events.length}-${events[0]?.updatedAt || 'none'}"`,
+      'Vary': 'Accept-Encoding'
+    });
+
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

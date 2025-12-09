@@ -153,8 +153,8 @@ function Home() {
           setFeaturedPosts(blogsData);
         }
 
-        // Fetch upcoming events
-        const eventsResponse = await fetch(`${API_BASE_URL}/api/events/upcoming/list?_t=${cacheBuster}`, {
+        // Fetch featured events (like blogs)
+        const eventsResponse = await fetch(`${API_BASE_URL}/api/events/featured/list?_t=${cacheBuster}`, {
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
