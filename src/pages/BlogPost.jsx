@@ -8,6 +8,7 @@ function BlogPost() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [comments, setComments] = useState([]);
+  const [relatedPosts, setRelatedPosts] = useState([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ function BlogPost() {
 
     fetchPost();
     fetchComments();
+    fetchRelatedPosts();
   }, [id]);
 
   const handleCommentSubmit = async (e) => {
@@ -79,10 +81,21 @@ function BlogPost() {
     }
   };
 
-  const relatedPosts = [
-    { id: 2, title: 'Nightlife Tips: Enjoying Safely', image: '/blog/blog2.jpg' },
-    { id: 3, title: 'Career Opportunities in the Nightlife Industry', image: '/blog/blog3.jpg' }
-  ];
+  const fetchRelatedPosts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/blogs?limit=3`);
+      if (response.ok) {
+        const data = await response.json();
+        // Filter out current post and take first 2
+        const filtered = data.blogs.filter(blog => blog._id !== id).slice(0, 2);
+        setRelatedPosts(filtered);
+      }
+    } catch (err) {
+      console.error('Error fetching related posts:', err);
+      // Fallback to empty array
+      setRelatedPosts([]);
+    }
+  };
 
   if (loading) {
     return (
@@ -154,7 +167,7 @@ function BlogPost() {
           <div className="related-posts">
             <h3>Related Posts</h3>
             {relatedPosts.map(relPost => (
-              <Link key={relPost.id} to={`/blog/${relPost.id}`} className="related-post">
+              <Link key={relPost._id} to={`/blog/${relPost._id}`} className="related-post">
                 <img src={relPost.image} alt={relPost.title} loading="lazy" />
                 <span>{relPost.title}</span>
               </Link>
