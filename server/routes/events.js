@@ -86,7 +86,7 @@ router.post('/', protect, admin, upload.single('image'), [
   body('title').trim().isLength({ min: 1 }),
   body('description').trim().isLength({ min: 1 }),
   body('shortDescription').trim().isLength({ min: 1 }),
-  body('date').optional(),
+  body('date').isDate(),
   body('time').trim().isLength({ min: 1 }),
   body('location').trim().isLength({ min: 1 }),
   body('contactEmail').isEmail(),
@@ -111,9 +111,7 @@ router.post('/', protect, admin, upload.single('image'), [
       image: imageData,
       price: parseFloat(req.body.price) || 0,
       featured: req.body.featured === 'true' || req.body.featured === true,
-      published: req.body.published === 'true' || req.body.published === true,
-      date: req.body.date ? new Date(req.body.date) : undefined,
-      time: req.body.time || undefined
+      published: req.body.published === 'true' || req.body.published === true
     };
 
     const event = new Event(eventData);
