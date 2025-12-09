@@ -14,8 +14,9 @@ router.get('/', async (req, res) => {
     const page = Number(req.query.pageNumber) || 1;
     const type = req.query.type || '';
     const search = req.query.search || '';
+    const admin = req.query.admin === 'true'; // Check if admin request
 
-    let query = { published: true };
+    let query = admin ? {} : { published: true }; // Show all for admin, published only for public
 
     if (type) {
       query.type = type;

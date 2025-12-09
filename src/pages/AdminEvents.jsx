@@ -6,6 +6,7 @@ function AdminEvents() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cacheRefreshing, setCacheRefreshing] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -14,7 +15,7 @@ function AdminEvents() {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/api/events`, {
+      const response = await fetch(`${API_BASE_URL}/api/events?admin=true`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -52,6 +53,15 @@ function AdminEvents() {
   };
 
   const togglePublished = async (eventId, currentStatus) => {
+    const newStatus = !currentStatus;
+
+    // Optimistic update - immediately update UI
+    setEvents(prevEvents =>
+      prevEvents.map(event =>
+        event._id === eventId ? { ...event, published: newStatus } : event
+      )
+    );
+
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
@@ -60,14 +70,120 @@ function AdminEvents() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ published: !currentStatus }),
+        body: JSON.stringify({ published: newStatus }),
       });
 
       if (response.ok) {
-        fetchEvents(); // Refresh the list
+        // Successfully updated
+        // Trigger homepage refresh if function is available
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
+      } else {
+        // Revert optimistic update on failure
+        setEvents(prevEvents =>
+          prevEvents.map(event =>
+            event._id === eventId ? { ...event, published: currentStatus } : event
+          )
+        );
+        alert('Failed to update publish status. Please try again.');
       }
     } catch (error) {
       console.error('Error updating event:', error);
+      // Revert optimistic update on error
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event._id === eventId ? { ...event, published: currentStatus } : event
+        )
+      );
+      alert('Network error. Please try again.');
+    }
+  };
+
+  const toggleFeatured = async (eventId, currentStatus) => {
+    const newStatus = !currentStatus;
+
+    // Optimistic update - immediately update UI
+    setEvents(prevEvents =>
+      prevEvents.map(event =>
+        event._id === eventId ? { ...event, featured: newStatus } : event
+      )
+    );
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      console.log(`Toggling featured for event ${eventId}: ${currentStatus} -> ${newStatus}`);
+
+      const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ featured: newStatus }),
+      });
+
+      if (response.ok) {
+        console.log(`Successfully updated featured status for event ${eventId}`);
+        // Trigger homepage refresh if function is available
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
+      } else {
+        console.error(`Failed to update featured status for event ${eventId}:`, response.status);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+        // Revert optimistic update on failure
+        setEvents(prevEvents =>
+          prevEvents.map(event =>
+            event._id === eventId ? { ...event, featured: currentStatus } : event
+          )
+        );
+        alert('Failed to update featured status. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating event featured status:', error);
+      // Revert optimistic update on error
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event._id === eventId ? { ...event, featured: currentStatus } : event
+        )
+      );
+      alert('Network error. Please try again.');
+    }
+  };
+
+  const forceRefreshCache = async () => {
+    setCacheRefreshing(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/blogs/invalidate-cache`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        // Trigger immediate refresh of all pages
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
+        if (window.refreshBlogData) {
+          window.refreshBlogData();
+        }
+        if (window.refreshRelatedPosts) {
+          window.refreshRelatedPosts();
+        }
+        alert('Cache refresh triggered! Public website updated immediately.');
+      } else {
+        alert('Failed to trigger cache refresh.');
+      }
+    } catch (error) {
+      console.error('Error refreshing cache:', error);
+      alert('Network error while refreshing cache.');
+    } finally {
+      setCacheRefreshing(false);
     }
   };
 
@@ -108,6 +224,24 @@ function AdminEvents() {
         <h1>Manage Events</h1>
         <div className="admin-actions">
           <Link to="/admin/events/new" className="add-btn">Add New Event</Link>
+          <button
+            onClick={forceRefreshCache}
+            disabled={cacheRefreshing}
+            className="refresh-cache-btn"
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: cacheRefreshing ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              marginLeft: '10px'
+            }}
+          >
+            {cacheRefreshing ? 'Refreshing...' : 'Force Refresh Public Cache'}
+          </button>
         </div>
       </div>
 
@@ -139,7 +273,14 @@ function AdminEvents() {
                     {event.published ? 'Published' : 'Draft'}
                   </button>
                 </td>
-                <td>{event.featured ? 'Yes' : 'No'}</td>
+                <td>
+                  <button
+                    onClick={() => toggleFeatured(event._id, event.featured)}
+                    className={`status-btn ${event.featured ? 'featured' : 'not-featured'}`}
+                  >
+                    {event.featured ? 'Featured' : 'Not Featured'}
+                  </button>
+                </td>
                 <td className="actions">
                   <button onClick={() => handleDelete(event._id)} className="delete-btn">
                     Delete
