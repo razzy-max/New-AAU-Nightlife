@@ -1,6 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '../components/Carousel';
+import API_BASE_URL from '../config';
+
+// Background prefetching utility
+const prefetchData = async (url) => {
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Cache-Control': 'max-age=3600' } // Cache for 1 hour
+    });
+    if (response.ok) {
+      await response.json(); // Consume the response to cache it
+    }
+  } catch (error) {
+    // Silently fail - prefetching is not critical
+    console.log('Prefetch failed:', url);
+  }
+};
 
 function Home() {
   const [email, setEmail] = useState('');
@@ -169,6 +186,32 @@ function Home() {
     return () => clearInterval(countdownInterval);
   }, [events]);
 
+  // Background prefetching of blog data
+  useEffect(() => {
+    const prefetchBlogData = async () => {
+      // Wait 2 seconds after page load to avoid interfering with initial render
+      setTimeout(async () => {
+        try {
+          // Prefetch blog listings
+          await prefetchData(`${API_BASE_URL}/api/blogs`);
+
+          // Prefetch featured blogs
+          await prefetchData(`${API_BASE_URL}/api/blogs/featured/list`);
+
+          // Prefetch events and jobs
+          await prefetchData(`${API_BASE_URL}/api/events`);
+          await prefetchData(`${API_BASE_URL}/api/jobs`);
+
+          console.log('Background prefetching completed');
+        } catch (error) {
+          console.log('Background prefetching failed:', error);
+        }
+      }, 2000);
+    };
+
+    prefetchBlogData();
+  }, []);
+
   return (
     <div>
       <section className="hero">
@@ -255,13 +298,25 @@ function Home() {
                   <span>By {post.author}</span>
                   <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
-                <Link to={`/blog/${post.id}`} className="read-more-btn">Read More</Link>
+                <Link
+                  to={`/blog/${post.id}`}
+                  className="read-more-btn"
+                  rel="prefetch"
+                >
+                  Read More
+                </Link>
               </div>
             </div>
           ))}
         </div>
         <div className="view-all-blogs">
-          <Link to="/blog" className="view-all-btn">View All Blogs</Link>
+          <Link
+            to="/blog"
+            className="view-all-btn"
+            rel="prefetch"
+          >
+            View All Blogs
+          </Link>
         </div>
       </section>
       <section className="section job-opportunities">

@@ -67,8 +67,9 @@ router.get('/', async (req, res) => {
 
     // Add cache headers for better performance
     res.set({
-      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
-      'ETag': `"blogs-${page}-${category}-${search}-${count}"`
+      'Cache-Control': 'public, max-age=600, s-maxage=300', // 10 min browser, 5 min CDN
+      'ETag': `"blogs-${page}-${category}-${search}-${count}"`,
+      'Vary': 'Accept-Encoding'
     });
 
     res.json({
@@ -90,6 +91,12 @@ router.get('/:id', async (req, res) => {
     const blog = await Blog.findById(req.params.id);
 
     if (blog) {
+      // Cache individual blog posts for 15 minutes
+      res.set({
+        'Cache-Control': 'public, max-age=900, s-maxage=600',
+        'ETag': `"blog-${blog._id}-${blog.updatedAt}"`,
+        'Vary': 'Accept-Encoding'
+      });
       res.json(blog);
     } else {
       res.status(404).json({ message: 'Blog not found' });
@@ -194,6 +201,14 @@ router.get('/featured/list', async (req, res) => {
     const blogs = await Blog.find({ featured: true, published: true })
       .sort({ createdAt: -1 })
       .limit(3);
+
+    // Cache featured blogs for 10 minutes
+    res.set({
+      'Cache-Control': 'public, max-age=600, s-maxage=300',
+      'ETag': `"featured-blogs-${blogs.length}-${blogs[0]?.updatedAt || 'none'}"`,
+      'Vary': 'Accept-Encoding'
+    });
+
     res.json(blogs);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
