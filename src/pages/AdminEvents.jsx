@@ -129,8 +129,6 @@ function AdminEvents() {
         if (window.refreshHomepageData) {
           window.refreshHomepageData();
         }
-        // Refresh the events list to ensure UI is in sync
-        fetchEvents();
       } else {
         console.error(`Failed to update featured status for event ${eventId}:`, response.status);
         const errorData = await response.text();

@@ -46,7 +46,7 @@ function AdminNewEvent() {
     if (!formData.location.trim()) newErrors.location = 'Location is required';
     if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email format';
-    if (!formData.image) newErrors.image = 'Image is required';
+    // Image is now optional
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -263,6 +263,9 @@ function AdminNewEvent() {
               required
             />
             {errors.image && <span className="error">{errors.image}</span>}
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+              Leave empty to use default image
+            </p>
           </div>
         </div>
 

@@ -86,7 +86,7 @@ router.post('/', protect, admin, upload.single('image'), [
   body('title').trim().isLength({ min: 1 }),
   body('description').trim().isLength({ min: 1 }),
   body('shortDescription').trim().isLength({ min: 1 }),
-  body('date').optional().isISO8601(),
+  body('date').optional(),
   body('time').trim().isLength({ min: 1 }),
   body('location').trim().isLength({ min: 1 }),
   body('contactEmail').isEmail(),
