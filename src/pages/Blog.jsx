@@ -9,11 +9,18 @@ function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/blogs`);
+        // Use cache-busting parameter to force fresh data
+        const response = await fetch(`${API_BASE_URL}/api/blogs?_t=${cacheBuster}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch blogs');
         }
@@ -27,6 +34,19 @@ function Blog() {
     };
 
     fetchBlogs();
+  }, [cacheBuster]);
+
+  // Function to refresh blog data (exposed globally for admin use)
+  const refreshBlogData = () => {
+    setCacheBuster(Date.now());
+  };
+
+  // Expose refresh function globally
+  useEffect(() => {
+    window.refreshBlogData = refreshBlogData;
+    return () => {
+      delete window.refreshBlogData;
+    };
   }, []);
 
   const categories = ['All', 'General', 'Events', 'Jobs', 'Sports', 'Academics'];

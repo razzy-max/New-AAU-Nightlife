@@ -75,9 +75,12 @@ function AdminBlogs() {
 
       if (response.ok) {
         // Successfully updated
-        // Trigger homepage refresh if function is available
+        // Trigger homepage and blog page refresh if functions are available
         if (window.refreshHomepageData) {
           window.refreshHomepageData();
+        }
+        if (window.refreshBlogData) {
+          window.refreshBlogData();
         }
       } else {
         // Revert optimistic update on failure
@@ -125,9 +128,12 @@ function AdminBlogs() {
 
       if (response.ok) {
         console.log(`Successfully updated featured status for blog ${blogId}`);
-        // Trigger homepage refresh if function is available
+        // Trigger homepage and blog page refresh if functions are available
         if (window.refreshHomepageData) {
           window.refreshHomepageData();
+        }
+        if (window.refreshBlogData) {
+          window.refreshBlogData();
         }
       } else {
         console.error(`Failed to update featured status for blog ${blogId}:`, response.status);
@@ -165,7 +171,14 @@ function AdminBlogs() {
       });
 
       if (response.ok) {
-        alert('Cache refresh triggered! Public website will update within a few minutes.');
+        // Trigger immediate refresh of all pages
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
+        if (window.refreshBlogData) {
+          window.refreshBlogData();
+        }
+        alert('Cache refresh triggered! Public website updated immediately.');
       } else {
         alert('Failed to trigger cache refresh.');
       }
