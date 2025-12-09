@@ -71,6 +71,26 @@ function AdminBlogs() {
     }
   };
 
+  const toggleFeatured = async (blogId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ featured: !currentStatus }),
+      });
+
+      if (response.ok) {
+        fetchBlogs(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error updating blog:', error);
+    }
+  };
+
   if (loading) {
     return <div className="admin-loading">Loading blogs...</div>;
   }
@@ -138,7 +158,14 @@ function AdminBlogs() {
                     {blog.published ? 'Published' : 'Draft'}
                   </button>
                 </td>
-                <td>{blog.featured ? 'Yes' : 'No'}</td>
+                <td>
+                  <button
+                    onClick={() => toggleFeatured(blog._id, blog.featured)}
+                    className={`status-btn ${blog.featured ? 'featured' : 'not-featured'}`}
+                  >
+                    {blog.featured ? 'Featured' : 'Not Featured'}
+                  </button>
+                </td>
                 <td>{new Date(blog.createdAt).toLocaleDateString()}</td>
                 <td className="actions">
                   <Link to={`/blog/${blog._id}`} className="view-btn" target="_blank">

@@ -1631,6 +1631,41 @@ footer {
   margin: 0 auto 20px;
 }
 
+/* Status Button Styles */
+.status-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.status-btn.published {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-btn.draft {
+  background-color: #6c757d;
+  color: white;
+}
+
+.status-btn.featured {
+  background-color: #ffc107;
+  color: black;
+}
+
+.status-btn.not-featured {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.status-btn:hover {
+  opacity: 0.8;
+}
+
 /* Admin Styles */
 .admin-login {
   min-height: 100vh;
