@@ -62,7 +62,7 @@ function Events() {
                 <p className="event-description">{event.shortDescription || event.description}</p>
                 <div className="event-details">
                   <p><strong>Location:</strong> {event.location}</p>
-                  <p><strong>Organizer:</strong> {event.organizer}</p>
+                  <p><strong>Contact:</strong> {event.contactEmail}</p>
                 </div>
                 <button className="rsvp-btn">RSVP Now</button>
               </div>

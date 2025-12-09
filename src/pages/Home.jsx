@@ -22,6 +22,8 @@ const prefetchData = async (url) => {
 function Home() {
   const [email, setEmail] = useState('');
   const [featuredPosts, setFeaturedPosts] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [featuredJobs, setFeaturedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cacheBuster, setCacheBuster] = useState(Date.now());
 
@@ -44,70 +46,6 @@ function Home() {
     };
   }, []);
 
-  const events = [
-    {
-      id: 1,
-      title: 'Tabata Festival 1.0',
-      description: 'Get ready to kick off your day with high energy and pure vibes! Tabata Festival 1.0 is here to ignite your morning with fitness, music, and fun.',
-      date: '2024-12-15',
-      time: '8:00 AM',
-      location: 'AAU Sports Complex',
-      image: '/events/Bonfire.png'
-    },
-    {
-      id: 2,
-      title: 'Campus Concert Series: Afrobeat Night',
-      description: 'Dive into the rhythms of Africa with our Campus Concert Series featuring rising Afrobeat stars!',
-      date: '2024-12-20',
-      time: '8:00 PM',
-      location: 'AAU Auditorium',
-      image: '/events/Hangout.jpg'
-    },
-    {
-      id: 3,
-      title: 'Nightlife Networking Mixer',
-      description: 'Elevate your career prospects at our exclusive Nightlife Networking Mixer!',
-      date: '2024-12-25',
-      time: '6:00 PM',
-      location: 'AAU Grand Ballroom',
-      image: '/events/MovieAMA.jpg'
-    }
-  ];
-
-  const upcomingEvents = events.slice(0, 3);
-
-
-  const jobs = [
-    {
-      id: 1,
-      title: 'Event Bartender',
-      company: 'Club X Nightlife',
-      location: 'Ekpoma, AAU',
-      description: 'Join our dynamic team at Club X as an Event Bartender! We\'re looking for enthusiastic individuals with a passion for mixology and customer service.',
-      salary: '₦50,000 - ₦80,000/month',
-      type: 'Part-time'
-    },
-    {
-      id: 2,
-      title: 'Event Coordinator',
-      company: 'AAU Nightlife Events',
-      location: 'Ekpoma, AAU',
-      description: 'Are you organized, creative, and passionate about student life? We\'re seeking an Event Coordinator to help plan and execute unforgettable nightlife experiences.',
-      salary: '₦70,000 - ₦120,000/month',
-      type: 'Full-time'
-    },
-    {
-      id: 3,
-      title: 'Social Media Manager',
-      company: 'AAU Nightlife',
-      location: 'Ekpoma, AAU',
-      description: 'Help us amplify the AAU Nightlife brand! We\'re looking for a creative Social Media Manager to handle our online presence.',
-      salary: '₦60,000 - ₦100,000/month',
-      type: 'Part-time'
-    }
-  ];
-
-  const featuredJobs = jobs.slice(0, 3);
 
   const stats = [
     { number: '50+', label: 'Events Hosted' },
@@ -146,30 +84,32 @@ function Home() {
   }, [testimonials.length]);
 
   useEffect(() => {
-    const nextEvent = events[0];
-    const eventDate = new Date(`${nextEvent.date}T${nextEvent.time}`);
+    if (upcomingEvents.length > 0) {
+      const nextEvent = upcomingEvents[0];
+      const eventDate = new Date(`${nextEvent.date}T${nextEvent.time}`);
 
-    const updateCountdown = () => {
-      const now = new Date();
-      const difference = eventDate - now;
+      const updateCountdown = () => {
+        const now = new Date();
+        const difference = eventDate - now;
 
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-        setTimeLeft({ days, hours, minutes, seconds });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
+          setTimeLeft({ days, hours, minutes, seconds });
+        } else {
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        }
+      };
 
-    updateCountdown();
-    const countdownInterval = setInterval(updateCountdown, 1000);
+      updateCountdown();
+      const countdownInterval = setInterval(updateCountdown, 1000);
 
-    return () => clearInterval(countdownInterval);
-  }, [events]);
+      return () => clearInterval(countdownInterval);
+    }
+  }, [upcomingEvents]);
 
   // Background prefetching of blog data
   useEffect(() => {
@@ -197,31 +137,57 @@ function Home() {
     prefetchBlogData();
   }, []);
 
-  // Fetch featured blogs for homepage
+  // Fetch homepage data (featured blogs, upcoming events, featured jobs)
   useEffect(() => {
-    const fetchFeaturedBlogs = async () => {
+    const fetchHomepageData = async () => {
       try {
-        // Use cache-busting parameter to force fresh data
-        const response = await fetch(`${API_BASE_URL}/api/blogs/featured/list?_t=${cacheBuster}`, {
+        // Fetch featured blogs
+        const blogsResponse = await fetch(`${API_BASE_URL}/api/blogs/featured/list?_t=${cacheBuster}`, {
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
           }
         });
-        if (response.ok) {
-          const data = await response.json();
-          setFeaturedPosts(data);
+        if (blogsResponse.ok) {
+          const blogsData = await blogsResponse.json();
+          setFeaturedPosts(blogsData);
+        }
+
+        // Fetch upcoming events
+        const eventsResponse = await fetch(`${API_BASE_URL}/api/events/upcoming/list?_t=${cacheBuster}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        if (eventsResponse.ok) {
+          const eventsData = await eventsResponse.json();
+          setUpcomingEvents(eventsData);
+        }
+
+        // Fetch featured jobs
+        const jobsResponse = await fetch(`${API_BASE_URL}/api/jobs/featured/list?_t=${cacheBuster}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        if (jobsResponse.ok) {
+          const jobsData = await jobsResponse.json();
+          setFeaturedJobs(jobsData);
         }
       } catch (error) {
-        console.error('Error fetching featured blogs:', error);
-        // Fallback to empty array
+        console.error('Error fetching homepage data:', error);
+        // Fallback to empty arrays
         setFeaturedPosts([]);
+        setUpcomingEvents([]);
+        setFeaturedJobs([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeaturedBlogs();
+    fetchHomepageData();
   }, [cacheBuster]);
 
   if (loading) {
@@ -263,8 +229,8 @@ function Home() {
       <section className="section upcoming-events">
         <h2>Upcoming Events</h2>
         <div className="events-preview-grid">
-          {upcomingEvents.map(event => (
-            <div key={event.id} className="event-preview-card">
+          {upcomingEvents.length > 0 ? upcomingEvents.map(event => (
+            <div key={event._id} className="event-preview-card">
               <div className="event-preview-image">
                 <img src={event.image} alt={event.title} loading="lazy" />
                 <div className="event-preview-date">
@@ -273,12 +239,16 @@ function Home() {
               </div>
               <div className="event-preview-content">
                 <h3>{event.title}</h3>
-                <p className="event-preview-description">{event.description.substring(0, 100)}...</p>
+                <p className="event-preview-description">{event.shortDescription || event.description?.substring(0, 100) + '...'}</p>
                 <p className="event-preview-time">{event.time} • {event.location}</p>
                 <Link to="/events" className="learn-more-btn">Learn More</Link>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="no-events">
+              <p>No upcoming events available. Check back soon!</p>
+            </div>
+          )}
         </div>
         <div className="view-all-events">
           <Link to="/events" className="view-all-btn">View All Events</Link>
@@ -304,7 +274,9 @@ function Home() {
             <div className="countdown-label">Seconds</div>
           </div>
         </div>
-        <p className="countdown-event">Until {events[0].title}</p>
+        {upcomingEvents.length > 0 && (
+          <p className="countdown-event">Until {upcomingEvents[0].title}</p>
+        )}
       </section>
       <section className="section featured-blogs">
         <h2>Featured Blogs</h2>
@@ -349,8 +321,8 @@ function Home() {
       <section className="section job-opportunities">
         <h2>Career Opportunities</h2>
         <div className="jobs-preview-grid">
-          {featuredJobs.map(job => (
-            <div key={job.id} className="job-preview-card">
+          {featuredJobs.length > 0 ? featuredJobs.map(job => (
+            <div key={job._id} className="job-preview-card">
               <div className="job-preview-header">
                 <span className="job-type-badge">{job.type}</span>
                 <h3>{job.title}</h3>
@@ -358,12 +330,16 @@ function Home() {
               </div>
               <div className="job-preview-content">
                 <p className="job-location">📍 {job.location}</p>
-                <p className="job-description">{job.description.substring(0, 100)}...</p>
+                <p className="job-description">{job.description?.substring(0, 100) + '...'}</p>
                 <p className="job-salary">{job.salary}</p>
                 <Link to="/jobs" className="apply-btn">Apply Now</Link>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="no-jobs">
+              <p>No job opportunities available yet. Check back soon!</p>
+            </div>
+          )}
         </div>
         <div className="view-all-jobs">
           <Link to="/jobs" className="view-all-btn">View All Jobs</Link>

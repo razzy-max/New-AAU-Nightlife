@@ -11,12 +11,10 @@ function AdminNewEvent() {
     date: '',
     time: '',
     location: '',
-    capacity: '',
     price: 0,
     category: 'Social',
-    organizer: '',
     contactEmail: '',
-    image: '',
+    image: null,
     featured: false,
     published: true
   });
@@ -24,11 +22,18 @@ function AdminNewEvent() {
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'file') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -37,11 +42,11 @@ function AdminNewEvent() {
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.shortDescription.trim()) newErrors.shortDescription = 'Short description is required';
     if (!formData.date) newErrors.date = 'Date is required';
-    if (!formData.time.trim()) newErrors.time = 'Time is required';
+    if (!formData.time) newErrors.time = 'Time is required';
     if (!formData.location.trim()) newErrors.location = 'Location is required';
-    if (!formData.organizer.trim()) newErrors.organizer = 'Organizer is required';
     if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email format';
+    if (!formData.image) newErrors.image = 'Image is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -54,17 +59,26 @@ function AdminNewEvent() {
     setLoading(true);
     try {
       const token = localStorage.getItem('adminToken');
+      const formDataToSend = new FormData();
+
+      // Add all form fields except image
+      Object.keys(formData).forEach(key => {
+        if (key !== 'image' && formData[key] !== null && formData[key] !== undefined) {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
+
+      // Add image file
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/events`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          capacity: formData.capacity ? parseInt(formData.capacity) : null,
-          price: parseFloat(formData.price) || 0
-        }),
+        body: formDataToSend,
       });
 
       if (response.ok) {
@@ -185,12 +199,11 @@ function AdminNewEvent() {
           <div className="form-group">
             <label htmlFor="time">Time *</label>
             <input
-              type="text"
+              type="time"
               id="time"
               name="time"
               value={formData.time}
               onChange={handleChange}
-              placeholder="e.g., 7:00 PM"
               required
             />
             {errors.time && <span className="error">{errors.time}</span>}
@@ -209,33 +222,6 @@ function AdminNewEvent() {
               required
             />
             {errors.location && <span className="error">{errors.location}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="capacity">Capacity</label>
-            <input
-              type="number"
-              id="capacity"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleChange}
-              placeholder="Leave empty for unlimited"
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="organizer">Organizer *</label>
-            <input
-              type="text"
-              id="organizer"
-              name="organizer"
-              value={formData.organizer}
-              onChange={handleChange}
-              required
-            />
-            {errors.organizer && <span className="error">{errors.organizer}</span>}
           </div>
 
           <div className="form-group">
@@ -267,15 +253,16 @@ function AdminNewEvent() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="image">Image URL</label>
+            <label htmlFor="image">Event Image *</label>
             <input
-              type="url"
+              type="file"
               id="image"
               name="image"
-              value={formData.image}
               onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
+              accept="image/*"
+              required
             />
+            {errors.image && <span className="error">{errors.image}</span>}
           </div>
         </div>
 

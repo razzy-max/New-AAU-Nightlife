@@ -1,9 +1,36 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import multer from 'multer';
+import path from 'path';
 import Event from '../models/Event.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'event-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // @desc    Get all events
 // @route   GET /api/events
@@ -63,15 +90,13 @@ router.get('/:id', async (req, res) => {
 // @desc    Create an event
 // @route   POST /api/events
 // @access  Private/Admin
-router.post('/', protect, admin, [
+router.post('/', protect, admin, upload.single('image'), [
   body('title').trim().isLength({ min: 1 }),
   body('description').trim().isLength({ min: 1 }),
   body('shortDescription').trim().isLength({ min: 1 }),
   body('date').isISO8601(),
   body('time').trim().isLength({ min: 1 }),
   body('location').trim().isLength({ min: 1 }),
-  body('image').trim().isLength({ min: 1 }),
-  body('organizer').trim().isLength({ min: 1 }),
   body('contactEmail').isEmail(),
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -80,7 +105,15 @@ router.post('/', protect, admin, [
   }
 
   try {
-    const event = new Event(req.body);
+    const eventData = {
+      ...req.body,
+      image: req.file ? `/uploads/${req.file.filename}` : req.body.image,
+      price: parseFloat(req.body.price) || 0,
+      featured: req.body.featured === 'true' || req.body.featured === true,
+      published: req.body.published === 'true' || req.body.published === true
+    };
+
+    const event = new Event(eventData);
     const createdEvent = await event.save();
     res.status(201).json(createdEvent);
   } catch (error) {
