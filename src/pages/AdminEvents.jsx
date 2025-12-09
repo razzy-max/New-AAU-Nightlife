@@ -250,9 +250,10 @@ function AdminEvents() {
           <thead>
             <tr>
               <th>Title</th>
-              <th>Organizer</th>
               <th>Date</th>
+              <th>Time</th>
               <th>Location</th>
+              <th>Description</th>
               <th>Published</th>
               <th>Featured</th>
               <th>Actions</th>
@@ -262,9 +263,12 @@ function AdminEvents() {
             {events.map(event => (
               <tr key={event._id}>
                 <td className="event-title">{event.title}</td>
-                <td>{event.organizer}</td>
                 <td>{new Date(event.date).toLocaleDateString()}</td>
+                <td>{event.time}</td>
                 <td>{event.location}</td>
+                <td className="event-description">
+                  {event.shortDescription || event.description?.substring(0, 50) + (event.description?.length > 50 ? '...' : '')}
+                </td>
                 <td>
                   <button
                     onClick={() => togglePublished(event._id, event.published)}
