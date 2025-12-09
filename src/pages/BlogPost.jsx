@@ -10,6 +10,7 @@ function BlogPost() {
   const [comments, setComments] = useState([]);
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -41,8 +42,14 @@ function BlogPost() {
 
     fetchPost();
     fetchComments();
-    fetchRelatedPosts();
   }, [id]);
+
+  // Fetch related posts after post data is loaded
+  useEffect(() => {
+    if (post) {
+      fetchRelatedPosts();
+    }
+  }, [post, cacheBuster]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -83,12 +90,44 @@ function BlogPost() {
 
   const fetchRelatedPosts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/blogs?limit=3`);
+      // Fetch more blogs to find better related posts with cache busting
+      const response = await fetch(`${API_BASE_URL}/api/blogs?limit=20&_t=${cacheBuster}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
-        // Filter out current post and take first 2
-        const filtered = data.blogs.filter(blog => blog._id !== id).slice(0, 2);
-        setRelatedPosts(filtered);
+        const allBlogs = data.blogs;
+
+        // Filter out current post and only include published posts
+        const availableBlogs = allBlogs.filter(blog =>
+          blog._id !== id && blog.published === true
+        );
+
+        // Find related posts based on tags and category
+        let relatedPosts = [];
+
+        if (post && post.tags && post.tags.length > 0) {
+          // First priority: posts sharing at least one tag
+          relatedPosts = availableBlogs.filter(blog =>
+            blog.tags && blog.tags.some(tag => post.tags.includes(tag))
+          );
+        }
+
+        // If no tag matches found, use category matching
+        if (relatedPosts.length === 0 && post && post.category) {
+          relatedPosts = availableBlogs.filter(blog =>
+            blog.category === post.category
+          );
+        }
+
+        // Sort by creation date (most recent first) and take top 2
+        relatedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const finalRelatedPosts = relatedPosts.slice(0, 2);
+
+        setRelatedPosts(finalRelatedPosts);
       }
     } catch (err) {
       console.error('Error fetching related posts:', err);
@@ -96,6 +135,19 @@ function BlogPost() {
       setRelatedPosts([]);
     }
   };
+
+  // Function to refresh related posts data (exposed globally for admin use)
+  const refreshRelatedPosts = () => {
+    setCacheBuster(Date.now());
+  };
+
+  // Expose refresh function globally
+  useEffect(() => {
+    window.refreshRelatedPosts = refreshRelatedPosts;
+    return () => {
+      delete window.refreshRelatedPosts;
+    };
+  }, []);
 
   if (loading) {
     return (
