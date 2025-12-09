@@ -21,6 +21,8 @@ const prefetchData = async (url) => {
 
 function Home() {
   const [email, setEmail] = useState('');
+  const [featuredPosts, setFeaturedPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
@@ -60,37 +62,6 @@ function Home() {
 
   const upcomingEvents = events.slice(0, 3);
 
-  const posts = [
-    {
-      id: 1,
-      title: 'Campus Life at AAU: A Student\'s Perspective',
-      excerpt: 'Exploring the vibrant student life at Ambrose Alli University. From academic challenges to social events, discover what makes AAU special.',
-      author: 'John Doe',
-      date: '2024-11-15',
-      category: 'General',
-      image: '/blog/blog1.jpg'
-    },
-    {
-      id: 2,
-      title: 'Nightlife Tips: Enjoying Safely',
-      excerpt: 'Essential tips for enjoying AAU\'s nightlife scene responsibly. Learn about safety measures, transportation options, and making the most of your evenings.',
-      author: 'Jane Smith',
-      date: '2024-11-20',
-      category: 'Events',
-      image: '/blog/blog2.jpg'
-    },
-    {
-      id: 3,
-      title: 'Career Opportunities in the Nightlife Industry',
-      excerpt: 'Discover exciting career paths in event management, hospitality, and entertainment. From bartending to event coordination, explore job prospects.',
-      author: 'Mike Johnson',
-      date: '2024-11-25',
-      category: 'Jobs',
-      image: '/blog/blog3.jpg'
-    }
-  ];
-
-  const featuredPosts = posts.slice(0, 3);
 
   const jobs = [
     {
@@ -212,6 +183,38 @@ function Home() {
     prefetchBlogData();
   }, []);
 
+  // Fetch featured blogs for homepage
+  useEffect(() => {
+    const fetchFeaturedBlogs = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/blogs/featured/list`);
+        if (response.ok) {
+          const data = await response.json();
+          setFeaturedPosts(data);
+        }
+      } catch (error) {
+        console.error('Error fetching featured blogs:', error);
+        // Fallback to empty array
+        setFeaturedPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedBlogs();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading homepage...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <section className="hero">
@@ -286,8 +289,8 @@ function Home() {
       <section className="section featured-blogs">
         <h2>Featured Blogs</h2>
         <div className="blogs-preview-grid">
-          {featuredPosts.map(post => (
-            <div key={post.id} className="blog-preview-card">
+          {featuredPosts.length > 0 ? featuredPosts.map(post => (
+            <div key={post._id} className="blog-preview-card">
               <div className="blog-preview-image">
                 <img src={post.image} alt={post.title} loading="lazy" />
               </div>
@@ -296,10 +299,10 @@ function Home() {
                 <p className="blog-preview-excerpt">{post.excerpt.substring(0, 120)}...</p>
                 <div className="blog-preview-meta">
                   <span>By {post.author}</span>
-                  <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span>{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
                 <Link
-                  to={`/blog/${post.id}`}
+                  to={`/blog/${post._id}`}
                   className="read-more-btn"
                   rel="prefetch"
                 >
@@ -307,7 +310,11 @@ function Home() {
                 </Link>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="no-featured-blogs">
+              <p>No featured blogs available yet. Check back soon!</p>
+            </div>
+          )}
         </div>
         <div className="view-all-blogs">
           <Link
