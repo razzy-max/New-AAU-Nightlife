@@ -47,8 +47,9 @@ router.get('/', async (req, res) => {
     const page = Number(req.query.pageNumber) || 1;
     const category = req.query.category || '';
     const search = req.query.search || '';
+    const admin = req.query.admin === 'true'; // Check if admin request
 
-    let query = { published: true };
+    let query = admin ? {} : { published: true }; // Show all for admin, published only for public
 
     if (category) {
       query.category = category;
@@ -65,12 +66,14 @@ router.get('/', async (req, res) => {
       .skip(pageSize * (page - 1))
       .select('-video'); // Exclude video field for list view to reduce payload
 
-    // Add cache headers for better performance
-    res.set({
-      'Cache-Control': 'public, max-age=600, s-maxage=300', // 10 min browser, 5 min CDN
-      'ETag': `"blogs-${page}-${category}-${search}-${count}"`,
-      'Vary': 'Accept-Encoding'
-    });
+    // Add cache headers for better performance (only for public requests)
+    if (!admin) {
+      res.set({
+        'Cache-Control': 'public, max-age=600, s-maxage=300', // 10 min browser, 5 min CDN
+        'ETag': `"blogs-${page}-${category}-${search}-${count}"`,
+        'Vary': 'Accept-Encoding'
+      });
+    }
 
     res.json({
       blogs,
@@ -164,13 +167,16 @@ router.put('/:id', protect, admin, async (req, res) => {
     const blog = await Blog.findById(req.params.id);
 
     if (blog) {
+      console.log(`Updating blog ${req.params.id}:`, req.body);
       Object.assign(blog, req.body);
       const updatedBlog = await blog.save();
+      console.log(`Blog ${req.params.id} updated successfully. Featured: ${updatedBlog.featured}`);
       res.json(updatedBlog);
     } else {
       res.status(404).json({ message: 'Blog not found' });
     }
   } catch (error) {
+    console.error('Error updating blog:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

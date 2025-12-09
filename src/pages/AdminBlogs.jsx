@@ -14,7 +14,7 @@ function AdminBlogs() {
   const fetchBlogs = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/api/blogs`, {
+      const response = await fetch(`${API_BASE_URL}/api/blogs?admin=true`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -74,20 +74,28 @@ function AdminBlogs() {
   const toggleFeatured = async (blogId, currentStatus) => {
     try {
       const token = localStorage.getItem('adminToken');
+      const newStatus = !currentStatus;
+      console.log(`Toggling featured for blog ${blogId}: ${currentStatus} -> ${newStatus}`);
+
       const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ featured: !currentStatus }),
+        body: JSON.stringify({ featured: newStatus }),
       });
 
       if (response.ok) {
+        console.log(`Successfully updated featured status for blog ${blogId}`);
         fetchBlogs(); // Refresh the list
+      } else {
+        console.error(`Failed to update featured status for blog ${blogId}:`, response.status);
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
       }
     } catch (error) {
-      console.error('Error updating blog:', error);
+      console.error('Error updating blog featured status:', error);
     }
   };
 
