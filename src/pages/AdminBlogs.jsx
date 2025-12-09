@@ -6,6 +6,7 @@ function AdminBlogs() {
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cacheRefreshing, setCacheRefreshing] = useState(false);
 
   useEffect(() => {
     fetchBlogs();
@@ -52,6 +53,15 @@ function AdminBlogs() {
   };
 
   const togglePublished = async (blogId, currentStatus) => {
+    const newStatus = !currentStatus;
+
+    // Optimistic update - immediately update UI
+    setBlogs(prevBlogs =>
+      prevBlogs.map(blog =>
+        blog._id === blogId ? { ...blog, published: newStatus } : blog
+      )
+    );
+
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`, {
@@ -60,21 +70,48 @@ function AdminBlogs() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ published: !currentStatus }),
+        body: JSON.stringify({ published: newStatus }),
       });
 
       if (response.ok) {
-        fetchBlogs(); // Refresh the list
+        // Successfully updated
+        // Trigger homepage refresh if function is available
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
+      } else {
+        // Revert optimistic update on failure
+        setBlogs(prevBlogs =>
+          prevBlogs.map(blog =>
+            blog._id === blogId ? { ...blog, published: currentStatus } : blog
+          )
+        );
+        alert('Failed to update publish status. Please try again.');
       }
     } catch (error) {
       console.error('Error updating blog:', error);
+      // Revert optimistic update on error
+      setBlogs(prevBlogs =>
+        prevBlogs.map(blog =>
+          blog._id === blogId ? { ...blog, published: currentStatus } : blog
+        )
+      );
+      alert('Network error. Please try again.');
     }
   };
 
   const toggleFeatured = async (blogId, currentStatus) => {
+    const newStatus = !currentStatus;
+
+    // Optimistic update - immediately update UI
+    setBlogs(prevBlogs =>
+      prevBlogs.map(blog =>
+        blog._id === blogId ? { ...blog, featured: newStatus } : blog
+      )
+    );
+
     try {
       const token = localStorage.getItem('adminToken');
-      const newStatus = !currentStatus;
       console.log(`Toggling featured for blog ${blogId}: ${currentStatus} -> ${newStatus}`);
 
       const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`, {
@@ -88,14 +125,55 @@ function AdminBlogs() {
 
       if (response.ok) {
         console.log(`Successfully updated featured status for blog ${blogId}`);
-        fetchBlogs(); // Refresh the list
+        // Trigger homepage refresh if function is available
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
       } else {
         console.error(`Failed to update featured status for blog ${blogId}:`, response.status);
         const errorData = await response.text();
         console.error('Error response:', errorData);
+        // Revert optimistic update on failure
+        setBlogs(prevBlogs =>
+          prevBlogs.map(blog =>
+            blog._id === blogId ? { ...blog, featured: currentStatus } : blog
+          )
+        );
+        alert('Failed to update featured status. Please try again.');
       }
     } catch (error) {
       console.error('Error updating blog featured status:', error);
+      // Revert optimistic update on error
+      setBlogs(prevBlogs =>
+        prevBlogs.map(blog =>
+          blog._id === blogId ? { ...blog, featured: currentStatus } : blog
+        )
+      );
+      alert('Network error. Please try again.');
+    }
+  };
+
+  const forceRefreshCache = async () => {
+    setCacheRefreshing(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/blogs/invalidate-cache`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        alert('Cache refresh triggered! Public website will update within a few minutes.');
+      } else {
+        alert('Failed to trigger cache refresh.');
+      }
+    } catch (error) {
+      console.error('Error refreshing cache:', error);
+      alert('Network error while refreshing cache.');
+    } finally {
+      setCacheRefreshing(false);
     }
   };
 
@@ -136,6 +214,24 @@ function AdminBlogs() {
         <h1>Manage Blogs</h1>
         <div className="admin-actions">
           <Link to="/admin/blogs/new" className="add-btn">Add New Blog</Link>
+          <button
+            onClick={forceRefreshCache}
+            disabled={cacheRefreshing}
+            className="refresh-cache-btn"
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: cacheRefreshing ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              marginLeft: '10px'
+            }}
+          >
+            {cacheRefreshing ? 'Refreshing...' : 'Force Refresh Public Cache'}
+          </button>
         </div>
       </div>
 

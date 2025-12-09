@@ -23,12 +23,26 @@ function Home() {
   const [email, setEmail] = useState('');
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     alert(`Thank you for subscribing with ${email}!`);
     setEmail('');
   };
+
+  // Function to refresh homepage data (exposed globally for admin use)
+  const refreshHomepageData = () => {
+    setCacheBuster(Date.now());
+  };
+
+  // Expose refresh function globally
+  useEffect(() => {
+    window.refreshHomepageData = refreshHomepageData;
+    return () => {
+      delete window.refreshHomepageData;
+    };
+  }, []);
 
   const events = [
     {
@@ -187,7 +201,13 @@ function Home() {
   useEffect(() => {
     const fetchFeaturedBlogs = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/blogs/featured/list`);
+        // Use cache-busting parameter to force fresh data
+        const response = await fetch(`${API_BASE_URL}/api/blogs/featured/list?_t=${cacheBuster}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setFeaturedPosts(data);
@@ -202,7 +222,7 @@ function Home() {
     };
 
     fetchFeaturedBlogs();
-  }, []);
+  }, [cacheBuster]);
 
   if (loading) {
     return (

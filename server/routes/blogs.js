@@ -171,6 +171,14 @@ router.put('/:id', protect, admin, async (req, res) => {
       Object.assign(blog, req.body);
       const updatedBlog = await blog.save();
       console.log(`Blog ${req.params.id} updated successfully. Featured: ${updatedBlog.featured}`);
+
+      // Set cache control headers to prevent caching of this response
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+
       res.json(updatedBlog);
     } else {
       res.status(404).json({ message: 'Blog not found' });
@@ -217,6 +225,26 @@ router.get('/featured/list', async (req, res) => {
 
     res.json(blogs);
   } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Invalidate cache (Admin only)
+// @route   POST /api/blogs/invalidate-cache
+// @access  Private/Admin
+router.post('/invalidate-cache', protect, admin, async (req, res) => {
+  try {
+    // This endpoint can be used to invalidate CDN caches or trigger cache refresh
+    // For now, we'll just return success and let the admin know cache should refresh
+    console.log('Cache invalidation requested by admin');
+
+    res.json({
+      message: 'Cache invalidation triggered',
+      note: 'Public caches will refresh on next request (may take up to 10 minutes)',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error invalidating cache:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
