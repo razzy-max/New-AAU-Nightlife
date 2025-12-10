@@ -20,6 +20,7 @@ function AdminCarousel() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [cacheRefreshing, setCacheRefreshing] = useState(false);
 
   useEffect(() => {
     fetchSlides();
@@ -249,6 +250,40 @@ function AdminCarousel() {
     }
   };
 
+  const forceRefreshCache = async () => {
+    setCacheRefreshing(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/blogs/invalidate-cache`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        // Trigger immediate refresh of all pages
+        if (window.refreshHomepageData) {
+          window.refreshHomepageData();
+        }
+        if (window.refreshBlogData) {
+          window.refreshBlogData();
+        }
+        if (window.refreshRelatedPosts) {
+          window.refreshRelatedPosts();
+        }
+        alert('Cache refresh triggered! Public website updated immediately.');
+      } else {
+        alert('Failed to trigger cache refresh.');
+      }
+    } catch (error) {
+      console.error('Error refreshing cache:', error);
+      alert('Network error while refreshing cache.');
+    } finally {
+      setCacheRefreshing(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -306,6 +341,24 @@ function AdminCarousel() {
             className="add-btn"
           >
             Add New Slide
+          </button>
+          <button
+            onClick={forceRefreshCache}
+            disabled={cacheRefreshing}
+            className="refresh-cache-btn"
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: cacheRefreshing ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              marginLeft: '10px'
+            }}
+          >
+            {cacheRefreshing ? 'Refreshing...' : 'Force Refresh Public Cache'}
           </button>
         </div>
       </div>
