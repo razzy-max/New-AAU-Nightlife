@@ -266,6 +266,9 @@ function AdminCarousel() {
         if (window.refreshHomepageData) {
           window.refreshHomepageData();
         }
+        if (window.refreshCarouselData) {
+          window.refreshCarouselData();
+        }
         if (window.refreshBlogData) {
           window.refreshBlogData();
         }
