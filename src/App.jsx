@@ -12,6 +12,7 @@ import AdminBlogs from './pages/AdminBlogs';
 import AdminEvents from './pages/AdminEvents';
 import AdminJobs from './pages/AdminJobs';
 import AdminComments from './pages/AdminComments';
+import AdminCarousel from './pages/AdminCarousel';
 import AdminNewBlog from './pages/AdminNewBlog';
 import AdminNewEvent from './pages/AdminNewEvent';
 import AdminNewJob from './pages/AdminNewJob';
@@ -34,6 +35,7 @@ function App() {
         <Route path="/admin/events/new" element={<AdminNewEvent />} />
         <Route path="/admin/jobs" element={<AdminJobs />} />
         <Route path="/admin/jobs/new" element={<AdminNewJob />} />
+        <Route path="/admin/carousel" element={<AdminCarousel />} />
         <Route path="/admin/comments" element={<AdminComments />} />
       </Routes>
       <Footer />
