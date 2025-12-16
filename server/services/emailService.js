@@ -1,21 +1,42 @@
 import nodemailer from 'nodemailer';
 import PDFDocument from 'pdfkit';
 
-// Create transporter
+// Create transporter with explicit SMTP configuration for reliability
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // Use TLS instead of SSL
+  requireTLS: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 10000, // 10 seconds
+  pool: {
+    maxConnections: 1, // Render ephemeral, keep minimal
+    maxMessages: Infinity,
+    rateDelta: 1000,
+    rateLimit: 5,
+  },
 });
 
 // Verify transporter connection on startup
+console.log('[EMAIL] Verifying Gmail SMTP connection...');
 transporter.verify((error, success) => {
   if (error) {
-    console.error('Email transporter error:', error);
+    console.error('❌ [EMAIL] Connection failed - SMTP verification error:');
+    console.error('   Error message:', error.message);
+    console.error('   Error code:', error.code);
+    console.error('   Config check:', {
+      service: 'smtp.gmail.com',
+      port: 587,
+      user: process.env.EMAIL_USER,
+      hasPassword: !!process.env.EMAIL_PASSWORD,
+      nodeEnv: process.env.NODE_ENV,
+    });
   } else {
-    console.log('Email transporter ready:', success);
+    console.log('✅ [EMAIL] Gmail SMTP connection verified successfully');
   }
 });
 
@@ -121,11 +142,13 @@ export const generateTicketPDF = async (ticket) => {
 // Send ticket email
 export const sendTicketEmail = async (ticket) => {
   try {
-    console.log('Starting email send for ticket:', ticket.ticketId, 'to:', ticket.email);
+    console.log(`[EMAIL] Starting ticket email for ID: ${ticket.ticketId}`);
+    console.log(`[EMAIL] Recipient: ${ticket.email}`);
     
     // Generate PDF buffer
+    console.log('[EMAIL] Generating PDF...');
     const pdfBuffer = await generateTicketPDF(ticket);
-    console.log('PDF generated, size:', pdfBuffer.length);
+    console.log(`[EMAIL] PDF generated successfully (${pdfBuffer.length} bytes)`);
 
     // Email content
     const mailOptions = {
@@ -193,15 +216,33 @@ export const sendTicketEmail = async (ticket) => {
       ],
     };
 
-    console.log('Sending email with options:', { to: mailOptions.to, from: mailOptions.from });
+    console.log('[EMAIL] Preparing to send email...');
+    console.log(`[EMAIL] From: ${mailOptions.from}`);
+    console.log(`[EMAIL] To: ${mailOptions.to}`);
+    console.log(`[EMAIL] Subject: ${mailOptions.subject}`);
 
-    // Send email
-    const result = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', result.messageId);
+    // Send email with timeout protection
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Email send timeout after 30 seconds')), 30000)
+    );
+
+    const result = await Promise.race([sendPromise, timeoutPromise]);
+    console.log(`✅ [EMAIL] Email sent successfully!`);
+    console.log(`✅ [EMAIL] Message ID: ${result.messageId}`);
     return result;
   } catch (error) {
-    console.error('Error sending email:', error.message);
-    console.error('Full error:', error);
+    console.error(`❌ [EMAIL] Failed to send email for ticket ${ticket.ticketId}`);
+    console.error(`❌ [EMAIL] Recipient: ${ticket.email}`);
+    console.error(`❌ [EMAIL] Error type: ${error.code || error.name}`);
+    console.error(`❌ [EMAIL] Error message: ${error.message}`);
+    
+    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+      console.error('❌ [EMAIL] Connection issue detected - Gmail SMTP unreachable from Render');
+      console.error('❌ [EMAIL] This may be a firewall/network issue on the hosting provider');
+    }
+    
+    console.error(`❌ [EMAIL] Full error:`, error);
     throw error;
   }
 };
