@@ -1,44 +1,20 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import PDFDocument from 'pdfkit';
 
-// Create transporter with explicit SMTP configuration for reliability
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // Use TLS instead of SSL
-  requireTLS: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000, // 10 seconds
-  pool: {
-    maxConnections: 1, // Render ephemeral, keep minimal
-    maxMessages: Infinity,
-    rateDelta: 1000,
-    rateLimit: 5,
-  },
-});
+// Initialize SendGrid with API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Verify transporter connection on startup
-console.log('[EMAIL] Verifying Gmail SMTP connection...');
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ [EMAIL] Connection failed - SMTP verification error:');
-    console.error('   Error message:', error.message);
-    console.error('   Error code:', error.code);
-    console.error('   Config check:', {
-      service: 'smtp.gmail.com',
-      port: 587,
-      user: process.env.EMAIL_USER,
-      hasPassword: !!process.env.EMAIL_PASSWORD,
-      nodeEnv: process.env.NODE_ENV,
-    });
-  } else {
-    console.log('✅ [EMAIL] Gmail SMTP connection verified successfully');
-  }
-});
+// Verify SendGrid connection on startup
+console.log('[EMAIL] Verifying SendGrid configuration...');
+if (!process.env.SENDGRID_API_KEY) {
+  console.error('❌ [EMAIL] SendGrid API key not found in environment variables');
+  console.error('   Config check:', {
+    sendgridApiKey: !!process.env.SENDGRID_API_KEY,
+    nodeEnv: process.env.NODE_ENV,
+  });
+} else {
+  console.log('✅ [EMAIL] SendGrid initialized with API key');
+}
 
 // Generate ticket PDF as buffer
 export const generateTicketPDF = async (ticket) => {
@@ -139,7 +115,7 @@ export const generateTicketPDF = async (ticket) => {
   });
 };
 
-// Send ticket email
+// Send ticket email via SendGrid
 export const sendTicketEmail = async (ticket) => {
   try {
     console.log(`[EMAIL] Starting ticket email for ID: ${ticket.ticketId}`);
@@ -150,10 +126,11 @@ export const sendTicketEmail = async (ticket) => {
     const pdfBuffer = await generateTicketPDF(ticket);
     console.log(`[EMAIL] PDF generated successfully (${pdfBuffer.length} bytes)`);
 
-    // Email content
-    const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_USER}>`,
+    // Prepare email data for SendGrid
+    const msg = {
       to: ticket.email,
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@aaunightlife.com',
+      replyTo: process.env.EMAIL_USER || 'iraborerasmus@gmail.com',
       subject: `Your Ticket for ${ticket.eventTitle} - Ticket ID: ${ticket.ticketId}`,
       html: `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto;">
@@ -209,27 +186,23 @@ export const sendTicketEmail = async (ticket) => {
       `,
       attachments: [
         {
+          content: pdfBuffer.toString('base64'),
           filename: `ticket-${ticket.ticketId}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
+          type: 'application/pdf',
+          disposition: 'attachment',
         },
       ],
     };
 
-    console.log('[EMAIL] Preparing to send email...');
-    console.log(`[EMAIL] From: ${mailOptions.from}`);
-    console.log(`[EMAIL] To: ${mailOptions.to}`);
-    console.log(`[EMAIL] Subject: ${mailOptions.subject}`);
+    console.log('[EMAIL] Preparing to send email via SendGrid...');
+    console.log(`[EMAIL] From: ${msg.from}`);
+    console.log(`[EMAIL] To: ${msg.to}`);
+    console.log(`[EMAIL] Subject: ${msg.subject}`);
 
-    // Send email with timeout protection
-    const sendPromise = transporter.sendMail(mailOptions);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Email send timeout after 30 seconds')), 30000)
-    );
-
-    const result = await Promise.race([sendPromise, timeoutPromise]);
-    console.log(`✅ [EMAIL] Email sent successfully!`);
-    console.log(`✅ [EMAIL] Message ID: ${result.messageId}`);
+    // Send email with SendGrid
+    const result = await sgMail.send(msg);
+    console.log(`✅ [EMAIL] Email sent successfully via SendGrid!`);
+    console.log(`✅ [EMAIL] Response status: ${result[0].statusCode}`);
     return result;
   } catch (error) {
     console.error(`❌ [EMAIL] Failed to send email for ticket ${ticket.ticketId}`);
@@ -237,9 +210,8 @@ export const sendTicketEmail = async (ticket) => {
     console.error(`❌ [EMAIL] Error type: ${error.code || error.name}`);
     console.error(`❌ [EMAIL] Error message: ${error.message}`);
     
-    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
-      console.error('❌ [EMAIL] Connection issue detected - Gmail SMTP unreachable from Render');
-      console.error('❌ [EMAIL] This may be a firewall/network issue on the hosting provider');
+    if (error.message.includes('API key')) {
+      console.error('❌ [EMAIL] SendGrid API key issue - check SENDGRID_API_KEY environment variable');
     }
     
     console.error(`❌ [EMAIL] Full error:`, error);
