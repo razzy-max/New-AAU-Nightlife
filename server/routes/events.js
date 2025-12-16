@@ -106,18 +106,33 @@ router.post('/', protect, admin, upload.single('image'), [
       imageData = `data:${imageMimeType};base64,${imageBuffer.toString('base64')}`;
     }
 
+    // Parse tickets if provided
+    let tickets = [];
+    if (req.body.tickets) {
+      try {
+        tickets = typeof req.body.tickets === 'string' ? JSON.parse(req.body.tickets) : req.body.tickets;
+      } catch (e) {
+        tickets = [];
+      }
+    }
+
     const eventData = {
       ...req.body,
       image: imageData,
-      price: parseFloat(req.body.price) || 0,
       featured: req.body.featured === 'true' || req.body.featured === true,
-      published: req.body.published === 'true' || req.body.published === true
+      published: req.body.published === 'true' || req.body.published === true,
+      hasTicketing: tickets.length > 0,
+      tickets: tickets,
     };
+
+    // Remove old price field if exists
+    delete eventData.price;
 
     const event = new Event(eventData);
     const createdEvent = await event.save();
     res.status(201).json(createdEvent);
   } catch (error) {
+    console.error('Error creating event:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -130,6 +145,21 @@ router.put('/:id', protect, admin, async (req, res) => {
     const event = await Event.findById(req.params.id);
 
     if (event) {
+      // Parse tickets if provided
+      if (req.body.tickets) {
+        try {
+          const tickets = typeof req.body.tickets === 'string' ? JSON.parse(req.body.tickets) : req.body.tickets;
+          req.body.tickets = tickets;
+          req.body.hasTicketing = tickets.length > 0;
+        } catch (e) {
+          req.body.tickets = [];
+          req.body.hasTicketing = false;
+        }
+      }
+
+      // Remove old price field if exists
+      delete req.body.price;
+
       Object.assign(event, req.body);
       const updatedEvent = await event.save();
       res.json(updatedEvent);
@@ -137,6 +167,7 @@ router.put('/:id', protect, admin, async (req, res) => {
       res.status(404).json({ message: 'Event not found' });
     }
   } catch (error) {
+    console.error('Error updating event:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

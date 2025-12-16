@@ -16,6 +16,7 @@ import Event from './models/Event.js';
 import Job from './models/Job.js';
 import Carousel from './models/Carousel.js';
 import Comment from './models/Comment.js';
+import Ticket from './models/Ticket.js';
 
 // Import routes (we'll create these next)
 import authRoutes from './routes/auth.js';
@@ -24,6 +25,7 @@ import eventRoutes from './routes/events.js';
 import jobRoutes from './routes/jobs.js';
 import carouselRoutes from './routes/carousel.js';
 import commentRoutes from './routes/comments.js';
+import ticketRoutes from './routes/tickets.js';
 
 dotenv.config();
 
@@ -65,6 +67,7 @@ app.use(express.static('public'));
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/tickets', ticketRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/carousel', carouselRoutes);
 app.use('/api/comments', commentRoutes);

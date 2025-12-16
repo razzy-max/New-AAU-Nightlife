@@ -11,13 +11,14 @@ function AdminNewEvent() {
     date: '',
     time: '',
     location: '',
-    price: 0,
     category: 'Social',
     contactEmail: '',
     image: null,
     featured: false,
     published: true
   });
+  const [hasTicketing, setHasTicketing] = useState(false);
+  const [tickets, setTickets] = useState([{ name: '', price: '' }]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -36,6 +37,22 @@ function AdminNewEvent() {
     }
   };
 
+  const handleTicketChange = (index, field, value) => {
+    const updatedTickets = [...tickets];
+    updatedTickets[index][field] = field === 'price' ? parseFloat(value) || 0 : value;
+    setTickets(updatedTickets);
+  };
+
+  const addTicketRow = () => {
+    setTickets([...tickets, { name: '', price: '' }]);
+  };
+
+  const removeTicketRow = (index) => {
+    if (tickets.length > 1) {
+      setTickets(tickets.filter((_, i) => i !== index));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.title.trim()) newErrors.title = 'Title is required';
@@ -46,7 +63,13 @@ function AdminNewEvent() {
     if (!formData.location.trim()) newErrors.location = 'Location is required';
     if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email format';
-    // Image is now optional
+
+    if (hasTicketing) {
+      const validTickets = tickets.filter(t => t.name.trim() && t.price);
+      if (validTickets.length === 0) {
+        newErrors.tickets = 'At least one valid ticket is required when ticketing is enabled';
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -61,12 +84,18 @@ function AdminNewEvent() {
       const token = localStorage.getItem('adminToken');
       const formDataToSend = new FormData();
 
-      // Add all form fields except image
+      // Add all form fields except image and tickets
       Object.keys(formData).forEach(key => {
         if (key !== 'image' && formData[key] !== null && formData[key] !== undefined) {
           formDataToSend.append(key, formData[key]);
         }
       });
+
+      // Add tickets as JSON if enabled
+      if (hasTicketing) {
+        const validTickets = tickets.filter(t => t.name.trim() && t.price);
+        formDataToSend.append('tickets', JSON.stringify(validTickets));
+      }
 
       // Add image file
       if (formData.image) {
@@ -238,35 +267,20 @@ function AdminNewEvent() {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="price">Price (₦)</label>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="image">Event Image *</label>
-            <input
-              type="file"
-              id="image"
-              name="image"
-              onChange={handleChange}
-              accept="image/*"
-              required
-            />
-            {errors.image && <span className="error">{errors.image}</span>}
-            <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-              Leave empty to use default image
-            </p>
-          </div>
+        <div className="form-group">
+          <label htmlFor="image">Event Image *</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            onChange={handleChange}
+            accept="image/*"
+            required
+          />
+          {errors.image && <span className="error">{errors.image}</span>}
+          <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+            Leave empty to use default image
+          </p>
         </div>
 
         <div className="form-row">
@@ -293,6 +307,120 @@ function AdminNewEvent() {
               Publish Immediately
             </label>
           </div>
+        </div>
+
+        {/* Ticketing Section */}
+        <div className="ticketing-section" style={{
+          borderTop: '2px solid #DAA520',
+          paddingTop: '20px',
+          marginTop: '20px'
+        }}>
+          <div className="form-group checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={hasTicketing}
+                onChange={(e) => setHasTicketing(e.target.checked)}
+              />
+              Enable Ticket Sales for This Event
+            </label>
+          </div>
+
+          {hasTicketing && (
+            <div style={{ marginTop: '20px' }}>
+              <h3 style={{ color: '#DAA520', marginBottom: '15px' }}>Ticket Types</h3>
+              {errors.tickets && <span className="error">{errors.tickets}</span>}
+
+              <div style={{
+                maxHeight: '400px',
+                overflowY: 'auto',
+                border: '1px solid #ddd',
+                borderRadius: '5px',
+                padding: '10px'
+              }}>
+                {tickets.map((ticket, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      gap: '10px',
+                      marginBottom: '12px',
+                      padding: '10px',
+                      backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#fff',
+                      borderRadius: '5px',
+                      alignItems: 'flex-start'
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <input
+                        type="text"
+                        placeholder="Ticket Type (e.g., Regular, VIP Table)"
+                        value={ticket.name}
+                        onChange={(e) => handleTicketChange(index, 'name', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #ddd',
+                          borderRadius: '5px',
+                          fontFamily: 'Arial, sans-serif'
+                        }}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <input
+                        type="number"
+                        placeholder="Price (₦)"
+                        value={ticket.price}
+                        onChange={(e) => handleTicketChange(index, 'price', e.target.value)}
+                        min="0"
+                        step="100"
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #ddd',
+                          borderRadius: '5px',
+                          fontFamily: 'Arial, sans-serif'
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeTicketRow(index)}
+                      disabled={tickets.length === 1}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: tickets.length === 1 ? '#ccc' : '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: tickets.length === 1 ? 'not-allowed' : 'pointer',
+                        marginTop: '0'
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={addTicketRow}
+                style={{
+                  marginTop: '10px',
+                  padding: '10px 20px',
+                  backgroundColor: '#DAA520',
+                  color: 'black',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                + Add Ticket Type
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="form-actions">

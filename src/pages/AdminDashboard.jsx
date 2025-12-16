@@ -9,6 +9,7 @@ function AdminDashboard() {
     events: 0,
     jobs: 0,
     comments: 0,
+    tickets: 0,
   });
   const navigate = useNavigate();
 
@@ -38,23 +39,26 @@ function AdminDashboard() {
         'Authorization': `Bearer ${token}`,
       };
 
-      const [blogsRes, eventsRes, jobsRes, commentsRes] = await Promise.all([
+      const [blogsRes, eventsRes, jobsRes, commentsRes, ticketsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/blogs?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/events?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/jobs?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/comments/admin/all?pageNumber=1&pageSize=1`, { headers }),
+        fetch(`${API_BASE_URL}/api/tickets/admin/list`, { headers }),
       ]);
 
       const blogsData = await blogsRes.json();
       const eventsData = await eventsRes.json();
       const jobsData = await jobsRes.json();
       const commentsData = await commentsRes.json();
+      const ticketsData = await ticketsRes.json();
 
       setStats({
         blogs: blogsData.total || 0,
         events: eventsData.total || 0,
         jobs: jobsData.total || 0,
         comments: commentsData.total || 0,
+        tickets: ticketsData.total || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -96,6 +100,11 @@ function AdminDashboard() {
           <Link to="/admin/events" className="manage-link">Manage Events</Link>
         </div>
         <div className="stat-card">
+          <h3>{stats.tickets}</h3>
+          <p>Ticket Sales</p>
+          <Link to="/admin/tickets" className="manage-link">View Tickets</Link>
+        </div>
+        <div className="stat-card">
           <h3>{stats.jobs}</h3>
           <p>Jobs</p>
           <Link to="/admin/jobs" className="manage-link">Manage Jobs</Link>
@@ -113,6 +122,7 @@ function AdminDashboard() {
           <Link to="/admin/blogs/new" className="action-btn">Add New Blog</Link>
           <Link to="/admin/events/new" className="action-btn">Add New Event</Link>
           <Link to="/admin/jobs/new" className="action-btn">Add New Job</Link>
+          <Link to="/admin/tickets" className="action-btn">View Ticket Sales</Link>
           <Link to="/admin/carousel" className="action-btn">Manage Carousel</Link>
         </div>
       </div>

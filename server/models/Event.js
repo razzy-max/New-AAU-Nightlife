@@ -34,10 +34,14 @@ const eventSchema = new mongoose.Schema({
     type: Number,
     default: null,
   },
-  price: {
-    type: Number,
-    default: 0, // 0 for free events
+  hasTicketing: {
+    type: Boolean,
+    default: false,
   },
+  tickets: [new mongoose.Schema({
+    name: String,
+    price: Number,
+  }, { _id: true })],
   category: {
     type: String,
     enum: ['Social', 'Academic', 'Sports', 'Cultural', 'Other'],

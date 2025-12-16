@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
 function Events() {
@@ -64,7 +65,9 @@ function Events() {
                   <p><strong>Location:</strong> {event.location}</p>
                   <p><strong>Contact:</strong> {event.contactEmail}</p>
                 </div>
-                <button className="rsvp-btn">RSVP Now</button>
+                <Link to={`/events/${event._id}`} style={{ textDecoration: 'none' }}>
+                  <button className="rsvp-btn">RSVP Now</button>
+                </Link>
               </div>
             </div>
           ))}
