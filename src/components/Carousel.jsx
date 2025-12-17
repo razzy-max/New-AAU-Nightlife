@@ -113,19 +113,6 @@ function Carousel() {
         ))}
       </div>
 
-      {/* Navigation arrows */}
-      <button
-        className="carousel-arrow carousel-arrow-left"
-        onClick={() => setCurrentIndex((prevIndex) => (prevIndex - 1 + slides.length) % slides.length)}
-      >
-        ‹
-      </button>
-      <button
-        className="carousel-arrow carousel-arrow-right"
-        onClick={() => setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length)}
-      >
-        ›
-      </button>
     </div>
   );
 }
