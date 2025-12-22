@@ -10,6 +10,7 @@ function AdminDashboard() {
     jobs: 0,
     comments: 0,
     tickets: 0,
+    subscribers: 0,
   });
   const navigate = useNavigate();
 
@@ -39,12 +40,13 @@ function AdminDashboard() {
         'Authorization': `Bearer ${token}`,
       };
 
-      const [blogsRes, eventsRes, jobsRes, commentsRes, ticketsRes] = await Promise.all([
+      const [blogsRes, eventsRes, jobsRes, commentsRes, ticketsRes, subscribersRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/blogs?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/events?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/jobs?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/comments/admin/all?pageNumber=1&pageSize=1`, { headers }),
         fetch(`${API_BASE_URL}/api/tickets/admin/list`, { headers }),
+        fetch(`${API_BASE_URL}/api/subscribers/admin/count`, { headers }),
       ]);
 
       const blogsData = await blogsRes.json();
@@ -52,6 +54,7 @@ function AdminDashboard() {
       const jobsData = await jobsRes.json();
       const commentsData = await commentsRes.json();
       const ticketsData = await ticketsRes.json();
+      const subscribersData = await subscribersRes.json();
 
       setStats({
         blogs: blogsData.total || 0,
@@ -59,6 +62,7 @@ function AdminDashboard() {
         jobs: jobsData.total || 0,
         comments: commentsData.total || 0,
         tickets: ticketsData.total || 0,
+        subscribers: subscribersData.active || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -114,6 +118,11 @@ function AdminDashboard() {
           <p>Comments</p>
           <Link to="/admin/comments" className="manage-link">Manage Comments</Link>
         </div>
+        <div className="stat-card">
+          <h3>{stats.subscribers}</h3>
+          <p>Subscribers</p>
+          <Link to="/admin/subscribers" className="manage-link">Manage Subscribers</Link>
+        </div>
       </div>
 
       <div className="admin-quick-actions">
@@ -124,6 +133,7 @@ function AdminDashboard() {
           <Link to="/admin/jobs/new" className="action-btn">Add New Job</Link>
           <Link to="/admin/tickets" className="action-btn">View Ticket Sales</Link>
           <Link to="/admin/carousel" className="action-btn">Manage Carousel</Link>
+          <Link to="/admin/subscribers" className="action-btn">View Subscribers</Link>
         </div>
       </div>
     </div>

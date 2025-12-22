@@ -25,16 +25,44 @@ function Home() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribeMessage, setSubscribeMessage] = useState('');
   const [cacheBuster, setCacheBuster] = useState(() => {
     // Initialize from sessionStorage if available, otherwise use current time
     const stored = sessionStorage.getItem('home_cache_buster');
     return stored ? parseInt(stored) : Date.now();
   });
 
-  const handleNewsletterSubmit = (e) => {
+  const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    alert(`Thank you for subscribing with ${email}!`);
-    setEmail('');
+    setSubscribing(true);
+    setSubscribeMessage('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/subscribers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscribeMessage(data.message || 'Successfully subscribed!');
+        setEmail('');
+        // Clear message after 5 seconds
+        setTimeout(() => setSubscribeMessage(''), 5000);
+      } else {
+        setSubscribeMessage(data.message || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      setSubscribeMessage('Network error. Please try again later.');
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   // Function to refresh homepage data (exposed globally for admin use)
@@ -302,7 +330,7 @@ function Home() {
                 <h3>{event.title}</h3>
                 <p className="event-preview-description">{event.shortDescription || event.description?.substring(0, 100) + '...'}</p>
                 <p className="event-preview-time">{event.time} • {event.location}</p>
-                <Link to="/events" className="learn-more-btn">Learn More</Link>
+                <Link to={`/events/${event._id}`} className="learn-more-btn">Learn More</Link>
               </div>
             </div>
           )) : (
@@ -427,6 +455,11 @@ function Home() {
       <section className="section newsletter-signup">
         <h2>Stay Updated</h2>
         <p>Subscribe to our newsletter for the latest events, job opportunities, and campus news.</p>
+        {subscribeMessage && (
+          <div className={`subscribe-message ${subscribeMessage.includes('error') || subscribeMessage.includes('Failed') ? 'error' : 'success'}`}>
+            {subscribeMessage}
+          </div>
+        )}
         <form onSubmit={handleNewsletterSubmit} className="newsletter-form">
           <input
             type="email"
@@ -434,8 +467,11 @@ function Home() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={subscribing}
           />
-          <button type="submit" className="subscribe-btn">Subscribe</button>
+          <button type="submit" className="subscribe-btn" disabled={subscribing}>
+            {subscribing ? 'Subscribing...' : 'Subscribe'}
+          </button>
         </form>
       </section>
       <section className="section testimonials">

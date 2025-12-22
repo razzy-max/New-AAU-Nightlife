@@ -17,6 +17,7 @@ import Job from './models/Job.js';
 import Carousel from './models/Carousel.js';
 import Comment from './models/Comment.js';
 import Ticket from './models/Ticket.js';
+import Subscriber from './models/Subscriber.js';
 
 // Import routes (we'll create these next)
 import authRoutes from './routes/auth.js';
@@ -26,6 +27,7 @@ import jobRoutes from './routes/jobs.js';
 import carouselRoutes from './routes/carousel.js';
 import commentRoutes from './routes/comments.js';
 import ticketRoutes from './routes/tickets.js';
+import subscriberRoutes from './routes/subscribers.js';
 
 dotenv.config();
 
@@ -71,6 +73,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/carousel', carouselRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/subscribers', subscriberRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

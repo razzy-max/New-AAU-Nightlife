@@ -21,6 +21,7 @@ import AdminNewBlog from './pages/AdminNewBlog';
 import AdminNewEvent from './pages/AdminNewEvent';
 import AdminNewJob from './pages/AdminNewJob';
 import AdminTickets from './pages/AdminTickets';
+import AdminSubscribers from './pages/AdminSubscribers';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
         <Route path="/admin/jobs/new" element={<ProtectedRoute><AdminNewJob /></ProtectedRoute>} />
         <Route path="/admin/carousel" element={<ProtectedRoute><AdminCarousel /></ProtectedRoute>} />
         <Route path="/admin/comments" element={<ProtectedRoute><AdminComments /></ProtectedRoute>} />
+        <Route path="/admin/subscribers" element={<ProtectedRoute><AdminSubscribers /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </Router>
