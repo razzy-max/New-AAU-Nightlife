@@ -71,7 +71,7 @@ router.post('/', protect, admin, [
   body('requirements').trim().isLength({ min: 1 }),
   body('salary').trim().isLength({ min: 1 }),
   body('type').isIn(['Full-time', 'Part-time', 'Contract', 'Internship']),
-  body('contactEmail').isEmail(),
+  body('contactEmail').optional({ checkFalsy: true }).isEmail(),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
