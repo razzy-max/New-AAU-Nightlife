@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Events from './pages/Events';
 import EventDetails from './pages/EventDetails';
@@ -35,16 +36,16 @@ function App() {
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogPost />} />
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/blogs" element={<AdminBlogs />} />
-        <Route path="/admin/blogs/new" element={<AdminNewBlog />} />
-        <Route path="/admin/events" element={<AdminEvents />} />
-        <Route path="/admin/events/new" element={<AdminNewEvent />} />
-        <Route path="/admin/tickets" element={<AdminTickets />} />
-        <Route path="/admin/jobs" element={<AdminJobs />} />
-        <Route path="/admin/jobs/new" element={<AdminNewJob />} />
-        <Route path="/admin/carousel" element={<AdminCarousel />} />
-        <Route path="/admin/comments" element={<AdminComments />} />
+        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/blogs" element={<ProtectedRoute><AdminBlogs /></ProtectedRoute>} />
+        <Route path="/admin/blogs/new" element={<ProtectedRoute><AdminNewBlog /></ProtectedRoute>} />
+        <Route path="/admin/events" element={<ProtectedRoute><AdminEvents /></ProtectedRoute>} />
+        <Route path="/admin/events/new" element={<ProtectedRoute><AdminNewEvent /></ProtectedRoute>} />
+        <Route path="/admin/tickets" element={<ProtectedRoute><AdminTickets /></ProtectedRoute>} />
+        <Route path="/admin/jobs" element={<ProtectedRoute><AdminJobs /></ProtectedRoute>} />
+        <Route path="/admin/jobs/new" element={<ProtectedRoute><AdminNewJob /></ProtectedRoute>} />
+        <Route path="/admin/carousel" element={<ProtectedRoute><AdminCarousel /></ProtectedRoute>} />
+        <Route path="/admin/comments" element={<ProtectedRoute><AdminComments /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </Router>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
@@ -10,6 +10,25 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    const userData = localStorage.getItem('adminUser');
+    
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser.role === 'admin') {
+          navigate('/admin');
+        }
+      } catch (error) {
+        // Invalid data, stay on login page
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({
