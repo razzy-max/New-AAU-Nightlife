@@ -93,10 +93,16 @@ function Home() {
       // Filter out past events and sort by nearest date
       const now = new Date();
       const futureEvents = upcomingEvents
-        .map(event => ({
-          ...event,
-          eventDateTime: new Date(`${event.date}T${event.time}`)
-        }))
+        .map(event => {
+          // Extract just the date part (YYYY-MM-DD) from the ISO date string
+          const dateOnly = event.date.split('T')[0];
+          // Combine with the time to create a proper datetime
+          const eventDateTime = new Date(`${dateOnly}T${event.time}`);
+          return {
+            ...event,
+            eventDateTime
+          };
+        })
         .filter(event => event.eventDateTime > now)
         .sort((a, b) => a.eventDateTime - b.eventDateTime);
 
