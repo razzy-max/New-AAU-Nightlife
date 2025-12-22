@@ -9,7 +9,11 @@ function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cacheBuster, setCacheBuster] = useState(Date.now());
+  const [cacheBuster, setCacheBuster] = useState(() => {
+    // Initialize from sessionStorage if available, otherwise use current time
+    const stored = sessionStorage.getItem('blogs_cache_buster');
+    return stored ? parseInt(stored) : Date.now();
+  });
 
   useEffect(() => {
     const fetchBlogs = async () => {

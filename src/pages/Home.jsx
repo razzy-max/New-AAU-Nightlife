@@ -25,7 +25,11 @@ function Home() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cacheBuster, setCacheBuster] = useState(Date.now());
+  const [cacheBuster, setCacheBuster] = useState(() => {
+    // Initialize from sessionStorage if available, otherwise use current time
+    const stored = sessionStorage.getItem('home_cache_buster');
+    return stored ? parseInt(stored) : Date.now();
+  });
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
