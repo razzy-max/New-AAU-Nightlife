@@ -15,6 +15,7 @@ function AdminNewJob() {
     category: 'Other',
     applicationDeadline: '',
     contactEmail: '',
+    whatsappNumber: '',
     image: '',
     featured: false,
     published: true
@@ -248,6 +249,19 @@ function AdminNewJob() {
             />
             {errors.contactEmail && <span className="error">{errors.contactEmail}</span>}
           </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="whatsappNumber">WhatsApp Number (for applications)</label>
+          <input
+            type="tel"
+            id="whatsappNumber"
+            name="whatsappNumber"
+            value={formData.whatsappNumber}
+            onChange={handleChange}
+            placeholder="e.g., +2348012345678"
+          />
+          <small style={{color: '#666', fontSize: '0.85rem'}}>Include country code (e.g., +234). Applicants will use this to apply via WhatsApp.</small>
         </div>
 
         <div className="form-group">

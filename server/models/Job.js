@@ -44,6 +44,10 @@ const jobSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  whatsappNumber: {
+    type: String,
+    default: null,
+  },
   image: {
     type: String, // URL to company logo or job image
     default: null,
