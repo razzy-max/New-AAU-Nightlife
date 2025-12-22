@@ -78,6 +78,7 @@ function Home() {
 
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [nextEvent, setNextEvent] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -89,29 +90,51 @@ function Home() {
 
   useEffect(() => {
     if (upcomingEvents.length > 0) {
-      const nextEvent = upcomingEvents[0];
-      const eventDate = new Date(`${nextEvent.date}T${nextEvent.time}`);
+      // Filter out past events and sort by nearest date
+      const now = new Date();
+      const futureEvents = upcomingEvents
+        .map(event => ({
+          ...event,
+          eventDateTime: new Date(`${event.date}T${event.time}`)
+        }))
+        .filter(event => event.eventDateTime > now)
+        .sort((a, b) => a.eventDateTime - b.eventDateTime);
 
-      const updateCountdown = () => {
-        const now = new Date();
-        const difference = eventDate - now;
+      if (futureEvents.length > 0) {
+        const upcoming = futureEvents[0];
+        setNextEvent(upcoming);
 
-        if (difference > 0) {
-          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        const updateCountdown = () => {
+          const now = new Date();
+          const difference = upcoming.eventDateTime - now;
 
-          setTimeLeft({ days, hours, minutes, seconds });
-        } else {
-          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        }
-      };
+          if (difference > 0) {
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      updateCountdown();
-      const countdownInterval = setInterval(updateCountdown, 1000);
+            setTimeLeft({ days, hours, minutes, seconds });
+          } else {
+            // Event has passed, reset to zero and clear next event
+            setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            setNextEvent(null);
+          }
+        };
 
-      return () => clearInterval(countdownInterval);
+        updateCountdown();
+        const countdownInterval = setInterval(updateCountdown, 1000);
+
+        return () => clearInterval(countdownInterval);
+      } else {
+        // No future events
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        setNextEvent(null);
+      }
+    } else {
+      // No events at all
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      setNextEvent(null);
     }
   }, [upcomingEvents]);
 
@@ -288,26 +311,44 @@ function Home() {
       </section>
       <section className="section event-countdown">
         <h2>Next Event Countdown</h2>
-        <div className="countdown-container">
-          <div className="countdown-item">
-            <div className="countdown-number">{timeLeft.days}</div>
-            <div className="countdown-label">Days</div>
+        {nextEvent ? (
+          <>
+            <p className="countdown-event-title">Counting down to: <strong>{nextEvent.title}</strong></p>
+            <p className="countdown-event-date">
+              {new Date(nextEvent.date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })} at {nextEvent.time}
+            </p>
+            <div className="countdown-container">
+              <div className="countdown-item">
+                <div className="countdown-number">{String(timeLeft.days).padStart(2, '0')}</div>
+                <div className="countdown-label">Days</div>
+              </div>
+              <div className="countdown-separator">:</div>
+              <div className="countdown-item">
+                <div className="countdown-number">{String(timeLeft.hours).padStart(2, '0')}</div>
+                <div className="countdown-label">Hours</div>
+              </div>
+              <div className="countdown-separator">:</div>
+              <div className="countdown-item">
+                <div className="countdown-number">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                <div className="countdown-label">Minutes</div>
+              </div>
+              <div className="countdown-separator">:</div>
+              <div className="countdown-item">
+                <div className="countdown-number">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                <div className="countdown-label">Seconds</div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="no-countdown">
+            <p>No upcoming events scheduled at the moment.</p>
+            <Link to="/events" className="btn-primary">Check All Events</Link>
           </div>
-          <div className="countdown-item">
-            <div className="countdown-number">{timeLeft.hours}</div>
-            <div className="countdown-label">Hours</div>
-          </div>
-          <div className="countdown-item">
-            <div className="countdown-number">{timeLeft.minutes}</div>
-            <div className="countdown-label">Minutes</div>
-          </div>
-          <div className="countdown-item">
-            <div className="countdown-number">{timeLeft.seconds}</div>
-            <div className="countdown-label">Seconds</div>
-          </div>
-        </div>
-        {upcomingEvents.length > 0 && (
-          <p className="countdown-event">Until {upcomingEvents[0].title}</p>
         )}
       </section>
       <section className="section featured-blogs">
