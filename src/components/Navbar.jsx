@@ -22,7 +22,6 @@ function Navbar() {
             <li><Link to="/events" onClick={() => setIsOpen(false)}>Events</Link></li>
             <li><Link to="/jobs" onClick={() => setIsOpen(false)}>Jobs</Link></li>
             <li><Link to="/blog" onClick={() => setIsOpen(false)}>Blog</Link></li>
-            <li><Link to="/admin/login" onClick={() => setIsOpen(false)} className="admin-link">Admin</Link></li>
           </ul>
         </div>
         <div className={`navbar-toggle ${isOpen ? 'active' : ''}`} onClick={toggleMenu} aria-label="Toggle menu">
