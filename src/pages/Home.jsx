@@ -453,16 +453,6 @@ function Home() {
           </div>
         </div>
       </section>
-      <section className="section social-media">
-        <h2>Follow Us</h2>
-        <p>Stay connected with AAU Nightlife on social media for the latest updates and behind-the-scenes content.</p>
-        <div className="social-links">
-          <a href="https://instagram.com/aau_nightlife" target="_blank" rel="noopener noreferrer" className="social-link instagram">Instagram</a>
-          <a href="https://facebook.com/aau_nightlife" target="_blank" rel="noopener noreferrer" className="social-link facebook">Facebook</a>
-          <a href="https://twitter.com/aau_nightlife" target="_blank" rel="noopener noreferrer" className="social-link twitter">Twitter</a>
-          <a href="https://tiktok.com/@aau_nightlife" target="_blank" rel="noopener noreferrer" className="social-link tiktok">TikTok</a>
-        </div>
-      </section>
       <section className="section cta-banner">
         <div className="cta-content">
           <h2>Ready to Join the Fun?</h2>

@@ -695,6 +695,21 @@ footer {
 
 .footer-socials {
   display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-socials .follow-text {
+  color: var(--background-color);
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.footer-socials .social-icons {
+  display: flex;
   gap: 1.5rem;
   justify-content: center;
   align-items: center;
