@@ -100,23 +100,31 @@ function Jobs() {
                   <p><strong>Requirements:</strong> {job.requirements}</p>
                   <p><strong>Salary:</strong> {job.salary}</p>
                 </div>
-                {job.whatsappNumber ? (
-                  <a
-                    href={`https://wa.me/${job.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in applying for the ${job.title} position at ${job.company}.`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="apply-btn"
-                  >
-                    Apply via WhatsApp
-                  </a>
-                ) : (
-                  <a
-                    href={`mailto:${job.contactEmail}?subject=Application for ${job.title}&body=Hi, I'm interested in applying for the ${job.title} position at ${job.company}.`}
-                    className="apply-btn"
-                  >
-                    Apply via Email
-                  </a>
-                )}
+                <div className="job-apply-buttons">
+                  {job.whatsappNumber && (
+                    <a
+                      href={`https://wa.me/${job.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in applying for the ${job.title} position at ${job.company}.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="apply-btn whatsapp-btn"
+                    >
+                      Apply via WhatsApp
+                    </a>
+                  )}
+                  {job.contactEmail && (
+                    <a
+                      href={`mailto:${job.contactEmail}?subject=Application for ${job.title}&body=Hi, I'm interested in applying for the ${job.title} position at ${job.company}.`}
+                      className="apply-btn email-btn"
+                    >
+                      Apply via Email
+                    </a>
+                  )}
+                  {!job.whatsappNumber && !job.contactEmail && (
+                    <button className="apply-btn physical-btn" disabled>
+                      Apply Physically
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

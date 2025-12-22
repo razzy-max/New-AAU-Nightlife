@@ -1143,6 +1143,13 @@ footer {
   color: var(--secondary-color);
 }
 
+.job-apply-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
 .apply-btn {
   background-color: var(--primary-color);
   color: var(--secondary-color);
@@ -1153,12 +1160,43 @@ footer {
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: background-color 0.3s ease;
-  width: 100%;
-  margin-top: 1rem;
+  flex: 1;
+  min-width: 150px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .apply-btn:hover {
   background-color: #E6C200;
+}
+
+.apply-btn.whatsapp-btn {
+  background-color: #25D366;
+  color: white;
+}
+
+.apply-btn.whatsapp-btn:hover {
+  background-color: #20BA5A;
+}
+
+.apply-btn.email-btn {
+  background-color: var(--primary-color);
+}
+
+.apply-btn.email-btn:hover {
+  background-color: #E6C200;
+}
+
+.apply-btn.physical-btn {
+  background-color: #6c757d;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.apply-btn.physical-btn:hover {
+  background-color: #6c757d;
 }
 
 @media (max-width: 768px) {

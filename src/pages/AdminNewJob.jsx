@@ -39,8 +39,7 @@ function AdminNewJob() {
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.requirements.trim()) newErrors.requirements = 'Requirements is required';
     if (!formData.salary.trim()) newErrors.salary = 'Salary is required';
-    if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email format';
+    if (formData.contactEmail.trim() && !/\S+@\S+\.\S+/.test(formData.contactEmail)) newErrors.contactEmail = 'Invalid email format';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -238,14 +237,13 @@ function AdminNewJob() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="contactEmail">Contact Email *</label>
+            <label htmlFor="contactEmail">Contact Email (optional)</label>
             <input
               type="email"
               id="contactEmail"
               name="contactEmail"
               value={formData.contactEmail}
               onChange={handleChange}
-              required
             />
             {errors.contactEmail && <span className="error">{errors.contactEmail}</span>}
           </div>

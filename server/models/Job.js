@@ -42,7 +42,7 @@ const jobSchema = new mongoose.Schema({
   },
   contactEmail: {
     type: String,
-    required: true,
+    default: null,
   },
   whatsappNumber: {
     type: String,
