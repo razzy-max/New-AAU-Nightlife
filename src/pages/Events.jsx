@@ -6,6 +6,7 @@ function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -46,6 +47,21 @@ function Events() {
     };
 
     fetchEvents();
+  }, [refreshTrigger]);
+
+  // Function to refresh events data (exposed globally for admin use)
+  const refreshEventsData = () => {
+    sessionStorage.removeItem('events_cache');
+    sessionStorage.removeItem('events_cache_timestamp');
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  // Expose refresh function globally
+  useEffect(() => {
+    window.refreshEventsData = refreshEventsData;
+    return () => {
+      delete window.refreshEventsData;
+    };
   }, []);
 
   if (loading) {

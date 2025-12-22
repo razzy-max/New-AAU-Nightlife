@@ -253,35 +253,38 @@ function AdminCarousel() {
   const forceRefreshCache = async () => {
     setCacheRefreshing(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/api/blogs/invalidate-cache`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        // Trigger immediate refresh of all pages
-        if (window.refreshHomepageData) {
-          window.refreshHomepageData();
-        }
-        if (window.refreshCarouselData) {
-          window.refreshCarouselData();
-        }
-        if (window.refreshBlogData) {
-          window.refreshBlogData();
-        }
-        if (window.refreshRelatedPosts) {
-          window.refreshRelatedPosts();
-        }
-        alert('Cache refresh triggered! Public website updated immediately.');
-      } else {
-        alert('Failed to trigger cache refresh.');
+      // Clear all sessionStorage caches
+      sessionStorage.removeItem('home_cache');
+      sessionStorage.removeItem('home_cache_timestamp');
+      sessionStorage.removeItem('events_cache');
+      sessionStorage.removeItem('events_cache_timestamp');
+      sessionStorage.removeItem('blogs_cache');
+      sessionStorage.removeItem('blogs_cache_timestamp');
+      sessionStorage.removeItem('jobs_cache');
+      sessionStorage.removeItem('jobs_cache_timestamp');
+      
+      // Update cache busters
+      sessionStorage.setItem('home_cache_buster', Date.now().toString());
+      sessionStorage.setItem('blogs_cache_buster', Date.now().toString());
+      
+      // Trigger immediate refresh of all pages
+      if (window.refreshHomepageData) {
+        window.refreshHomepageData();
       }
+      if (window.refreshEventsData) {
+        window.refreshEventsData();
+      }
+      if (window.refreshBlogData) {
+        window.refreshBlogData();
+      }
+      if (window.refreshJobsData) {
+        window.refreshJobsData();
+      }
+      
+      alert('Cache refreshed successfully! All public pages updated.');
     } catch (error) {
       console.error('Error refreshing cache:', error);
-      alert('Network error while refreshing cache.');
+      alert('Error refreshing cache. Please try again.');
     } finally {
       setCacheRefreshing(false);
     }

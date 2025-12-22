@@ -5,6 +5,7 @@ function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -45,6 +46,21 @@ function Jobs() {
     };
 
     fetchJobs();
+  }, [refreshTrigger]);
+
+  // Function to refresh jobs data (exposed globally for admin use)
+  const refreshJobsData = () => {
+    sessionStorage.removeItem('jobs_cache');
+    sessionStorage.removeItem('jobs_cache_timestamp');
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  // Expose refresh function globally
+  useEffect(() => {
+    window.refreshJobsData = refreshJobsData;
+    return () => {
+      delete window.refreshJobsData;
+    };
   }, []);
 
   if (loading) {
