@@ -10,12 +10,34 @@ function Events() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        // Check if we have cached data
+        const cachedData = sessionStorage.getItem('events_cache');
+        const cacheTimestamp = sessionStorage.getItem('events_cache_timestamp');
+        const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+
+        // Use cached data if it exists and is fresh
+        if (cachedData && cacheTimestamp) {
+          const age = Date.now() - parseInt(cacheTimestamp);
+          if (age < cacheMaxAge) {
+            setEvents(JSON.parse(cachedData));
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fetch fresh data
         const response = await fetch(`${API_BASE_URL}/api/events`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
         const data = await response.json();
-        setEvents(data.events || []);
+        const eventsData = data.events || [];
+        
+        setEvents(eventsData);
+        
+        // Cache the data
+        sessionStorage.setItem('events_cache', JSON.stringify(eventsData));
+        sessionStorage.setItem('events_cache_timestamp', Date.now().toString());
       } catch (err) {
         setError(err.message);
       } finally {

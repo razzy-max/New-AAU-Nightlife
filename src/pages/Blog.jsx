@@ -14,7 +14,22 @@ function Blog() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        // Use cache-busting parameter to force fresh data
+        // Check if we have cached data
+        const cachedData = sessionStorage.getItem('blogs_cache');
+        const cacheTimestamp = sessionStorage.getItem('blogs_cache_timestamp');
+        const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+
+        // Use cached data if it exists and is fresh (unless cacheBuster changed)
+        if (cachedData && cacheTimestamp && cacheBuster === parseInt(sessionStorage.getItem('blogs_cache_buster') || '0')) {
+          const age = Date.now() - parseInt(cacheTimestamp);
+          if (age < cacheMaxAge) {
+            setPosts(JSON.parse(cachedData));
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fetch fresh data with cache-busting parameter
         const response = await fetch(`${API_BASE_URL}/api/blogs?_t=${cacheBuster}`, {
           headers: {
             'Cache-Control': 'no-cache',
@@ -25,7 +40,14 @@ function Blog() {
           throw new Error('Failed to fetch blogs');
         }
         const data = await response.json();
-        setPosts(data.blogs || []);
+        const blogsData = data.blogs || [];
+        
+        setPosts(blogsData);
+        
+        // Cache the data
+        sessionStorage.setItem('blogs_cache', JSON.stringify(blogsData));
+        sessionStorage.setItem('blogs_cache_timestamp', Date.now().toString());
+        sessionStorage.setItem('blogs_cache_buster', cacheBuster.toString());
       } catch (err) {
         setError(err.message);
       } finally {

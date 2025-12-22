@@ -9,12 +9,34 @@ function Jobs() {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
+        // Check if we have cached data
+        const cachedData = sessionStorage.getItem('jobs_cache');
+        const cacheTimestamp = sessionStorage.getItem('jobs_cache_timestamp');
+        const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+
+        // Use cached data if it exists and is fresh
+        if (cachedData && cacheTimestamp) {
+          const age = Date.now() - parseInt(cacheTimestamp);
+          if (age < cacheMaxAge) {
+            setJobs(JSON.parse(cachedData));
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fetch fresh data
         const response = await fetch(`${API_BASE_URL}/api/jobs`);
         if (!response.ok) {
           throw new Error('Failed to fetch jobs');
         }
         const data = await response.json();
-        setJobs(data.jobs || []);
+        const jobsData = data.jobs || [];
+        
+        setJobs(jobsData);
+        
+        // Cache the data
+        sessionStorage.setItem('jobs_cache', JSON.stringify(jobsData));
+        sessionStorage.setItem('jobs_cache_timestamp', Date.now().toString());
       } catch (err) {
         setError(err.message);
       } finally {
