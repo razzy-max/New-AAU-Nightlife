@@ -1,6 +1,6 @@
 import express from 'express';
 import Subscriber from '../models/Subscriber.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 });
 
 // Admin route - Get all subscribers
-router.get('/admin/all', authenticateToken, async (req, res) => {
+router.get('/admin/all', protect, async (req, res) => {
   try {
     const { status, page = 1, limit = 50 } = req.query;
     
@@ -68,7 +68,7 @@ router.get('/admin/all', authenticateToken, async (req, res) => {
 });
 
 // Admin route - Get subscribers count
-router.get('/admin/count', authenticateToken, async (req, res) => {
+router.get('/admin/count', protect, async (req, res) => {
   try {
     const activeCount = await Subscriber.countDocuments({ status: 'active' });
     const unsubscribedCount = await Subscriber.countDocuments({ status: 'unsubscribed' });
@@ -85,7 +85,7 @@ router.get('/admin/count', authenticateToken, async (req, res) => {
 });
 
 // Admin route - Delete subscriber
-router.delete('/admin/:id', authenticateToken, async (req, res) => {
+router.delete('/admin/:id', protect, async (req, res) => {
   try {
     const subscriber = await Subscriber.findByIdAndDelete(req.params.id);
     if (!subscriber) {
@@ -99,7 +99,7 @@ router.delete('/admin/:id', authenticateToken, async (req, res) => {
 });
 
 // Admin route - Export subscribers to CSV
-router.get('/admin/export', authenticateToken, async (req, res) => {
+router.get('/admin/export', protect, async (req, res) => {
   try {
     const { status } = req.query;
     const query = status ? { status } : {};
