@@ -141,6 +141,27 @@ function Home() {
   useEffect(() => {
     const fetchHomepageData = async () => {
       try {
+        // Check if we have cached data
+        const cachedBlogs = sessionStorage.getItem('home_blogs_cache');
+        const cachedEvents = sessionStorage.getItem('home_events_cache');
+        const cachedJobs = sessionStorage.getItem('home_jobs_cache');
+        const cacheTimestamp = sessionStorage.getItem('home_cache_timestamp');
+        const cachedBuster = sessionStorage.getItem('home_cache_buster');
+        const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+
+        // Use cached data if it exists, is fresh, and cacheBuster hasn't changed
+        if (cachedBlogs && cachedEvents && cachedJobs && cacheTimestamp && 
+            cacheBuster === parseInt(cachedBuster || '0')) {
+          const age = Date.now() - parseInt(cacheTimestamp);
+          if (age < cacheMaxAge) {
+            setFeaturedPosts(JSON.parse(cachedBlogs));
+            setUpcomingEvents(JSON.parse(cachedEvents));
+            setFeaturedJobs(JSON.parse(cachedJobs));
+            setLoading(false);
+            return;
+          }
+        }
+
         // Fetch featured blogs
         const blogsResponse = await fetch(`${API_BASE_URL}/api/blogs/featured/list?_t=${cacheBuster}`, {
           headers: {
@@ -151,6 +172,7 @@ function Home() {
         if (blogsResponse.ok) {
           const blogsData = await blogsResponse.json();
           setFeaturedPosts(blogsData);
+          sessionStorage.setItem('home_blogs_cache', JSON.stringify(blogsData));
         }
 
         // Fetch featured events (like blogs)
@@ -163,6 +185,7 @@ function Home() {
         if (eventsResponse.ok) {
           const eventsData = await eventsResponse.json();
           setUpcomingEvents(eventsData);
+          sessionStorage.setItem('home_events_cache', JSON.stringify(eventsData));
         }
 
         // Fetch featured jobs
@@ -175,7 +198,12 @@ function Home() {
         if (jobsResponse.ok) {
           const jobsData = await jobsResponse.json();
           setFeaturedJobs(jobsData);
+          sessionStorage.setItem('home_jobs_cache', JSON.stringify(jobsData));
         }
+
+        // Update cache metadata
+        sessionStorage.setItem('home_cache_timestamp', Date.now().toString());
+        sessionStorage.setItem('home_cache_buster', cacheBuster.toString());
       } catch (error) {
         console.error('Error fetching homepage data:', error);
         // Fallback to empty arrays
