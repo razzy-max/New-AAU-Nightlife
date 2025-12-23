@@ -32,6 +32,7 @@ export const useScrollAnimation = (threshold = 0.1) => {
 
     // Check if already in viewport
     const checkVisibility = () => {
+      if (!currentRef) return;
       const rect = currentRef.getBoundingClientRect();
       if (rect.top < window.innerHeight && rect.bottom > 0) {
         setIsVisible(true);
@@ -42,7 +43,6 @@ export const useScrollAnimation = (threshold = 0.1) => {
     
     // Watch for when children are added to the container (content loaded from API)
     const mutationObserver = new MutationObserver(() => {
-      // When children appear, recheck visibility
       checkVisibility();
     });
     
@@ -51,9 +51,13 @@ export const useScrollAnimation = (threshold = 0.1) => {
       subtree: true 
     });
     
+    // Backup timer in case MutationObserver misses the change
+    const backupTimer = setTimeout(checkVisibility, 500);
+    
     observer.observe(currentRef);
 
     return () => {
+      clearTimeout(backupTimer);
       mutationObserver.disconnect();
       if (currentRef) {
         observer.unobserve(currentRef);
