@@ -39,9 +39,16 @@ export const useScrollAnimation = (threshold = 0.1) => {
     };
 
     checkVisibility();
+    
+    // Add a fallback check for slow-loading content (first visits with API calls)
+    const fallbackTimer = setTimeout(() => {
+      checkVisibility();
+    }, 300);
+    
     observer.observe(currentRef);
 
     return () => {
+      clearTimeout(fallbackTimer);
       if (currentRef) {
         observer.unobserve(currentRef);
       }
