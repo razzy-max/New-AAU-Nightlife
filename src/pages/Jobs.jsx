@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import API_BASE_URL from '../config';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [gridRef, gridVisible] = useScrollAnimation();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -85,9 +87,9 @@ function Jobs() {
         <p>Find exciting career opportunities in the AAU nightlife industry</p>
       </section>
       <section className="section jobs-section">
-        <div className="jobs-grid">
-          {jobs.map(job => (
-            <div key={job._id} className="job-card">
+        <div ref={gridRef} className="jobs-grid">
+          {jobs.map((job, index) => (
+            <div key={job._id} className={`job-card stagger-item ${gridVisible ? 'visible' : ''} delay-${Math.min((index % 3) + 1, 3)}`}>
               <div className="job-header">
                 <div className="job-type-badge">{job.type}</div>
                 <h3>{job.title}</h3>

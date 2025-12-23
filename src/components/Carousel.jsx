@@ -5,6 +5,7 @@ function Carousel() {
   const [slides, setSlides] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     fetchSlides();
@@ -31,6 +32,8 @@ function Carousel() {
       console.error('Error fetching carousel slides:', error);
     } finally {
       setLoading(false);
+      // Fade in carousel after a brief moment
+      setTimeout(() => setIsReady(true), 100);
     }
   };
 
@@ -44,7 +47,7 @@ function Carousel() {
 
   if (loading) {
     return (
-      <div className="carousel">
+      <div className="carousel carousel-loading">
         <div className="carousel-slide active" style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           display: 'flex',
@@ -62,7 +65,7 @@ function Carousel() {
 
   if (slides.length === 0) {
     return (
-      <div className="carousel">
+      <div className="carousel carousel-loading">
         <div className="carousel-slide active" style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           display: 'flex',
@@ -79,7 +82,7 @@ function Carousel() {
   }
 
   return (
-    <div className="carousel">
+    <div className={`carousel ${isReady ? 'carousel-ready' : 'carousel-loading'}`}>
       {slides.map((slide, index) => (
         <div
           key={slide._id}

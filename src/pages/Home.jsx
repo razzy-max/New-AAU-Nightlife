@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from '../components/Carousel';
 import API_BASE_URL from '../config';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { useTypewriter } from '../hooks/useTypewriter';
 
 // Background prefetching utility
 const prefetchData = async (url) => {
@@ -32,6 +34,17 @@ function Home() {
     const stored = sessionStorage.getItem('home_cache_buster');
     return stored ? parseInt(stored) : Date.now();
   });
+
+  // Scroll animations
+  const [eventsRef, eventsVisible] = useScrollAnimation();
+  const [countdownRef, countdownVisible] = useScrollAnimation();
+  const [statsRef, statsVisible] = useScrollAnimation();
+  const [jobsRef, jobsVisible] = useScrollAnimation();
+  const [blogsRef, blogsVisible] = useScrollAnimation();
+  const [newsletterRef, newsletterVisible] = useScrollAnimation();
+  
+  // Typewriter animation for hero
+  const { displayText, isComplete, showCursor } = useTypewriter();
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
@@ -296,30 +309,40 @@ function Home() {
         <Carousel />
         <div className="hero-overlay"></div>
         <div className="hero-content">
-          <h1>Welcome to AAU Nightlife</h1>
-          <p>Experience the vibrant nightlife in Ekpoma, AAU</p>
-          <Link to="/events" className="explore-btn">Explore Events</Link>
+          <h1 className="typewriter-text">
+            {displayText}
+            {showCursor && <span className="cursor">|</span>}
+          </h1>
+          <p className={`hero-subtitle ${isComplete ? 'fade-in' : ''}`}>
+            Experience the vibrant nightlife in Ekpoma, AAU
+          </p>
+          <Link 
+            to="/events" 
+            className={`explore-btn ${isComplete ? 'slide-up' : ''}`}
+          >
+            Explore Events
+          </Link>
         </div>
       </section>
       <section className="section">
         <h2>About Us</h2>
         <p>AAU Nightlife is your go-to platform for everything happening in and around Ambrose Alli University. We are dedicated to showcasing the vibrant student lifestyle by curating the latest events, job opportunities, and student blogs that matter most to the AAU community.<br /><br />Our mission is to connect students with experiences that enrich campus life — from nightlife parties and hangouts to career-building opportunities and creative storytelling. Whether you're looking for where the next rave is happening, searching for part-time jobs to support your studies, or simply wanting to share and read authentic student perspectives, AAU Nightlife is here to keep you informed and engaged.<br /><br />We pride ourselves on being more than just an entertainment hub. AAU Nightlife is a community-driven platform that amplifies student voices, supports local businesses, and promotes collaboration across campus. By blending fun, culture, and opportunity, we aim to redefine what it means to be a student at Ambrose Alli University.<br /><br />Join us as we continue to grow, inspire, and celebrate the energy of AAU.</p>
       </section>
-      <section className="section stats-dashboard">
+      <section ref={statsRef} className="section stats-dashboard">
         <div className="stats-grid">
           {stats.map((stat, index) => (
-            <div key={index} className="stat-item">
+            <div key={index} className={`stat-item scale-in ${statsVisible ? 'visible' : ''} delay-${index + 1}`}>
               <div className="stat-number">{stat.number}</div>
               <div className="stat-label">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
-      <section className="section upcoming-events">
-        <h2>Upcoming Events</h2>
+      <section ref={eventsRef} className="section upcoming-events">
+        <h2 className={`fade-in-up ${eventsVisible ? 'visible' : ''}`}>Upcoming Events</h2>
         <div className="events-preview-grid">
-          {upcomingEvents.length > 0 ? upcomingEvents.map(event => (
-            <div key={event._id} className="event-preview-card">
+          {upcomingEvents.length > 0 ? upcomingEvents.map((event, index) => (
+            <div key={event._id} className={`event-preview-card stagger-item ${eventsVisible ? 'visible' : ''} delay-${Math.min(index + 1, 3)}`}>
               <div className="event-preview-image">
                 <img src={event.image} alt={event.title} loading="lazy" />
                 <div className="event-preview-date">
@@ -343,7 +366,7 @@ function Home() {
           <Link to="/events" className="view-all-btn">View All Events</Link>
         </div>
       </section>
-      <section className="section event-countdown">
+      <section ref={countdownRef} className={`section event-countdown fade-in-up ${countdownVisible ? 'visible' : ''}`}>
         <h2>Next Event Countdown</h2>
         {nextEvent ? (
           <>
@@ -385,11 +408,11 @@ function Home() {
           </div>
         )}
       </section>
-      <section className="section featured-blogs">
-        <h2>Featured Blogs</h2>
+      <section ref={blogsRef} className="section featured-blogs">
+        <h2 className={`fade-in-up ${blogsVisible ? 'visible' : ''}`}>Featured Blogs</h2>
         <div className="blogs-preview-grid">
-          {featuredPosts.length > 0 ? featuredPosts.map(post => (
-            <div key={post._id} className="blog-preview-card">
+          {featuredPosts.length > 0 ? featuredPosts.map((post, index) => (
+            <div key={post._id} className={`blog-preview-card stagger-item ${blogsVisible ? 'visible' : ''} delay-${Math.min(index + 1, 3)}`}>
               <div className="blog-preview-image">
                 <img src={post.image} alt={post.title} loading="lazy" />
               </div>
@@ -425,11 +448,11 @@ function Home() {
           </Link>
         </div>
       </section>
-      <section className="section job-opportunities">
-        <h2>Career Opportunities</h2>
+      <section ref={jobsRef} className="section job-opportunities">
+        <h2 className={`fade-in-up ${jobsVisible ? 'visible' : ''}`}>Career Opportunities</h2>
         <div className="jobs-preview-grid">
-          {featuredJobs.length > 0 ? featuredJobs.map(job => (
-            <div key={job._id} className="job-preview-card">
+          {featuredJobs.length > 0 ? featuredJobs.map((job, index) => (
+            <div key={job._id} className={`job-preview-card stagger-item ${jobsVisible ? 'visible' : ''} delay-${Math.min(index + 1, 3)}`}>
               <div className="job-preview-header">
                 <span className="job-type-badge">{job.type}</span>
                 <h3>{job.title}</h3>
@@ -452,7 +475,7 @@ function Home() {
           <Link to="/jobs" className="view-all-btn">View All Jobs</Link>
         </div>
       </section>
-      <section className="section newsletter-signup">
+      <section ref={newsletterRef} className={`section newsletter-signup fade-in-up ${newsletterVisible ? 'visible' : ''}`}>
         <h2>Stay Updated</h2>
         <p>Subscribe to our newsletter for the latest events, job opportunities, and campus news.</p>
         {subscribeMessage && (

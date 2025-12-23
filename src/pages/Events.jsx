@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [gridRef, gridVisible] = useScrollAnimation();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -86,9 +88,9 @@ function Events() {
         <p>Discover the vibrant nightlife and exciting events at AAU</p>
       </section>
       <section className="section events-section">
-        <div className="events-grid">
-          {events.map(event => (
-            <div key={event._id} className="event-card">
+        <div ref={gridRef} className="events-grid">
+          {events.map((event, index) => (
+            <div key={event._id} className={`event-card stagger-item ${gridVisible ? 'visible' : ''} delay-${Math.min((index % 3) + 1, 3)}`}>
               <div className="event-image">
                 <img src={event.image} alt={event.title} loading="lazy" />
                 <div className="event-date-badge">

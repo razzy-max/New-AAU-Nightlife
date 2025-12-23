@@ -10,6 +10,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(218, 165, 32, 0.2);
 }
 
 html, body {
@@ -25,6 +26,116 @@ body {
   color: var(--text-color);
   background-color: var(--background-color);
 }
+
+/* ========== SCROLL ANIMATIONS ========== */
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+}
+
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+}
+
+.fade-in-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fade-in-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+}
+
+.fade-in-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scale-in {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.scale-in.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.stagger-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.delay-1 { transition-delay: 0.15s; }
+.delay-2 { transition-delay: 0.3s; }
+.delay-3 { transition-delay: 0.45s; }
+.delay-4 { transition-delay: 0.6s; }
+.delay-5 { transition-delay: 0.75s; }
+
+/* ========== HERO TYPEWRITER ANIMATION ========== */
+
+.typewriter-text {
+  min-height: 60px;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+
+.typewriter-text .cursor {
+  display: inline-block;
+  margin-left: 3px;
+  animation: blink 1s step-end infinite;
+  font-weight: 400;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.hero-subtitle {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s;
+}
+
+.hero-subtitle.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.explore-btn {
+  opacity: 0;
+  transform: translateY(50px) scale(0.9);
+  transition: opacity 1s ease-out 0.8s, transform 1s ease-out 0.8s;
+}
+
+.explore-btn.slide-up {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ========== END HERO TYPEWRITER ANIMATION ========== */
+
+/* ========== END SCROLL ANIMATIONS ========== */
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Georgia', serif;
@@ -313,9 +424,15 @@ button:hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.blog-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.blog-card:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .blog-image img {
@@ -780,6 +897,24 @@ footer {
   z-index: -1;
 }
 
+.carousel-loading {
+  opacity: 0;
+}
+
+.carousel-ready {
+  opacity: 1;
+  animation: fadeInCarousel 0.8s ease-in;
+}
+
+@keyframes fadeInCarousel {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .carousel-slide {
   position: absolute;
   top: 0;
@@ -946,9 +1081,15 @@ footer {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.event-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.event-card:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .event-image {
@@ -1075,9 +1216,15 @@ footer {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.job-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.job-card:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .job-header {
@@ -1246,7 +1393,6 @@ footer {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
-  transition: background-color 0.3s ease;
   text-decoration: none;
   display: inline-block;
 }

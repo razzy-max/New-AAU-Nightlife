@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 function Blog() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -9,6 +10,7 @@ function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [gridRef, gridVisible] = useScrollAnimation();
   const [cacheBuster, setCacheBuster] = useState(() => {
     // Initialize from sessionStorage if available, otherwise use current time
     const stored = sessionStorage.getItem('blogs_cache_buster');
@@ -133,9 +135,9 @@ function Blog() {
             </div>
           </aside>
           <main className="blogs-main">
-            <div className="blogs-grid">
-              {filteredPosts.map(post => (
-                <div key={post._id} className="blog-card">
+            <div ref={gridRef} className="blogs-grid">
+              {filteredPosts.map((post, index) => (
+                <div key={post._id} className={`blog-card stagger-item ${gridVisible ? 'visible' : ''} delay-${Math.min((index % 3) + 1, 3)}`}>
                   <div className="blog-image">
                     <img
                       src={post.image}
