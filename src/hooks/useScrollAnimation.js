@@ -3,22 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 export const useScrollAnimation = (threshold = 0.1) => {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [element, setElement] = useState(null);
+
+  // Track when ref gets attached
+  useEffect(() => {
+    if (ref.current && ref.current !== element) {
+      setElement(ref.current);
+    }
+  });
 
   useEffect(() => {
-    // Small delay to let React finish rendering
-    const mountTimer = setTimeout(() => {
-      setIsMounted(true);
-    }, 50);
-
-    return () => clearTimeout(mountTimer);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    
-    const currentRef = ref.current;
-    if (!currentRef) return;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -30,23 +25,26 @@ export const useScrollAnimation = (threshold = 0.1) => {
       }
     );
 
-    // Check if already in viewport
-    const checkVisibility = () => {
-      const rect = currentRef.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
+    // Check if element is in viewport
+    const checkInitialVisibility = () => {
+      const rect = element.getBoundingClientRect();
+      const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+      if (isInViewport) {
         setIsVisible(true);
       }
     };
 
-    checkVisibility();
-    observer.observe(currentRef);
+    // Check immediately and after small delay
+    checkInitialVisibility();
+    const timer = setTimeout(checkInitialVisibility, 100);
+    
+    observer.observe(element);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      clearTimeout(timer);
+      observer.unobserve(element);
     };
-  }, [threshold, isMounted]);
+  }, [element, threshold]);
 
   return [ref, isVisible];
 };
