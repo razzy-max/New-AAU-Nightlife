@@ -27,10 +27,10 @@ export const useScrollAnimation = (threshold = 0.1) => {
       }
     };
 
-    // Initial check with small delay for DOM to be ready
-    setTimeout(checkVisibility, 100);
+    // Check immediately
+    checkVisibility();
     
-    // Watch for content changes
+    // Watch for when children are added
     const mutationObserver = new MutationObserver(() => {
       checkVisibility();
     });
@@ -40,15 +40,21 @@ export const useScrollAnimation = (threshold = 0.1) => {
       subtree: true 
     });
     
-    // Additional checks for slow first loads
-    const timer1 = setTimeout(checkVisibility, 500);
-    const timer2 = setTimeout(checkVisibility, 1000);
+    // Multiple aggressive backup timers for slow first loads
+    const timer1 = setTimeout(checkVisibility, 200);
+    const timer2 = setTimeout(checkVisibility, 500);
+    const timer3 = setTimeout(checkVisibility, 1000);
+    const timer4 = setTimeout(checkVisibility, 1500);
+    const timer5 = setTimeout(checkVisibility, 2000);
     
     observer.observe(currentRef);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timer5);
       mutationObserver.disconnect();
       if (currentRef) {
         observer.unobserve(currentRef);
