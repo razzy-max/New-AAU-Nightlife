@@ -40,13 +40,21 @@ export const useScrollAnimation = (threshold = 0.1) => {
       subtree: true 
     });
     
-    // Backup timer
-    const backupTimer = setTimeout(checkVisibility, 500);
+    // Multiple aggressive backup timers for slow first loads
+    const timer1 = setTimeout(checkVisibility, 200);
+    const timer2 = setTimeout(checkVisibility, 500);
+    const timer3 = setTimeout(checkVisibility, 1000);
+    const timer4 = setTimeout(checkVisibility, 1500);
+    const timer5 = setTimeout(checkVisibility, 2000);
     
     observer.observe(currentRef);
 
     return () => {
-      clearTimeout(backupTimer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timer5);
       mutationObserver.disconnect();
       if (currentRef) {
         observer.unobserve(currentRef);
