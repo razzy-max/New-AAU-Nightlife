@@ -3,20 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 export const useScrollAnimation = (threshold = 0.1) => {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Small delay to let React finish rendering
-    const mountTimer = setTimeout(() => {
-      setIsMounted(true);
-    }, 50);
-
-    return () => clearTimeout(mountTimer);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    
     const currentRef = ref.current;
     if (!currentRef) return;
 
@@ -39,9 +27,10 @@ export const useScrollAnimation = (threshold = 0.1) => {
       }
     };
 
+    // Check immediately
     checkVisibility();
     
-    // Watch for when children are added to the container (content loaded from API)
+    // Watch for when children are added
     const mutationObserver = new MutationObserver(() => {
       checkVisibility();
     });
@@ -51,7 +40,7 @@ export const useScrollAnimation = (threshold = 0.1) => {
       subtree: true 
     });
     
-    // Backup timer in case MutationObserver misses the change
+    // Backup timer
     const backupTimer = setTimeout(checkVisibility, 500);
     
     observer.observe(currentRef);
@@ -63,7 +52,7 @@ export const useScrollAnimation = (threshold = 0.1) => {
         observer.unobserve(currentRef);
       }
     };
-  }, [threshold, isMounted]);
+  }, [threshold, ref.current]); // Watch ref.current changes - triggers when grid appears after loading
 
   return [ref, isVisible];
 };
