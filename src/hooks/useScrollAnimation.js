@@ -40,17 +40,21 @@ export const useScrollAnimation = (threshold = 0.1) => {
 
     checkVisibility();
     
-    // Multiple fallback checks for slow API loads on first visit
-    const fallbackTimer1 = setTimeout(checkVisibility, 300);
-    const fallbackTimer2 = setTimeout(checkVisibility, 600);
-    const fallbackTimer3 = setTimeout(checkVisibility, 1000);
+    // Watch for when children are added to the container (content loaded from API)
+    const mutationObserver = new MutationObserver(() => {
+      // When children appear, recheck visibility
+      checkVisibility();
+    });
+    
+    mutationObserver.observe(currentRef, { 
+      childList: true, 
+      subtree: true 
+    });
     
     observer.observe(currentRef);
 
     return () => {
-      clearTimeout(fallbackTimer1);
-      clearTimeout(fallbackTimer2);
-      clearTimeout(fallbackTimer3);
+      mutationObserver.disconnect();
       if (currentRef) {
         observer.unobserve(currentRef);
       }
