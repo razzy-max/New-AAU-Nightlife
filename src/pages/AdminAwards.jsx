@@ -259,8 +259,6 @@ const AdminAwards = () => {
       <div style={{
         marginTop: '100px',
         marginBottom: '20px',
-        position: 'relative',
-        zIndex: '1000',
         padding: '10px'
       }}>
         <button
