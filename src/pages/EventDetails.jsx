@@ -226,6 +226,7 @@ function EventDetails() {
       <section className="section" style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
         {/* Event Header */}
         <div
+          className="event-details-header-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',

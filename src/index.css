@@ -3540,4 +3540,13 @@ footer {
     padding: 0.5rem 0.75rem;
     min-width: auto;
   }
+
+  /* Event Details - Mobile Responsive */
+  .event-details-header-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .event-details-header-grid > div {
+    width: 100%;
+  }
 }
