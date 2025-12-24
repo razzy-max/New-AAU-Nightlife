@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './AdminAwards.css';
 
 const AdminAwards = () => {
   const [activeTab, setActiveTab] = useState('categories');
