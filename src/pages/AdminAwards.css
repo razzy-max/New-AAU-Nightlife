@@ -4,6 +4,44 @@
   min-height: 100vh;
 }
 
+@media (max-width: 768px) {
+  .admin-awards {
+    padding: 1rem;
+  }
+
+  .admin-awards h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-tabs {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .admin-tab-btn {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .admin-tab-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .admin-form-section,
+  .admin-list-section {
+    padding: 1.5rem;
+  }
+
+  .admin-form-section h2,
+  .admin-list-section h2 {
+    font-size: 1.25rem;
+  }
+}
+
 .admin-awards h1 {
   font-size: 2.5rem;
   font-weight: 700;

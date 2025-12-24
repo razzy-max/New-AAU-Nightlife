@@ -94,6 +94,11 @@ function AdminDashboard() {
 
       <div className="admin-stats">
         <div className="stat-card">
+          <h3>🏆</h3>
+          <p>Awards</p>
+          <Link to="/admin/awards" className="manage-link">Manage Awards</Link>
+        </div>
+        <div className="stat-card">
           <h3>{stats.blogs}</h3>
           <p>Blogs</p>
           <Link to="/admin/blogs" className="manage-link">Manage Blogs</Link>
@@ -128,6 +133,7 @@ function AdminDashboard() {
       <div className="admin-quick-actions">
         <h2>Quick Actions</h2>
         <div className="action-buttons">
+          <Link to="/admin/awards" className="action-btn">🏆 Manage Awards</Link>
           <Link to="/admin/blogs/new" className="action-btn">Add New Blog</Link>
           <Link to="/admin/events/new" className="action-btn">Add New Event</Link>
           <Link to="/admin/jobs/new" className="action-btn">Add New Job</Link>
