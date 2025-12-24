@@ -3448,6 +3448,8 @@ footer {
 @media (max-width: 768px) {
   .admin-awards {
     padding: 1rem;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .admin-awards h1 {
@@ -3460,24 +3462,32 @@ footer {
     flex-direction: column !important;
     gap: 0.5rem;
     padding: 0.75rem;
+    margin-bottom: 2rem !important;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #DAA520;
   }
 
   .admin-tab-btn {
-    width: 100%;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+    width: 100% !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
   }
 
   .admin-tab-content {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 1rem !important;
-    margin-bottom: 2rem;
+    display: block !important;
+    margin-bottom: 2rem !important;
   }
 
   .admin-form-section,
   .admin-list-section {
     padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #DAA520;
+    margin-bottom: 1.5rem;
   }
 
   .admin-form-section h2,
