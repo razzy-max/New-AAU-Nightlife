@@ -2,6 +2,14 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
   padding: 2rem 1rem;
+  padding-top: 7rem;
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .awards-page {
+    padding-top: 6.5rem;
+  }
 }
 
 .awards-hero {
