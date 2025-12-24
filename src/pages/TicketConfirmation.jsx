@@ -13,6 +13,7 @@ function TicketConfirmation() {
   const [qrCode, setQrCode] = useState(null);
   const canvasRef = useRef(null);
   const ticketCardRef = useRef(null);
+  const [autoDownloadDone, setAutoDownloadDone] = useState(false);
 
   useEffect(() => {
     // Add print styles
@@ -92,6 +93,11 @@ function TicketConfirmation() {
           },
         });
         setQrCode(qrDataUrl);
+
+        // Auto-download ticket after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          setAutoDownloadDone(true);
+        }, 500);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -101,6 +107,13 @@ function TicketConfirmation() {
 
     fetchTicket();
   }, [id]);
+
+  // Auto-download ticket when component is ready
+  useEffect(() => {
+    if (autoDownloadDone && ticket && ticketCardRef.current) {
+      downloadPDF();
+    }
+  }, [autoDownloadDone, ticket]);
 
   const downloadPDF = () => {
     if (!ticketCardRef.current) return;
