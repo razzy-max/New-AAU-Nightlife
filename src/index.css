@@ -3033,7 +3033,21 @@ footer {
   padding: 2rem;
   background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
   min-height: 100vh;
-  padding-top: 7rem;
+  padding-top: 3rem;
+}
+
+/* Desktop view - reduce top padding */
+@media (min-width: 769px) {
+  .admin-awards {
+    padding-top: 3rem;
+  }
+}
+
+/* Mobile view - increase top padding for navbar */
+@media (max-width: 768px) {
+  .admin-awards {
+    padding-top: 7rem;
+  }
 }
 
 .admin-awards h1 {
