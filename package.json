@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
-    "seed": "node server/seed.js"
+    "seed": "node server/seed.js",
+    "seed:awards": "node server/seedAwards.js"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",

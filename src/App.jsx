@@ -7,9 +7,11 @@ import Events from './pages/Events';
 import EventDetails from './pages/EventDetails';
 import TicketConfirmation from './pages/TicketConfirmation';
 import PaymentCallback from './pages/PaymentCallback';
+import AwardPaymentCallback from './pages/AwardPaymentCallback';
 import Jobs from './pages/Jobs';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
+import Awards from './pages/Awards';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminBlogs from './pages/AdminBlogs';
@@ -22,6 +24,7 @@ import AdminNewEvent from './pages/AdminNewEvent';
 import AdminNewJob from './pages/AdminNewJob';
 import AdminTickets from './pages/AdminTickets';
 import AdminSubscribers from './pages/AdminSubscribers';
+import AdminAwards from './pages/AdminAwards';
 
 function App() {
   return (
@@ -33,9 +36,11 @@ function App() {
         <Route path="/events/:id" element={<EventDetails />} />
         <Route path="/ticket/:id" element={<TicketConfirmation />} />
         <Route path="/payment-callback" element={<PaymentCallback />} />
+        <Route path="/award-payment-callback" element={<AwardPaymentCallback />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogPost />} />
+        <Route path="/awards" element={<Awards />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/blogs" element={<ProtectedRoute><AdminBlogs /></ProtectedRoute>} />
@@ -48,6 +53,7 @@ function App() {
         <Route path="/admin/carousel" element={<ProtectedRoute><AdminCarousel /></ProtectedRoute>} />
         <Route path="/admin/comments" element={<ProtectedRoute><AdminComments /></ProtectedRoute>} />
         <Route path="/admin/subscribers" element={<ProtectedRoute><AdminSubscribers /></ProtectedRoute>} />
+        <Route path="/admin/awards" element={<ProtectedRoute><AdminAwards /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </Router>

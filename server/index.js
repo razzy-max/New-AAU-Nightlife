@@ -28,6 +28,9 @@ import carouselRoutes from './routes/carousel.js';
 import commentRoutes from './routes/comments.js';
 import ticketRoutes from './routes/tickets.js';
 import subscriberRoutes from './routes/subscribers.js';
+import awardRoutes from './routes/awards.js';
+import votingRoutes from './routes/voting.js';
+import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
@@ -74,6 +77,9 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/carousel', carouselRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/subscribers', subscriberRoutes);
+app.use('/api/awards', awardRoutes);
+app.use('/api/voting', votingRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
