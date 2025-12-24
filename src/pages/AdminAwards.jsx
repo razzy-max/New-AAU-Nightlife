@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AdminAwards = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('categories');
   const [categories, setCategories] = useState([]);
   const [candidates, setCandidates] = useState([]);
@@ -254,6 +256,30 @@ const AdminAwards = () => {
 
   return (
     <div className="admin-awards">
+      <div style={{
+        marginTop: '100px',
+        marginBottom: '20px',
+        position: 'relative',
+        zIndex: '1000',
+        padding: '10px'
+      }}>
+        <button
+          onClick={() => navigate('/admin')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}
+        >
+          ← Back to Admin Dashboard
+        </button>
+      </div>
       <h1>🏆 Award Management</h1>
 
       <div className="admin-tabs">
