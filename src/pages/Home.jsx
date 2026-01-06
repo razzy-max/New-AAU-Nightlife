@@ -22,7 +22,7 @@ const prefetchData = async (url) => {
 };
 
 function Home() {
-  const [email, setEmail] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
@@ -57,14 +57,14 @@ function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ whatsappNumber }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setSubscribeMessage(data.message || 'Successfully subscribed!');
-        setEmail('');
+        setWhatsappNumber('');
         // Clear message after 5 seconds
         setTimeout(() => setSubscribeMessage(''), 5000);
       } else {
@@ -485,10 +485,11 @@ function Home() {
         )}
         <form onSubmit={handleNewsletterSubmit} className="newsletter-form">
           <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="tel"
+            placeholder="Enter your WhatsApp number"
+            value={whatsappNumber}
+            onChange={(e) => setWhatsappNumber(e.target.value)}
+            pattern="[0-9+\-\s()]*"
             required
             disabled={subscribing}
           />
