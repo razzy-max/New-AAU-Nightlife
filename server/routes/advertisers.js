@@ -46,12 +46,12 @@ router.get('/admin/all', protect, async (req, res) => {
 // Admin route - Create new advertiser
 router.post('/admin/create', protect, async (req, res) => {
   try {
-    const { companyName, logo, website, description, featured, active, displayOrder } = req.body;
+    const { companyName, logo, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
 
-    if (!companyName || !logo || !website) {
+    if (!companyName || !logo) {
       return res.status(400).json({
         success: false,
-        message: 'Company name, logo, and website are required'
+        message: 'Company name and logo are required'
       });
     }
 
@@ -59,6 +59,9 @@ router.post('/admin/create', protect, async (req, res) => {
       companyName,
       logo,
       website,
+      whatsapp,
+      instagram,
+      facebook,
       description,
       featured: featured !== undefined ? featured : false,
       active: active !== undefined ? active : true,
@@ -85,7 +88,7 @@ router.post('/admin/create', protect, async (req, res) => {
 router.put('/admin/update/:id', protect, async (req, res) => {
   try {
     const { id } = req.params;
-    const { companyName, logo, website, description, featured, active, displayOrder } = req.body;
+    const { companyName, logo, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
 
     const advertiser = await Advertiser.findById(id);
     if (!advertiser) {
@@ -97,7 +100,10 @@ router.put('/admin/update/:id', protect, async (req, res) => {
 
     if (companyName) advertiser.companyName = companyName;
     if (logo) advertiser.logo = logo;
-    if (website) advertiser.website = website;
+    if (website !== undefined) advertiser.website = website;
+    if (whatsapp !== undefined) advertiser.whatsapp = whatsapp;
+    if (instagram !== undefined) advertiser.instagram = instagram;
+    if (facebook !== undefined) advertiser.facebook = facebook;
     if (description !== undefined) advertiser.description = description;
     if (featured !== undefined) advertiser.featured = featured;
     if (active !== undefined) advertiser.active = active;

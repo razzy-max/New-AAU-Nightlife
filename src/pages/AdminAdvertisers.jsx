@@ -13,6 +13,9 @@ function AdminAdvertisers() {
     companyName: '',
     logo: '',
     website: '',
+    whatsapp: '',
+    instagram: '',
+    facebook: '',
     description: '',
     featured: true,
     active: true,
@@ -90,8 +93,8 @@ function AdminAdvertisers() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.companyName || !formData.logo || !formData.website) {
-      alert('Please fill in all required fields');
+    if (!formData.companyName || !formData.logo) {
+      alert('Please fill in company name and upload a logo');
       return;
     }
 
@@ -135,7 +138,10 @@ function AdminAdvertisers() {
     setFormData({
       companyName: advertiser.companyName,
       logo: advertiser.logo,
-      website: advertiser.website,
+      website: advertiser.website || '',
+      whatsapp: advertiser.whatsapp || '',
+      instagram: advertiser.instagram || '',
+      facebook: advertiser.facebook || '',
       description: advertiser.description || '',
       featured: advertiser.featured,
       active: advertiser.active,
@@ -265,6 +271,9 @@ function AdminAdvertisers() {
       companyName: '',
       logo: '',
       website: '',
+      whatsapp: '',
+      instagram: '',
+      facebook: '',
       description: '',
       featured: true,
       active: true,
@@ -311,14 +320,46 @@ function AdminAdvertisers() {
             </div>
 
             <div className="form-group">
-              <label>Website URL *</label>
+              <label>Website URL</label>
               <input
                 type="url"
                 name="website"
                 value={formData.website}
                 onChange={handleInputChange}
                 placeholder="https://example.com"
-                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>WhatsApp Number</label>
+              <input
+                type="text"
+                name="whatsapp"
+                value={formData.whatsapp}
+                onChange={handleInputChange}
+                placeholder="e.g., +2349012345678 or 09012345678"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Instagram Handle</label>
+              <input
+                type="text"
+                name="instagram"
+                value={formData.instagram}
+                onChange={handleInputChange}
+                placeholder="e.g., @companyname or https://instagram.com/companyname"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Facebook Page</label>
+              <input
+                type="text"
+                name="facebook"
+                value={formData.facebook}
+                onChange={handleInputChange}
+                placeholder="e.g., https://facebook.com/companypage"
               />
             </div>
 
@@ -401,7 +442,7 @@ function AdminAdvertisers() {
             <tr>
               <th>Logo</th>
               <th>Company</th>
-              <th>Website</th>
+              <th>Contact Methods</th>
               <th>Featured</th>
               <th>Active</th>
               <th>Order</th>
@@ -421,9 +462,29 @@ function AdminAdvertisers() {
                   </td>
                   <td>{advertiser.companyName}</td>
                   <td>
-                    <a href={advertiser.website} target="_blank" rel="noopener noreferrer">
-                      Visit Site
-                    </a>
+                    {advertiser.website && (
+                      <a href={advertiser.website} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
+                        🌐 Website
+                      </a>
+                    )}
+                    {advertiser.whatsapp && (
+                      <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
+                        💬 WhatsApp
+                      </a>
+                    )}
+                    {advertiser.instagram && (
+                      <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
+                        📷 Instagram
+                      </a>
+                    )}
+                    {advertiser.facebook && (
+                      <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" style={{display: 'block'}}>
+                        📘 Facebook
+                      </a>
+                    )}
+                    {!advertiser.website && !advertiser.whatsapp && !advertiser.instagram && !advertiser.facebook && (
+                      <span style={{color: '#999'}}>No contact methods</span>
+                    )}
                   </td>
                   <td>
                     <button

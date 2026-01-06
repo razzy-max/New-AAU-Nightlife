@@ -497,13 +497,9 @@ function Home() {
         {advertisers.length > 0 ? (
           <div className="advertisers-grid">
             {advertisers.map((advertiser, index) => (
-              <a 
+              <div 
                 key={advertiser._id} 
-                href={advertiser.website}
-                target="_blank"
-                rel="noopener noreferrer"
                 className={`advertiser-card stagger-item ${advertisersVisible ? 'visible' : ''} delay-${Math.min(index + 1, 4)}`}
-                title={advertiser.companyName}
               >
                 <div className="advertiser-logo">
                   <img src={advertiser.logo} alt={advertiser.companyName} loading="lazy" />
@@ -511,8 +507,30 @@ function Home() {
                 <div className="advertiser-info">
                   <h4>{advertiser.companyName}</h4>
                   {advertiser.description && <p>{advertiser.description}</p>}
+                  <div className="advertiser-links">
+                    {advertiser.website && (
+                      <a href={advertiser.website} target="_blank" rel="noopener noreferrer" title="Visit Website">
+                        🌐
+                      </a>
+                    )}
+                    {advertiser.whatsapp && (
+                      <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                        💬
+                      </a>
+                    )}
+                    {advertiser.instagram && (
+                      <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Instagram">
+                        📷
+                      </a>
+                    )}
+                    {advertiser.facebook && (
+                      <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" title="Facebook">
+                        📘
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         ) : (

@@ -12,7 +12,18 @@ const advertiserSchema = new mongoose.Schema({
   },
   website: {
     type: String,
-    required: true,
+    trim: true
+  },
+  whatsapp: {
+    type: String,
+    trim: true
+  },
+  instagram: {
+    type: String,
+    trim: true
+  },
+  facebook: {
+    type: String,
     trim: true
   },
   description: {
