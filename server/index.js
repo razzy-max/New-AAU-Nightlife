@@ -18,6 +18,7 @@ import Carousel from './models/Carousel.js';
 import Comment from './models/Comment.js';
 import Ticket from './models/Ticket.js';
 import Subscriber from './models/Subscriber.js';
+import Advertiser from './models/Advertiser.js';
 
 // Import routes (we'll create these next)
 import authRoutes from './routes/auth.js';
@@ -31,6 +32,7 @@ import subscriberRoutes from './routes/subscribers.js';
 import awardRoutes from './routes/awards.js';
 import votingRoutes from './routes/voting.js';
 import paymentRoutes from './routes/payments.js';
+import advertiserRoutes from './routes/advertisers.js';
 
 dotenv.config();
 
@@ -80,6 +82,7 @@ app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/awards', awardRoutes);
 app.use('/api/voting', votingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/advertisers', advertiserRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

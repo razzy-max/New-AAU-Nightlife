@@ -1650,6 +1650,129 @@ footer {
   margin-top: 2rem;
 }
 
+/* ========== FEATURED ADVERTISERS ========== */
+
+.featured-advertisers {
+  background-color: #fafafa;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.featured-advertisers h2 {
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+}
+
+.featured-advertisers > p {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.advertisers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.advertiser-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+
+.advertiser-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(218, 165, 32, 0.3);
+}
+
+.advertiser-logo {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.advertiser-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.advertiser-info {
+  text-align: center;
+}
+
+.advertiser-info h4 {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.advertiser-info p {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.no-advertisers {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #999;
+  font-size: 1.1rem;
+}
+
+/* Responsive for advertisers */
+@media (max-width: 768px) {
+  .advertisers-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .advertiser-card {
+    padding: 1.5rem;
+    min-height: 150px;
+  }
+
+  .advertiser-logo {
+    height: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .advertisers-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .featured-advertisers h2 {
+    font-size: 2rem;
+  }
+
+  .featured-advertisers > p {
+    font-size: 1rem;
+  }
+}
+
 .newsletter-signup {
   background-color: #f9f9f9;
   text-align: center;

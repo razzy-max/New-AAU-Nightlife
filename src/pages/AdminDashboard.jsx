@@ -139,6 +139,7 @@ function AdminDashboard() {
           <Link to="/admin/jobs/new" className="action-btn">Add New Job</Link>
           <Link to="/admin/tickets" className="action-btn">View Ticket Sales</Link>
           <Link to="/admin/carousel" className="action-btn">Manage Carousel</Link>
+          <Link to="/admin/advertisers" className="action-btn">📢 Manage Advertisers</Link>
           <Link to="/admin/subscribers" className="action-btn">View Subscribers</Link>
         </div>
       </div>

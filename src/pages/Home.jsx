@@ -26,6 +26,7 @@ function Home() {
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [advertisers, setAdvertisers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [subscribeMessage, setSubscribeMessage] = useState('');
@@ -41,6 +42,7 @@ function Home() {
   const [statsRef, statsVisible] = useScrollAnimation();
   const [jobsRef, jobsVisible] = useScrollAnimation();
   const [blogsRef, blogsVisible] = useScrollAnimation();
+  const [advertisersRef, advertisersVisible] = useScrollAnimation();
   const [newsletterRef, newsletterVisible] = useScrollAnimation();
   
   // Typewriter animation for hero
@@ -275,6 +277,19 @@ function Home() {
           sessionStorage.setItem('home_jobs_cache', JSON.stringify(jobsData));
         }
 
+        // Fetch featured advertisers
+        const advertisersResponse = await fetch(`${API_BASE_URL}/api/advertisers/featured?_t=${cacheBuster}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        if (advertisersResponse.ok) {
+          const advertisersData = await advertisersResponse.json();
+          setAdvertisers(advertisersData.data || []);
+          sessionStorage.setItem('home_advertisers_cache', JSON.stringify(advertisersData.data || []));
+        }
+
         // Update cache metadata
         sessionStorage.setItem('home_cache_timestamp', Date.now().toString());
         sessionStorage.setItem('home_cache_buster', cacheBuster.toString());
@@ -284,6 +299,7 @@ function Home() {
         setFeaturedPosts([]);
         setUpcomingEvents([]);
         setFeaturedJobs([]);
+        setAdvertisers([]);
       } finally {
         setLoading(false);
       }
@@ -474,6 +490,36 @@ function Home() {
         <div className="view-all-jobs">
           <Link to="/jobs" className="view-all-btn">View All Jobs</Link>
         </div>
+      </section>
+      <section ref={advertisersRef} className="section featured-advertisers">
+        <h2 className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Featured Advertisers</h2>
+        <p className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Discover amazing World-class businesses and services</p>
+        {advertisers.length > 0 ? (
+          <div className="advertisers-grid">
+            {advertisers.map((advertiser, index) => (
+              <a 
+                key={advertiser._id} 
+                href={advertiser.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`advertiser-card stagger-item ${advertisersVisible ? 'visible' : ''} delay-${Math.min(index + 1, 4)}`}
+                title={advertiser.companyName}
+              >
+                <div className="advertiser-logo">
+                  <img src={advertiser.logo} alt={advertiser.companyName} loading="lazy" />
+                </div>
+                <div className="advertiser-info">
+                  <h4>{advertiser.companyName}</h4>
+                  {advertiser.description && <p>{advertiser.description}</p>}
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="no-advertisers">
+            <p>No advertisers to display at the moment.</p>
+          </div>
+        )}
       </section>
       <section ref={newsletterRef} className={`section newsletter-signup fade-in-up ${newsletterVisible ? 'visible' : ''}`}>
         <h2>Stay Updated</h2>

@@ -25,6 +25,7 @@ import AdminNewJob from './pages/AdminNewJob';
 import AdminTickets from './pages/AdminTickets';
 import AdminSubscribers from './pages/AdminSubscribers';
 import AdminAwards from './pages/AdminAwards';
+import AdminAdvertisers from './pages/AdminAdvertisers';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
         <Route path="/admin/comments" element={<ProtectedRoute><AdminComments /></ProtectedRoute>} />
         <Route path="/admin/subscribers" element={<ProtectedRoute><AdminSubscribers /></ProtectedRoute>} />
         <Route path="/admin/awards" element={<ProtectedRoute><AdminAwards /></ProtectedRoute>} />
+        <Route path="/admin/advertisers" element={<ProtectedRoute><AdminAdvertisers /></ProtectedRoute>} />
       </Routes>
       <Footer />
     </Router>
