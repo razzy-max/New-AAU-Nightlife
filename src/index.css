@@ -554,6 +554,19 @@ button:hover {
   font-size: 1.1rem;
 }
 
+/* Blog content markdown links */
+.blog-content-link {
+  color: var(--primary-color);
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.blog-content-link:hover {
+  color: #E6C200;
+  opacity: 0.9;
+}
+
 .post-sidebar {
   max-width: 1000px;
   background-color: var(--background-color);

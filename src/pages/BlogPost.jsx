@@ -2,6 +2,46 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
+// Utility function to parse markdown links and render them as clickable links
+const parseMarkdownLinks = (text) => {
+  // Match markdown links: [text](url)
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    // Add text before the link
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    
+    // Add the link as a React element
+    const linkText = match[1];
+    const linkUrl = match[2];
+    parts.push(
+      <a 
+        key={match.index} 
+        href={linkUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="blog-content-link"
+      >
+        {linkText}
+      </a>
+    );
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text after the last link
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : text;
+};
+
 function BlogPost() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
@@ -192,7 +232,7 @@ function BlogPost() {
           </div>
           <div className="post-text">
             {post.content.split('\n').map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index}>{parseMarkdownLinks(paragraph)}</p>
             ))}
           </div>
 
