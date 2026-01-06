@@ -477,7 +477,6 @@ function Home() {
               <div className="job-preview-content">
                 <p className="job-location">📍 {job.location}</p>
                 <p className="job-description">{job.description?.substring(0, 100) + '...'}</p>
-                <p className="job-salary">{job.salary}</p>
                 <Link to="/jobs" className="apply-btn">Apply Now</Link>
               </div>
             </div>

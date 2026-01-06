@@ -1409,6 +1409,11 @@ footer {
   white-space: pre-line;
 }
 
+.job-requirements {
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
 .job-details p {
   margin: 0.25rem 0;
   font-size: 0.9rem;
@@ -1479,6 +1484,46 @@ footer {
 
   .job-content {
     padding: 1rem;
+  }
+
+  .job-description {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .job-requirements {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .job-details p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 480px) {
+  .job-description {
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .job-requirements {
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .job-details p {
+    font-size: 0.9rem;
+  }
+
+  .job-apply-buttons {
+    flex-direction: column;
+  }
+
+  .apply-btn {
+    width: 100%;
+    padding: 0.85rem 1rem;
   }
 }
 

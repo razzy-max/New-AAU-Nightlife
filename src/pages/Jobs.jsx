@@ -99,7 +99,7 @@ function Jobs() {
                 <p className="job-location">📍 {job.location}</p>
                 <p className="job-description">{job.description}</p>
                 <div className="job-details">
-                  <p><strong>Requirements:</strong> {job.requirements}</p>
+                  <p className="job-requirements"><strong>Requirements:</strong> {job.requirements}</p>
                   <p><strong>Salary:</strong> {job.salary}</p>
                 </div>
                 <div className="job-apply-buttons">
