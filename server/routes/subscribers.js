@@ -7,17 +7,17 @@ const router = express.Router();
 // Public route - Subscribe to newsletter
 router.post('/', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { whatsappNumber } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+    if (!whatsappNumber) {
+      return res.status(400).json({ message: 'WhatsApp number is required' });
     }
 
     // Check if already subscribed
-    const existingSubscriber = await Subscriber.findOne({ email });
+    const existingSubscriber = await Subscriber.findOne({ whatsappNumber });
     if (existingSubscriber) {
       if (existingSubscriber.status === 'active') {
-        return res.status(400).json({ message: 'This email is already subscribed to our newsletter' });
+        return res.status(400).json({ message: 'This WhatsApp number is already subscribed to our newsletter' });
       } else {
         // Reactivate unsubscribed user
         existingSubscriber.status = 'active';
@@ -28,14 +28,14 @@ router.post('/', async (req, res) => {
     }
 
     // Create new subscriber
-    const subscriber = new Subscriber({ email });
+    const subscriber = new Subscriber({ whatsappNumber });
     await subscriber.save();
 
     res.status(201).json({ message: 'Successfully subscribed to our newsletter!' });
   } catch (error) {
     console.error('Error subscribing:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: 'Please enter a valid email address' });
+      return res.status(400).json({ message: 'Please enter a valid WhatsApp number' });
     }
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }

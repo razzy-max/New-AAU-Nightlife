@@ -1,13 +1,11 @@
 import mongoose from 'mongoose';
 
 const subscriberSchema = new mongoose.Schema({
-  email: {
+  whatsappNumber: {
     type: String,
     required: true,
     unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address']
+    trim: true
   },
   status: {
     type: String,
