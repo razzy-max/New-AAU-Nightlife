@@ -34,9 +34,18 @@ router.post('/', async (req, res) => {
     res.status(201).json({ message: 'Successfully subscribed to our newsletter!' });
   } catch (error) {
     console.error('Error subscribing:', error);
+    console.error('Error details:', error.message);
+    console.error('Error name:', error.name);
+    
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: 'Please enter a valid WhatsApp number' });
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: messages[0] || 'Please enter a valid WhatsApp number' });
     }
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'This WhatsApp number is already subscribed to our newsletter' });
+    }
+    
     res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 });
