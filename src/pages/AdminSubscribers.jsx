@@ -203,7 +203,7 @@ function AdminSubscribers() {
         <table>
           <thead>
             <tr>
-              <th>Email</th>
+              <th>WhatsApp Number</th>
               <th>Status</th>
               <th>Subscribed Date</th>
               <th>Actions</th>
@@ -219,7 +219,7 @@ function AdminSubscribers() {
             ) : (
               subscribers.map(subscriber => (
                 <tr key={subscriber._id}>
-                  <td className="subscriber-email">{subscriber.email}</td>
+                  <td className="subscriber-email">{subscriber.whatsappNumber}</td>
                   <td>
                     <span className={`status-btn ${subscriber.status === 'active' ? 'published' : 'draft'}`}>
                       {subscriber.status}
