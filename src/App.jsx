@@ -22,6 +22,9 @@ import AdminCarousel from './pages/AdminCarousel';
 import AdminNewBlog from './pages/AdminNewBlog';
 import AdminNewEvent from './pages/AdminNewEvent';
 import AdminNewJob from './pages/AdminNewJob';
+import AdminEditBlog from './pages/AdminEditBlog';
+import AdminEditEvent from './pages/AdminEditEvent';
+import AdminEditJob from './pages/AdminEditJob';
 import AdminTickets from './pages/AdminTickets';
 import AdminSubscribers from './pages/AdminSubscribers';
 import AdminAwards from './pages/AdminAwards';
@@ -46,11 +49,14 @@ function App() {
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/blogs" element={<ProtectedRoute><AdminBlogs /></ProtectedRoute>} />
         <Route path="/admin/blogs/new" element={<ProtectedRoute><AdminNewBlog /></ProtectedRoute>} />
+        <Route path="/admin/blogs/edit/:id" element={<ProtectedRoute><AdminEditBlog /></ProtectedRoute>} />
         <Route path="/admin/events" element={<ProtectedRoute><AdminEvents /></ProtectedRoute>} />
         <Route path="/admin/events/new" element={<ProtectedRoute><AdminNewEvent /></ProtectedRoute>} />
+        <Route path="/admin/events/edit/:id" element={<ProtectedRoute><AdminEditEvent /></ProtectedRoute>} />
         <Route path="/admin/tickets" element={<ProtectedRoute><AdminTickets /></ProtectedRoute>} />
         <Route path="/admin/jobs" element={<ProtectedRoute><AdminJobs /></ProtectedRoute>} />
         <Route path="/admin/jobs/new" element={<ProtectedRoute><AdminNewJob /></ProtectedRoute>} />
+        <Route path="/admin/jobs/edit/:id" element={<ProtectedRoute><AdminEditJob /></ProtectedRoute>} />
         <Route path="/admin/carousel" element={<ProtectedRoute><AdminCarousel /></ProtectedRoute>} />
         <Route path="/admin/comments" element={<ProtectedRoute><AdminComments /></ProtectedRoute>} />
         <Route path="/admin/subscribers" element={<ProtectedRoute><AdminSubscribers /></ProtectedRoute>} />

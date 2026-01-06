@@ -303,6 +303,9 @@ function AdminBlogs() {
                   <Link to={`/blog/${blog._id}`} className="view-btn" target="_blank">
                     View
                   </Link>
+                  <button onClick={() => navigate(`/admin/blogs/edit/${blog._id}`)} className="edit-btn">
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(blog._id)} className="delete-btn">
                     Delete
                   </button>

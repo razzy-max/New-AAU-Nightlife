@@ -292,6 +292,9 @@ function AdminEvents() {
                   </button>
                 </td>
                 <td className="actions">
+                  <button onClick={() => navigate(`/admin/events/edit/${event._id}`)} className="edit-btn">
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(event._id)} className="delete-btn">
                     Delete
                   </button>

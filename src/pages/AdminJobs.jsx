@@ -288,6 +288,9 @@ function AdminJobs() {
                   </button>
                 </td>
                 <td className="actions">
+                  <button onClick={() => navigate(`/admin/jobs/edit/${job._id}`)} className="edit-btn">
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(job._id)} className="delete-btn">
                     Delete
                   </button>
