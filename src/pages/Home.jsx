@@ -104,17 +104,17 @@ function Home() {
   const testimonials = [
     {
       text: "AAU Nightlife has transformed my university experience! The events are amazing and I've made so many friends.",
-      author: "Sarah Johnson",
+      author: "Sarah Johnson ",
       role: "Computer Science Student"
     },
     {
       text: "The job opportunities posted here helped me land my dream internship. Highly recommend!",
-      author: "Michael Adebayo",
+      author: "Michael Adebayo ",
       role: "Business Administration Student"
     },
     {
       text: "The blogs keep me updated on campus life and career tips. Great platform for students!",
-      author: "Grace Okafor",
+      author: "Grace Okafor ",
       role: "Engineering Student"
     }
   ];

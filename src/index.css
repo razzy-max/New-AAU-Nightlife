@@ -1026,6 +1026,118 @@ footer {
   right: 20px;
 }
 
+/* ========== CAROUSEL MOBILE RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .hero {
+    height: 70vh;
+    min-height: 400px;
+  }
+
+  .carousel-slide {
+    background-size: cover;
+    background-position: center top;
+  }
+
+  .carousel-content {
+    padding: 1.5rem 1rem 0.75rem;
+  }
+
+  .carousel-text h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .carousel-text p {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .carousel-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .carousel-dots {
+    bottom: 10px;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .carousel-arrow-left {
+    left: 10px;
+  }
+
+  .carousel-arrow-right {
+    right: 10px;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: 60vh;
+    min-height: 350px;
+  }
+
+  .carousel-slide {
+    background-position: center center;
+  }
+
+  .carousel-content {
+    padding: 1rem 0.75rem 0.5rem;
+  }
+
+  .carousel-text h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .carousel-text p {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .carousel-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .carousel-arrow {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .hero h1 {
+    font-size: 1.6rem;
+    padding: 0 1rem;
+  }
+
+  .hero p {
+    font-size: 0.95rem;
+    padding: 0 1rem;
+  }
+}
+/* ========== END CAROUSEL MOBILE RESPONSIVE ========== */
+
 .hero h1 {
   font-size: 3rem;
   margin-bottom: 1rem;
