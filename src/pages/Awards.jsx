@@ -357,12 +357,25 @@ const Awards = () => {
                                   >
                                     −
                                   </button>
-                                  <span className="qty-display">{voteQuantities[candidate._id] || 1}</span>
+                                  <input 
+                                    type="number"
+                                    min="1"
+                                    max="99999"
+                                    className="qty-input"
+                                    value={voteQuantities[candidate._id] || 1}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value) || 1;
+                                      setVoteQuantities({
+                                        ...voteQuantities,
+                                        [candidate._id]: Math.max(1, Math.min(99999, val))
+                                      });
+                                    }}
+                                  />
                                   <button 
                                     className="qty-btn"
                                     onClick={() => setVoteQuantities({
                                       ...voteQuantities,
-                                      [candidate._id]: Math.min(100, (voteQuantities[candidate._id] || 1) + 1)
+                                      [candidate._id]: (voteQuantities[candidate._id] || 1) + 1
                                     })}
                                   >
                                     +

@@ -381,6 +381,36 @@
   transform: scale(0.95);
 }
 
+.qty-input {
+  width: 60px;
+  min-width: 50px;
+  padding: 0.4rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 2px solid #DAA520;
+  border-radius: 6px;
+  background: white;
+  color: #DAA520;
+  transition: all 0.2s ease;
+}
+
+.qty-input:focus {
+  outline: none;
+  border-color: #DAA520;
+  box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.1);
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-input[type=number] {
+  -moz-appearance: textfield;
+}
+
 .qty-display {
   min-width: 40px;
   text-align: center;
@@ -510,5 +540,32 @@
   .tab-btn {
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
+  }
+
+  .quantity-controls {
+    gap: 0.35rem;
+    padding: 0.5rem;
+  }
+
+  .qty-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+
+  .qty-input {
+    width: 50px;
+    min-width: 45px;
+    padding: 0.35rem;
+    font-size: 0.9rem;
+  }
+
+  .cost-display {
+    font-size: 1rem;
+    padding: 0.4rem;
+  }
+
+  .paid-vote-section {
+    gap: 0.5rem;
   }
 }

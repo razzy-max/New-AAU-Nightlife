@@ -189,7 +189,7 @@ router.post(
   [
     body('candidateId').notEmpty().withMessage('Candidate ID is required'),
     body('categoryId').notEmpty().withMessage('Category ID is required'),
-    body('voteWeight').isInt({ min: 1, max: 100 }).withMessage('Vote weight must be between 1 and 100'),
+    body('voteWeight').isInt({ min: 1, max: 99999 }).withMessage('Vote weight must be between 1 and 99,999'),
     body('email').isEmail().withMessage('Valid email is required'),
       body('amount').isInt({ min: 1 }).withMessage('Amount is required'),
     ],
@@ -288,7 +288,7 @@ router.post(
     body('transactionId').notEmpty().withMessage('Transaction ID is required'),
     body('candidateId').notEmpty().withMessage('Candidate ID is required'),
     body('categoryId').notEmpty().withMessage('Category ID is required'),
-    body('voteWeight').isInt({ min: 1, max: 100 }).withMessage('Vote weight is required'),
+    body('voteWeight').isInt({ min: 1, max: 99999 }).withMessage('Vote weight must be between 1 and 99,999'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
