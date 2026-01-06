@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
+import { formatTime } from '../utils/formatTime';
 
 function EventDetails() {
   const { id } = useParams();
@@ -260,7 +261,7 @@ function EventDetails() {
                 month: 'long',
                 day: 'numeric',
               })}{' '}
-              at {event.time}
+              at {formatTime(event.time)}
             </p>
             <p style={{ fontSize: '16px', marginBottom: '10px' }}>
               <strong>Location:</strong> {event.location}

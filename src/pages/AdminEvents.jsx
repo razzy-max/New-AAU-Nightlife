@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
+import { formatTime } from '../utils/formatTime';
 
 function AdminEvents() {
   const navigate = useNavigate();
@@ -270,7 +271,7 @@ function AdminEvents() {
               <tr key={event._id}>
                 <td className="event-title">{event.title}</td>
                 <td>{new Date(event.date).toLocaleDateString()}</td>
-                <td>{event.time}</td>
+                <td>{formatTime(event.time)}</td>
                 <td>{event.location}</td>
                 <td className="event-description">
                   {event.shortDescription || event.description?.substring(0, 50) + (event.description?.length > 50 ? '...' : '')}

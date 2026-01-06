@@ -4,6 +4,7 @@ import Carousel from '../components/Carousel';
 import API_BASE_URL from '../config';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useTypewriter } from '../hooks/useTypewriter';
+import { formatTime } from '../utils/formatTime';
 
 // Background prefetching utility
 const prefetchData = async (url) => {
@@ -368,7 +369,7 @@ function Home() {
               <div className="event-preview-content">
                 <h3>{event.title}</h3>
                 <p className="event-preview-description">{event.shortDescription || event.description?.substring(0, 100) + '...'}</p>
-                <p className="event-preview-time">{event.time} • {event.location}</p>
+                <p className="event-preview-time">{formatTime(event.time)} • {event.location}</p>
                 <Link to={`/events/${event._id}`} className="learn-more-btn">Learn More</Link>
               </div>
             </div>
@@ -393,7 +394,7 @@ function Home() {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
-              })} at {nextEvent.time}
+              })} at {formatTime(nextEvent.time)}
             </p>
             <div className="countdown-container">
               <div className="countdown-item">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { formatTime } from '../utils/formatTime';
 
 function Events() {
   const [events, setEvents] = useState([]);
@@ -95,7 +96,7 @@ function Events() {
                 <img src={event.image} alt={event.title} loading="lazy" />
                 <div className="event-date-badge">
                   <div className="date">{new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}, {new Date(event.date).getDate()}</div>
-                  <div className="time">{event.time}</div>
+                  <div className="time">{formatTime(event.time)}</div>
                 </div>
               </div>
               <div className="event-content">
