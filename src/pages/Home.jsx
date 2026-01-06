@@ -553,7 +553,6 @@ function Home() {
             placeholder="Enter your WhatsApp number"
             value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
-            pattern="[0-9+\-\s()]*"
             required
             disabled={subscribing}
           />
