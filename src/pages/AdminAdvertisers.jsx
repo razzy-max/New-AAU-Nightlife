@@ -486,22 +486,22 @@ function AdminAdvertisers() {
                   <td data-label="Contact">
                     {advertiser.website && (
                       <a href={advertiser.website} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
-                        🌐 Website
+                        <i className="fas fa-globe" style={{marginRight: '6px'}}></i> Website
                       </a>
                     )}
                     {advertiser.whatsapp && (
-                      <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
-                        💬 WhatsApp
+                      <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px', color: '#25D366'}}>
+                        <i className="fab fa-whatsapp" style={{marginRight: '6px'}}></i> WhatsApp
                       </a>
                     )}
                     {advertiser.instagram && (
-                      <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
-                        📷 Instagram
+                      <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px', color: '#E4405F'}}>
+                        <i className="fab fa-instagram" style={{marginRight: '6px'}}></i> Instagram
                       </a>
                     )}
                     {advertiser.facebook && (
-                      <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" style={{display: 'block'}}>
-                        📘 Facebook
+                      <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" style={{display: 'block', color: '#1877F2'}}>
+                        <i className="fab fa-facebook-f" style={{marginRight: '6px'}}></i> Facebook
                       </a>
                     )}
                     {!advertiser.website && !advertiser.whatsapp && !advertiser.instagram && !advertiser.facebook && (

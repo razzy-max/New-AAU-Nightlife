@@ -310,6 +310,22 @@ function Home() {
     fetchHomepageData();
   }, [cacheBuster]);
 
+  // Auto-slide advertisers carousel every 4 seconds
+  useEffect(() => {
+    if (advertisers.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setAdvertiserIndex(prev => {
+        const itemsPerView = window.innerWidth <= 768 ? 1 : window.innerWidth <= 992 ? 2 : 3;
+        const maxIndex = Math.max(0, advertisers.length - itemsPerView);
+        // Loop back to start when reaching the end
+        return prev >= maxIndex ? 0 : prev + 1;
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [advertisers.length]);
+
   if (loading) {
     return (
       <div className="loading">
@@ -522,22 +538,22 @@ function Home() {
                     <div className="advertiser-links">
                       {advertiser.website && (
                         <a href={advertiser.website} target="_blank" rel="noopener noreferrer" title="Visit Website">
-                          🌐
+                          <i className="fas fa-globe"></i>
                         </a>
                       )}
                       {advertiser.whatsapp && (
                         <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp">
-                          💬
+                          <i className="fab fa-whatsapp"></i>
                         </a>
                       )}
                       {advertiser.instagram && (
                         <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Instagram">
-                          📷
+                          <i className="fab fa-instagram"></i>
                         </a>
                       )}
                       {advertiser.facebook && (
                         <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" title="Facebook">
-                          📘
+                          <i className="fab fa-facebook-f"></i>
                         </a>
                       )}
                     </div>
