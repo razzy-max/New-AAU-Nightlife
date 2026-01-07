@@ -58,34 +58,40 @@ function AdminAdvertisers() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formDataUpload = new FormData();
-    formDataUpload.append('image', file);
+    // Check file size (max 2MB for logos)
+    const MAX_LOGO_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_LOGO_SIZE) {
+      alert('Logo file is too large. Maximum size is 2MB.');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
 
     try {
       setUploading(true);
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/api/blogs/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formDataUpload,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          logo: data.imageUrl
+          logo: reader.result
         }));
+        setUploading(false);
         alert('Logo uploaded successfully!');
-      } else {
-        alert('Failed to upload logo');
-      }
+      };
+      reader.onerror = () => {
+        alert('Error reading file');
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error uploading logo:', error);
       alert('Error uploading logo');
-    } finally {
       setUploading(false);
     }
   };
