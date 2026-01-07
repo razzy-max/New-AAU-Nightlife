@@ -87,7 +87,7 @@ function AdminAdvertisers() {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
-    if (!logoFile && !logoPreview && !editingId) newErrors.logo = 'Logo is required';
+    if (!logoPreview) newErrors.logo = 'Logo is required';
     if (logoFile && logoFile.size > MAX_LOGO_SIZE) {
       newErrors.logo = 'Logo file is too large. Maximum size is 2MB.';
     }
@@ -135,12 +135,13 @@ function AdminAdvertisers() {
           window.refreshHomepageData();
         }
       } else {
-        const data = await response.json();
-        alert(data.message || 'Failed to save advertiser');
+        const data = await response.json().catch(() => ({}));
+        console.error('Server error:', response.status, data);
+        alert(data.message || `Failed to save advertiser (Error ${response.status})`);
       }
     } catch (error) {
       console.error('Error saving advertiser:', error);
-      alert('Error saving advertiser');
+      alert('Error saving advertiser: ' + error.message);
     } finally {
       setLoading(false);
     }

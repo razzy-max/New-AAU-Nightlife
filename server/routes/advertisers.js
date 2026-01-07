@@ -48,6 +48,8 @@ router.post('/admin/create', protect, async (req, res) => {
   try {
     const { companyName, logo, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
 
+    console.log('Creating advertiser:', { companyName, hasLogo: !!logo, logoLength: logo?.length });
+
     if (!companyName || !logo) {
       return res.status(400).json({
         success: false,
@@ -63,7 +65,7 @@ router.post('/admin/create', protect, async (req, res) => {
       instagram,
       facebook,
       description,
-      featured: featured !== undefined ? featured : false,
+      featured: featured !== undefined ? featured : true,
       active: active !== undefined ? active : true,
       displayOrder: displayOrder || 0
     });
@@ -76,10 +78,10 @@ router.post('/admin/create', protect, async (req, res) => {
       message: 'Advertiser created successfully'
     });
   } catch (error) {
-    console.error('Error creating advertiser:', error);
+    console.error('Error creating advertiser:', error.message, error.stack);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: error.message || 'Server error'
     });
   }
 });

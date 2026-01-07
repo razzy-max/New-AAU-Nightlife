@@ -49,8 +49,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files for uploads (we'll create uploads directory)
 const uploadsPath = path.join(process.cwd(), 'uploads');
