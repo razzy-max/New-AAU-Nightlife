@@ -1,8 +1,26 @@
 import express from 'express';
+import multer from 'multer';
 import Advertiser from '../models/Advertiser.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Configure multer for file uploads (same as blogs/events)
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB limit for logos
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // Public route - Get all active featured advertisers
 router.get('/featured', async (req, res) => {
@@ -44,13 +62,19 @@ router.get('/admin/all', protect, async (req, res) => {
 });
 
 // Admin route - Create new advertiser
-router.post('/admin/create', protect, async (req, res) => {
+router.post('/admin/create', protect, upload.single('logo'), async (req, res) => {
   try {
-    const { companyName, logo, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
+    const { companyName, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
 
-    console.log('Creating advertiser:', { companyName, hasLogo: !!logo, logoLength: logo?.length });
+    // Convert uploaded file to base64 (same as blogs/events)
+    let logoData = null;
+    if (req.file) {
+      const logoBuffer = req.file.buffer;
+      const logoMimeType = req.file.mimetype;
+      logoData = `data:${logoMimeType};base64,${logoBuffer.toString('base64')}`;
+    }
 
-    if (!companyName || !logo) {
+    if (!companyName || !logoData) {
       return res.status(400).json({
         success: false,
         message: 'Company name and logo are required'
@@ -59,15 +83,15 @@ router.post('/admin/create', protect, async (req, res) => {
 
     const advertiser = new Advertiser({
       companyName,
-      logo,
+      logo: logoData,
       website,
       whatsapp,
       instagram,
       facebook,
       description,
-      featured: featured !== undefined ? featured : true,
-      active: active !== undefined ? active : true,
-      displayOrder: displayOrder || 0
+      featured: featured === 'true' || featured === true,
+      active: active === 'true' || active === true,
+      displayOrder: parseInt(displayOrder) || 0
     });
 
     await advertiser.save();
@@ -87,10 +111,10 @@ router.post('/admin/create', protect, async (req, res) => {
 });
 
 // Admin route - Update advertiser
-router.put('/admin/update/:id', protect, async (req, res) => {
+router.put('/admin/update/:id', protect, upload.single('logo'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { companyName, logo, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
+    const { companyName, website, whatsapp, instagram, facebook, description, featured, active, displayOrder } = req.body;
 
     const advertiser = await Advertiser.findById(id);
     if (!advertiser) {
@@ -100,16 +124,22 @@ router.put('/admin/update/:id', protect, async (req, res) => {
       });
     }
 
+    // Convert uploaded file to base64 if new logo provided
+    if (req.file) {
+      const logoBuffer = req.file.buffer;
+      const logoMimeType = req.file.mimetype;
+      advertiser.logo = `data:${logoMimeType};base64,${logoBuffer.toString('base64')}`;
+    }
+
     if (companyName) advertiser.companyName = companyName;
-    if (logo) advertiser.logo = logo;
     if (website !== undefined) advertiser.website = website;
     if (whatsapp !== undefined) advertiser.whatsapp = whatsapp;
     if (instagram !== undefined) advertiser.instagram = instagram;
     if (facebook !== undefined) advertiser.facebook = facebook;
     if (description !== undefined) advertiser.description = description;
-    if (featured !== undefined) advertiser.featured = featured;
-    if (active !== undefined) advertiser.active = active;
-    if (displayOrder !== undefined) advertiser.displayOrder = displayOrder;
+    if (featured !== undefined) advertiser.featured = featured === 'true' || featured === true;
+    if (active !== undefined) advertiser.active = active === 'true' || active === true;
+    if (displayOrder !== undefined) advertiser.displayOrder = parseInt(displayOrder) || 0;
 
     await advertiser.save();
 

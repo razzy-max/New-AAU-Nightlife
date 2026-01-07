@@ -95,22 +95,24 @@ function AdminAdvertisers() {
     try {
       const token = localStorage.getItem('adminToken');
       
-      // Convert logo to base64 if a new file was selected
-      let logoData = null;
+      // Use FormData like blogs/events
+      const formDataToSend = new FormData();
       
+      // Add text fields
+      formDataToSend.append('companyName', formData.companyName);
+      formDataToSend.append('website', formData.website);
+      formDataToSend.append('whatsapp', formData.whatsapp);
+      formDataToSend.append('instagram', formData.instagram);
+      formDataToSend.append('facebook', formData.facebook);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('featured', formData.featured);
+      formDataToSend.append('active', formData.active);
+      formDataToSend.append('displayOrder', formData.displayOrder);
+      
+      // Add logo file if selected
       if (logoFile) {
-        logoData = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(logoFile);
-        });
+        formDataToSend.append('logo', logoFile);
       }
-      
-      const dataToSend = {
-        ...formData,
-        ...(logoData && { logo: logoData })
-      };
 
       const url = editingId
         ? `${API_BASE_URL}/api/advertisers/admin/update/${editingId}`
@@ -122,9 +124,9 @@ function AdminAdvertisers() {
         method,
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          // Don't set Content-Type - browser will set it with boundary for FormData
         },
-        body: JSON.stringify(dataToSend),
+        body: formDataToSend,
       });
 
       if (response.ok) {
