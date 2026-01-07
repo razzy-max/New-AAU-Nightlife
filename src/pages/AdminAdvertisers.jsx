@@ -11,7 +11,6 @@ function AdminAdvertisers() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState('');
   const [formData, setFormData] = useState({
     companyName: '',
     website: '',
@@ -75,19 +74,12 @@ function AdminAdvertisers() {
 
     setLogoFile(file);
     setErrors(prev => ({ ...prev, logo: '' }));
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogoPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
   };
 
   const validateForm = () => {
     const newErrors = {};
     if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
-    if (!logoPreview) newErrors.logo = 'Logo is required';
+    if (!logoFile && !editingId) newErrors.logo = 'Logo is required';
     if (logoFile && logoFile.size > MAX_LOGO_SIZE) {
       newErrors.logo = 'Logo file is too large. Maximum size is 2MB.';
     }
@@ -104,11 +96,20 @@ function AdminAdvertisers() {
       const token = localStorage.getItem('adminToken');
       
       // Convert logo to base64 if a new file was selected
-      let logoData = logoPreview;
+      let logoData = null;
+      
+      if (logoFile) {
+        logoData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(logoFile);
+        });
+      }
       
       const dataToSend = {
         ...formData,
-        logo: logoData
+        ...(logoData && { logo: logoData })
       };
 
       const url = editingId
@@ -159,7 +160,6 @@ function AdminAdvertisers() {
       active: advertiser.active,
       displayOrder: advertiser.displayOrder || 0
     });
-    setLogoPreview(advertiser.logo);
     setLogoFile(null);
     setEditingId(advertiser._id);
     setShowForm(true);
@@ -293,7 +293,6 @@ function AdminAdvertisers() {
       displayOrder: 0
     });
     setLogoFile(null);
-    setLogoPreview('');
     setEditingId(null);
     setShowForm(false);
     setErrors({});
@@ -417,7 +416,7 @@ function AdminAdvertisers() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="logo">Logo * (Max 2MB)</label>
+              <label htmlFor="logo">Logo *{editingId ? ' (Leave empty to keep current)' : ''}</label>
               <input
                 type="file"
                 id="logo"
@@ -425,22 +424,6 @@ function AdminAdvertisers() {
                 onChange={handleLogoChange}
               />
               {errors.logo && <span className="error">{errors.logo}</span>}
-              {logoPreview && (
-                <div style={{ marginTop: '10px' }}>
-                  <img 
-                    src={logoPreview} 
-                    alt="Logo preview" 
-                    style={{ 
-                      maxWidth: '150px', 
-                      maxHeight: '100px', 
-                      objectFit: 'contain',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      padding: '5px'
-                    }} 
-                  />
-                </div>
-              )}
             </div>
 
             <div className="form-row">
