@@ -30,6 +30,13 @@ router.get('/featured', async (req, res) => {
       featured: true 
     }).sort({ displayOrder: 1, createdAt: -1 });
     
+    // Set cache control headers to prevent stale data
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     res.status(200).json({
       success: true,
       data: advertisers
@@ -47,6 +54,13 @@ router.get('/featured', async (req, res) => {
 router.get('/admin/all', protect, async (req, res) => {
   try {
     const advertisers = await Advertiser.find().sort({ displayOrder: 1, createdAt: -1 });
+    
+    // Set cache control headers
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     
     res.status(200).json({
       success: true,
@@ -96,6 +110,13 @@ router.post('/admin/create', protect, upload.single('logo'), async (req, res) =>
 
     await advertiser.save();
 
+    // Set cache control headers to prevent caching
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+
     res.status(201).json({
       success: true,
       data: advertiser,
@@ -142,6 +163,13 @@ router.put('/admin/update/:id', protect, upload.single('logo'), async (req, res)
     if (displayOrder !== undefined) advertiser.displayOrder = parseInt(displayOrder) || 0;
 
     await advertiser.save();
+
+    // Set cache control headers to prevent caching of this response
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
 
     res.status(200).json({
       success: true,

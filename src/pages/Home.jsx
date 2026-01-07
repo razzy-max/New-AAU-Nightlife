@@ -215,7 +215,7 @@ function Home() {
     prefetchBlogData();
   }, []);
 
-  // Fetch homepage data (featured blogs, upcoming events, featured jobs)
+  // Fetch homepage data (featured blogs, upcoming events, featured jobs, advertisers)
   useEffect(() => {
     const fetchHomepageData = async () => {
       try {
@@ -223,18 +223,21 @@ function Home() {
         const cachedBlogs = sessionStorage.getItem('home_blogs_cache');
         const cachedEvents = sessionStorage.getItem('home_events_cache');
         const cachedJobs = sessionStorage.getItem('home_jobs_cache');
+        const cachedAdvertisers = sessionStorage.getItem('home_advertisers_cache');
         const cacheTimestamp = sessionStorage.getItem('home_cache_timestamp');
         const cachedBuster = sessionStorage.getItem('home_cache_buster');
         const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
 
         // Use cached data if it exists, is fresh, and cacheBuster hasn't changed
-        if (cachedBlogs && cachedEvents && cachedJobs && cacheTimestamp && 
+        // Include advertisers in the cache check
+        if (cachedBlogs && cachedEvents && cachedJobs && cachedAdvertisers && cacheTimestamp && 
             cacheBuster === parseInt(cachedBuster || '0')) {
           const age = Date.now() - parseInt(cacheTimestamp);
           if (age < cacheMaxAge) {
             setFeaturedPosts(JSON.parse(cachedBlogs));
             setUpcomingEvents(JSON.parse(cachedEvents));
             setFeaturedJobs(JSON.parse(cachedJobs));
+            setAdvertisers(JSON.parse(cachedAdvertisers));
             setLoading(false);
             return;
           }

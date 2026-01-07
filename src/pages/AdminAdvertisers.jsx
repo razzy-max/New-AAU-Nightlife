@@ -300,6 +300,24 @@ function AdminAdvertisers() {
     setErrors({});
   };
 
+  // Force public cache refresh - clears all cached homepage data
+  const forcePublicCacheRefresh = () => {
+    // Clear all homepage-related sessionStorage items
+    sessionStorage.removeItem('home_blogs_cache');
+    sessionStorage.removeItem('home_events_cache');
+    sessionStorage.removeItem('home_jobs_cache');
+    sessionStorage.removeItem('home_advertisers_cache');
+    sessionStorage.removeItem('home_cache_timestamp');
+    sessionStorage.removeItem('home_cache_buster');
+    
+    // Trigger homepage refresh if the function is available
+    if (window.refreshHomepageData) {
+      window.refreshHomepageData();
+    }
+    
+    alert('Public cache cleared! The homepage will now load fresh data for all visitors.');
+  };
+
   if (loading) {
     return <div className="admin-loading">Loading advertisers...</div>;
   }
@@ -314,6 +332,14 @@ function AdminAdvertisers() {
             onClick={() => setShowForm(!showForm)}
           >
             {showForm ? 'Cancel' : '+ Add New Advertiser'}
+          </button>
+          <button
+            className="btn btn-warning"
+            onClick={forcePublicCacheRefresh}
+            title="Clear cached data so visitors see the latest updates"
+            style={{ backgroundColor: '#ff9800', color: '#000', borderColor: '#ff9800' }}
+          >
+            🔄 Force Cache Refresh
           </button>
           <Link to="/admin/dashboard" className="btn btn-secondary">
             Back to Dashboard
