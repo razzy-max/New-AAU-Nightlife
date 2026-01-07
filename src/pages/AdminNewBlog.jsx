@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
+// File size limits
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 2 * 1024 * 1024; // 2MB
+
 function AdminNewBlog() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -34,6 +38,12 @@ function AdminNewBlog() {
     if (!formData.content.trim()) newErrors.content = 'Content is required';
     if (!formData.author.trim()) newErrors.author = 'Author is required';
     if (!imageFile) newErrors.image = 'Image file is required';
+    if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
+      newErrors.image = 'Image file is too large. Maximum size is 5MB.';
+    }
+    if (videoFile && videoFile.size > MAX_VIDEO_SIZE) {
+      newErrors.video = 'Video file is too large. Maximum size is 2MB. Consider uploading to YouTube and linking instead.';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -177,7 +187,7 @@ function AdminNewBlog() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="video">Video File (Optional)</label>
+          <label htmlFor="video">Video File (Optional - max 2MB)</label>
           <input
             type="file"
             id="video"
@@ -185,6 +195,10 @@ function AdminNewBlog() {
             accept="video/*"
             onChange={(e) => setVideoFile(e.target.files[0])}
           />
+          <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+            For larger videos, upload to YouTube and embed the link in the content.
+          </p>
+          {errors.video && <span className="error">{errors.video}</span>}
         </div>
 
         <div className="form-group">

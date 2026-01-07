@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
+// File size limits
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 2 * 1024 * 1024; // 2MB
+
 function AdminEditBlog() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -77,6 +81,12 @@ function AdminEditBlog() {
     if (!formData.excerpt.trim()) newErrors.excerpt = 'Excerpt is required';
     if (!formData.content.trim()) newErrors.content = 'Content is required';
     if (!formData.author.trim()) newErrors.author = 'Author is required';
+    if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
+      newErrors.image = 'Image file is too large. Maximum size is 5MB.';
+    }
+    if (videoFile && videoFile.size > MAX_VIDEO_SIZE) {
+      newErrors.video = 'Video file is too large. Maximum size is 2MB. Consider uploading to YouTube and linking instead.';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -256,8 +266,9 @@ function AdminEditBlog() {
             onChange={(e) => setVideoFile(e.target.files[0])}
           />
           <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-            Leave empty to keep current video (if any)
+            Max 2MB. Leave empty to keep current video. For larger videos, upload to YouTube and embed the link.
           </p>
+          {errors.video && <span className="error">{errors.video}</span>}
         </div>
 
         <div className="form-group">
