@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 
+const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2MB max for logos
+
 function AdminAdvertisers() {
   const navigate = useNavigate();
   const [advertisers, setAdvertisers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
   const [formData, setFormData] = useState({
     companyName: '',
-    logo: '',
     website: '',
     whatsapp: '',
     instagram: '',
@@ -21,6 +23,7 @@ function AdminAdvertisers() {
     active: true,
     displayOrder: 0
   });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchAdvertisers();
@@ -54,58 +57,60 @@ function AdminAdvertisers() {
     }));
   };
 
-  const handleImageUpload = async (e) => {
+  const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file size (max 2MB for logos)
-    const MAX_LOGO_SIZE = 2 * 1024 * 1024;
+    // Check file size
     if (file.size > MAX_LOGO_SIZE) {
-      alert('Logo file is too large. Maximum size is 2MB.');
+      setErrors(prev => ({ ...prev, logo: 'Logo file is too large. Maximum size is 2MB.' }));
       return;
     }
 
     // Check file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file.');
+      setErrors(prev => ({ ...prev, logo: 'Please select an image file.' }));
       return;
     }
 
-    try {
-      setUploading(true);
-      
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          logo: reader.result
-        }));
-        setUploading(false);
-        alert('Logo uploaded successfully!');
-      };
-      reader.onerror = () => {
-        alert('Error reading file');
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Error uploading logo:', error);
-      alert('Error uploading logo');
-      setUploading(false);
+    setLogoFile(file);
+    setErrors(prev => ({ ...prev, logo: '' }));
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
+    if (!logoFile && !logoPreview && !editingId) newErrors.logo = 'Logo is required';
+    if (logoFile && logoFile.size > MAX_LOGO_SIZE) {
+      newErrors.logo = 'Logo file is too large. Maximum size is 2MB.';
     }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
-    if (!formData.companyName || !formData.logo) {
-      alert('Please fill in company name and upload a logo');
-      return;
-    }
-
+    setLoading(true);
     try {
       const token = localStorage.getItem('adminToken');
+      
+      // Convert logo to base64 if a new file was selected
+      let logoData = logoPreview;
+      
+      const dataToSend = {
+        ...formData,
+        logo: logoData
+      };
+
       const url = editingId
         ? `${API_BASE_URL}/api/advertisers/admin/update/${editingId}`
         : `${API_BASE_URL}/api/advertisers/admin/create`;
@@ -118,11 +123,10 @@ function AdminAdvertisers() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
-        alert(editingId ? 'Advertiser updated successfully!' : 'Advertiser created successfully!');
         resetForm();
         fetchAdvertisers();
         
@@ -137,13 +141,14 @@ function AdminAdvertisers() {
     } catch (error) {
       console.error('Error saving advertiser:', error);
       alert('Error saving advertiser');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEdit = (advertiser) => {
     setFormData({
       companyName: advertiser.companyName,
-      logo: advertiser.logo,
       website: advertiser.website || '',
       whatsapp: advertiser.whatsapp || '',
       instagram: advertiser.instagram || '',
@@ -153,6 +158,8 @@ function AdminAdvertisers() {
       active: advertiser.active,
       displayOrder: advertiser.displayOrder || 0
     });
+    setLogoPreview(advertiser.logo);
+    setLogoFile(null);
     setEditingId(advertiser._id);
     setShowForm(true);
   };
@@ -275,7 +282,6 @@ function AdminAdvertisers() {
   const resetForm = () => {
     setFormData({
       companyName: '',
-      logo: '',
       website: '',
       whatsapp: '',
       instagram: '',
@@ -285,8 +291,11 @@ function AdminAdvertisers() {
       active: true,
       displayOrder: 0
     });
+    setLogoFile(null);
+    setLogoPreview('');
     setEditingId(null);
     setShowForm(false);
+    setErrors({});
   };
 
   if (loading) {
@@ -314,128 +323,157 @@ function AdminAdvertisers() {
         <div className="admin-form-card">
           <h2>{editingId ? 'Edit Advertiser' : 'Add New Advertiser'}</h2>
           <form onSubmit={handleSubmit} className="admin-form">
-            <div className="form-group">
-              <label>Company Name *</label>
-              <input
-                type="text"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="companyName">Company Name *</label>
+                <input
+                  type="text"
+                  id="companyName"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleInputChange}
+                  required
+                />
+                {errors.companyName && <span className="error">{errors.companyName}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="website">Website URL</label>
+                <input
+                  type="url"
+                  id="website"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleInputChange}
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="whatsapp">WhatsApp Number</label>
+                <input
+                  type="text"
+                  id="whatsapp"
+                  name="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={handleInputChange}
+                  placeholder="e.g., +2349012345678"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="instagram">Instagram Handle</label>
+                <input
+                  type="text"
+                  id="instagram"
+                  name="instagram"
+                  value={formData.instagram}
+                  onChange={handleInputChange}
+                  placeholder="e.g., @companyname"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="facebook">Facebook Page</label>
+                <input
+                  type="text"
+                  id="facebook"
+                  name="facebook"
+                  value={formData.facebook}
+                  onChange={handleInputChange}
+                  placeholder="https://facebook.com/companypage"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="displayOrder">Display Order</label>
+                <input
+                  type="number"
+                  id="displayOrder"
+                  name="displayOrder"
+                  value={formData.displayOrder}
+                  onChange={handleInputChange}
+                  min="0"
+                />
+                <small style={{ fontSize: '12px', color: '#666' }}>Lower numbers appear first</small>
+              </div>
             </div>
 
             <div className="form-group">
-              <label>Website URL</label>
-              <input
-                type="url"
-                name="website"
-                value={formData.website}
-                onChange={handleInputChange}
-                placeholder="https://example.com"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>WhatsApp Number</label>
-              <input
-                type="text"
-                name="whatsapp"
-                value={formData.whatsapp}
-                onChange={handleInputChange}
-                placeholder="e.g., +2349012345678 or 09012345678"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Instagram Handle</label>
-              <input
-                type="text"
-                name="instagram"
-                value={formData.instagram}
-                onChange={handleInputChange}
-                placeholder="e.g., @companyname or https://instagram.com/companyname"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Facebook Page</label>
-              <input
-                type="text"
-                name="facebook"
-                value={formData.facebook}
-                onChange={handleInputChange}
-                placeholder="e.g., https://facebook.com/companypage"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
+              <label htmlFor="description">Description</label>
               <textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 rows="3"
+                placeholder="Brief description of the advertiser/business"
               />
             </div>
 
             <div className="form-group">
-              <label>Logo * {uploading && '(Uploading...)'}</label>
+              <label htmlFor="logo">Logo * (Max 2MB)</label>
               <input
                 type="file"
+                id="logo"
                 accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
+                onChange={handleLogoChange}
               />
-              {formData.logo && (
-                <div className="image-preview">
-                  <img src={formData.logo} alt="Logo preview" />
+              {errors.logo && <span className="error">{errors.logo}</span>}
+              {logoPreview && (
+                <div style={{ marginTop: '10px' }}>
+                  <img 
+                    src={logoPreview} 
+                    alt="Logo preview" 
+                    style={{ 
+                      maxWidth: '150px', 
+                      maxHeight: '100px', 
+                      objectFit: 'contain',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      padding: '5px'
+                    }} 
+                  />
                 </div>
               )}
             </div>
 
-            <div className="form-group">
-              <label>Display Order</label>
-              <input
-                type="number"
-                name="displayOrder"
-                value={formData.displayOrder}
-                onChange={handleInputChange}
-                min="0"
-              />
-              <small>Lower numbers appear first</small>
-            </div>
+            <div className="form-row">
+              <div className="form-group checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="featured"
+                    checked={formData.featured}
+                    onChange={handleInputChange}
+                  />
+                  Featured (Show on homepage)
+                </label>
+              </div>
 
-            <div className="form-group-inline">
-              <label>
-                <input
-                  type="checkbox"
-                  name="featured"
-                  checked={formData.featured}
-                  onChange={handleInputChange}
-                />
-                Featured (Show on homepage)
-              </label>
-            </div>
-
-            <div className="form-group-inline">
-              <label>
-                <input
-                  type="checkbox"
-                  name="active"
-                  checked={formData.active}
-                  onChange={handleInputChange}
-                />
-                Active
-              </label>
+              <div className="form-group checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="active"
+                    checked={formData.active}
+                    onChange={handleInputChange}
+                  />
+                  Active
+                </label>
+              </div>
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary">
-                {editingId ? 'Update Advertiser' : 'Create Advertiser'}
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={resetForm}>
+              <button type="button" onClick={resetForm} className="cancel-btn">
                 Cancel
+              </button>
+              <button type="submit" disabled={loading} className="submit-btn">
+                {loading ? 'Saving...' : (editingId ? 'Update Advertiser' : 'Create Advertiser')}
               </button>
             </div>
           </form>
