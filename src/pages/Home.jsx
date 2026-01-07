@@ -28,6 +28,7 @@ function Home() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [advertisers, setAdvertisers] = useState([]);
+  const [advertiserIndex, setAdvertiserIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [subscribeMessage, setSubscribeMessage] = useState('');
@@ -495,43 +496,66 @@ function Home() {
         <h2 className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Featured Advertisers</h2>
         <p className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Discover amazing World-class businesses and services</p>
         {advertisers.length > 0 ? (
-          <div className="advertisers-grid">
-            {advertisers.map((advertiser, index) => (
-              <div 
-                key={advertiser._id} 
-                className={`advertiser-card stagger-item ${advertisersVisible ? 'visible' : ''} delay-${Math.min(index + 1, 4)}`}
-              >
-                <div className="advertiser-logo">
-                  <img src={advertiser.logo} alt={advertiser.companyName} loading="lazy" />
-                </div>
-                <div className="advertiser-info">
-                  <h4>{advertiser.companyName}</h4>
-                  {advertiser.description && <p>{advertiser.description}</p>}
-                  <div className="advertiser-links">
-                    {advertiser.website && (
-                      <a href={advertiser.website} target="_blank" rel="noopener noreferrer" title="Visit Website">
-                        🌐
-                      </a>
-                    )}
-                    {advertiser.whatsapp && (
-                      <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp">
-                        💬
-                      </a>
-                    )}
-                    {advertiser.instagram && (
-                      <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Instagram">
-                        📷
-                      </a>
-                    )}
-                    {advertiser.facebook && (
-                      <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" title="Facebook">
-                        📘
-                      </a>
-                    )}
+          <div className="advertisers-carousel-container">
+            <button 
+              className="carousel-nav-btn prev" 
+              onClick={() => setAdvertiserIndex(prev => Math.max(0, prev - 1))}
+              disabled={advertiserIndex === 0}
+            >
+              ‹
+            </button>
+            <div 
+              className="advertisers-carousel"
+              style={{ transform: `translateX(-${advertiserIndex * (window.innerWidth <= 768 ? 100 : window.innerWidth <= 992 ? 50 : 33.333)}%)` }}
+            >
+              {advertisers.map((advertiser, index) => (
+                <div 
+                  key={advertiser._id} 
+                  className={`advertiser-card stagger-item ${advertisersVisible ? 'visible' : ''} delay-${Math.min(index + 1, 4)}`}
+                >
+                  <div className="advertiser-logo">
+                    <img src={advertiser.logo} alt={advertiser.companyName} loading="lazy" />
+                  </div>
+                  <div className="advertiser-info">
+                    <h4>{advertiser.companyName}</h4>
+                    {advertiser.description && <p>{advertiser.description}</p>}
+                    <div className="advertiser-links">
+                      {advertiser.website && (
+                        <a href={advertiser.website} target="_blank" rel="noopener noreferrer" title="Visit Website">
+                          🌐
+                        </a>
+                      )}
+                      {advertiser.whatsapp && (
+                        <a href={`https://wa.me/${advertiser.whatsapp.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                          💬
+                        </a>
+                      )}
+                      {advertiser.instagram && (
+                        <a href={advertiser.instagram.startsWith('http') ? advertiser.instagram : `https://instagram.com/${advertiser.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" title="Instagram">
+                          📷
+                        </a>
+                      )}
+                      {advertiser.facebook && (
+                        <a href={advertiser.facebook} target="_blank" rel="noopener noreferrer" title="Facebook">
+                          📘
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <button 
+              className="carousel-nav-btn next" 
+              onClick={() => setAdvertiserIndex(prev => {
+                const itemsPerView = window.innerWidth <= 768 ? 1 : window.innerWidth <= 992 ? 2 : 3;
+                const maxIndex = Math.max(0, advertisers.length - itemsPerView);
+                return Math.min(maxIndex, prev + 1);
+              })}
+              disabled={advertiserIndex >= advertisers.length - (window.innerWidth <= 768 ? 1 : window.innerWidth <= 992 ? 2 : 3)}
+            >
+              ›
+            </button>
           </div>
         ) : (
           <div className="no-advertisers">

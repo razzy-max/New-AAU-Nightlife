@@ -1843,15 +1843,21 @@ footer {
   margin-right: auto;
 }
 
-.advertisers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
+.advertisers-carousel-container {
+  position: relative;
   max-width: 1200px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
-.advertiser-card {
+.advertisers-carousel {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.advertisers-carousel .advertiser-card {
+  flex: 0 0 calc(33.333% - 1.33rem);
+  margin: 0 1rem;
   background: white;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
@@ -1863,13 +1869,48 @@ footer {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 180px;
+  min-height: 220px;
 }
 
-.advertiser-card:hover {
+.advertisers-carousel .advertiser-card:hover {
   border-color: var(--primary-color);
   transform: translateY(-5px);
   box-shadow: 0 5px 20px rgba(218, 165, 32, 0.3);
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--primary-color);
+  color: var(--secondary-color);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.carousel-nav-btn:hover {
+  background: var(--secondary-color);
+  color: var(--primary-color);
+}
+
+.carousel-nav-btn.prev {
+  left: -10px;
+}
+
+.carousel-nav-btn.next {
+  right: -10px;
+}
+
+.carousel-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .advertiser-logo {
@@ -1916,11 +1957,18 @@ footer {
   font-size: 1.5rem;
   text-decoration: none;
   transition: transform 0.2s ease;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f0f0;
 }
 
 .advertiser-links a:hover {
   transform: scale(1.2);
+  background: var(--primary-color);
 }
 
 .no-advertisers {
@@ -1931,26 +1979,36 @@ footer {
 }
 
 /* Responsive for advertisers */
+@media (max-width: 992px) {
+  .advertisers-carousel .advertiser-card {
+    flex: 0 0 calc(50% - 1rem);
+  }
+}
+
 @media (max-width: 768px) {
-  .advertisers-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+  .advertisers-carousel .advertiser-card {
+    flex: 0 0 calc(100% - 2rem);
+    margin: 0 1rem;
   }
-
-  .advertiser-card {
-    padding: 1.5rem;
-    min-height: 150px;
+  
+  .carousel-nav-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
   }
-
-  .advertiser-logo {
-    height: 80px;
+  
+  .carousel-nav-btn.prev {
+    left: 5px;
+  }
+  
+  .carousel-nav-btn.next {
+    right: 5px;
   }
 }
 
 @media (max-width: 480px) {
-  .advertisers-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .featured-advertisers {
+    padding: 3rem 1rem;
   }
 
   .featured-advertisers h2 {
@@ -1959,6 +2017,11 @@ footer {
 
   .featured-advertisers > p {
     font-size: 1rem;
+  }
+  
+  .advertisers-carousel .advertiser-card {
+    padding: 1.5rem;
+    min-height: 200px;
   }
 }
 
@@ -3879,5 +3942,90 @@ footer {
 
   .event-details-header-grid > div {
     width: 100%;
+  }
+}
+
+/* ========== ADMIN ADVERTISERS MOBILE RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1rem;
+  }
+  
+  .admin-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .admin-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .admin-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .admin-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .admin-form-card {
+    padding: 1rem;
+  }
+  
+  .admin-form-card h2 {
+    font-size: 1.25rem;
+  }
+  
+  .toggle-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+    margin: 0;
+  }
+  
+  /* Card-style table on mobile */
+  .admin-table thead {
+    display: none;
+  }
+  
+  .admin-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #fff;
+  }
+  
+  .admin-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .admin-table tbody td:last-child {
+    border-bottom: none;
+  }
+  
+  .admin-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #333;
+    margin-right: 1rem;
   }
 }

@@ -470,7 +470,6 @@ function AdminAdvertisers() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Logo</th>
               <th>Company</th>
               <th>Contact Methods</th>
               <th>Featured</th>
@@ -483,15 +482,8 @@ function AdminAdvertisers() {
             {advertisers.length > 0 ? (
               advertisers.map((advertiser) => (
                 <tr key={advertiser._id}>
-                  <td>
-                    <img
-                      src={advertiser.logo}
-                      alt={advertiser.companyName}
-                      className="table-logo"
-                    />
-                  </td>
-                  <td>{advertiser.companyName}</td>
-                  <td>
+                  <td data-label="Company"><strong>{advertiser.companyName}</strong></td>
+                  <td data-label="Contact">
                     {advertiser.website && (
                       <a href={advertiser.website} target="_blank" rel="noopener noreferrer" style={{display: 'block', marginBottom: '4px'}}>
                         🌐 Website
@@ -513,10 +505,10 @@ function AdminAdvertisers() {
                       </a>
                     )}
                     {!advertiser.website && !advertiser.whatsapp && !advertiser.instagram && !advertiser.facebook && (
-                      <span style={{color: '#999'}}>No contact methods</span>
+                      <span style={{color: '#999'}}>None</span>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Featured">
                     <button
                       className={`toggle-btn ${advertiser.featured ? 'active' : ''}`}
                       onClick={() => toggleFeatured(advertiser._id, advertiser.featured)}
@@ -524,7 +516,7 @@ function AdminAdvertisers() {
                       {advertiser.featured ? 'Yes' : 'No'}
                     </button>
                   </td>
-                  <td>
+                  <td data-label="Active">
                     <button
                       className={`toggle-btn ${advertiser.active ? 'active' : ''}`}
                       onClick={() => toggleActive(advertiser._id, advertiser.active)}
@@ -532,8 +524,8 @@ function AdminAdvertisers() {
                       {advertiser.active ? 'Yes' : 'No'}
                     </button>
                   </td>
-                  <td>{advertiser.displayOrder}</td>
-                  <td className="action-buttons">
+                  <td data-label="Order">{advertiser.displayOrder}</td>
+                  <td data-label="Actions" className="action-buttons">
                     <button
                       className="btn btn-edit"
                       onClick={() => handleEdit(advertiser)}
@@ -551,7 +543,7 @@ function AdminAdvertisers() {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="no-data">
+                <td colSpan="6" className="no-data">
                   No advertisers found. Create your first advertiser!
                 </td>
               </tr>
