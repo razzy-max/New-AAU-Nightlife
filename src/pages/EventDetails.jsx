@@ -127,7 +127,8 @@ function EventDetails() {
       }
 
       // Store the purchase details for verification after payment
-      sessionStorage.setItem('pendingPurchase', JSON.stringify({
+      // Use both sessionStorage AND localStorage for redundancy
+      const purchaseInfo = {
         reference: purchaseData.reference,
         ticketTypeName: selectedTicket.name,
         ticketTypePrice: selectedTicket.price,
@@ -135,7 +136,11 @@ function EventDetails() {
         name: nameStr,
         whatsapp: whatsappStr,
         eventId: id,
-      }));
+        timestamp: Date.now(),
+      };
+      
+      sessionStorage.setItem('pendingPurchase', JSON.stringify(purchaseInfo));
+      localStorage.setItem('pendingPurchase', JSON.stringify(purchaseInfo));
 
       // Redirect to Paystack payment page
       if (purchaseData.paymentUrl) {

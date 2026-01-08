@@ -126,6 +126,17 @@ router.post('/purchase/verify/:eventId', async (req, res) => {
       return res.status(400).json({ message: 'Payment reference required' });
     }
 
+    // Check if ticket already exists for this payment reference (idempotency check FIRST)
+    const existingTicket = await Ticket.findOne({ paymentReference: reference });
+    if (existingTicket) {
+      console.log('[TICKET] Already exists for reference:', reference, '-> Returning existing ticket');
+      return res.json({
+        success: true,
+        ticketId: existingTicket.ticketId,
+        message: 'Ticket already created for this payment',
+      });
+    }
+
     // Verify payment with Paystack
     const verifyResponse = await axios.get(
       `https://api.paystack.co/transaction/verify/${reference}`,
@@ -139,55 +150,101 @@ router.post('/purchase/verify/:eventId', async (req, res) => {
     const paymentData = verifyResponse.data.data;
 
     if (paymentData.status !== 'success') {
-      return res.status(400).json({ message: 'Payment verification failed' });
+      return res.status(400).json({ 
+        message: 'Payment verification failed',
+        paymentStatus: paymentData.status 
+      });
+    }
+
+    // Extract metadata from Paystack (this is the RELIABLE source)
+    const customFields = paymentData.metadata?.custom_fields || [];
+    const getField = (variableName) => {
+      const field = customFields.find(f => f.variable_name === variableName);
+      return field?.value || null;
+    };
+
+    // Use Paystack metadata as primary source, fallback to request body
+    const buyerName = getField('buyer_name') || name;
+    const buyerEmail = getField('email') || paymentData.customer?.email || email;
+    const buyerWhatsapp = getField('whatsapp') || whatsapp;
+    const ticketName = getField('ticket_type') || ticketTypeName;
+    const ticketPrice = parseFloat(getField('ticket_type_price')) || ticketTypePrice || (paymentData.amount / 100);
+    // Get eventId from Paystack metadata first, then from URL (but not if it's 'unknown')
+    const urlEventId = req.params.eventId !== 'unknown' ? req.params.eventId : null;
+    const eventId = getField('event_id') || urlEventId;
+
+    console.log('[TICKET VERIFY] Using data:', {
+      reference,
+      buyerName,
+      buyerEmail,
+      buyerWhatsapp,
+      ticketName,
+      ticketPrice,
+      eventId,
+      source: getField('buyer_name') ? 'paystack_metadata' : 'request_body'
+    });
+
+    // Validate we have minimum required data
+    if (!buyerName || !buyerEmail) {
+      console.error('[TICKET ERROR] Missing required buyer info after extracting from Paystack');
+      return res.status(400).json({ 
+        message: 'Missing buyer information. Please contact support with reference: ' + reference 
+      });
+    }
+
+    // Validate we have eventId
+    if (!eventId) {
+      console.error('[TICKET ERROR] Missing eventId, cannot create ticket');
+      return res.status(400).json({ 
+        message: 'Event information missing. Please contact support with reference: ' + reference 
+      });
     }
 
     // Get event details
-    const event = await Event.findById(req.params.eventId);
+    const event = await Event.findById(eventId);
     if (!event) {
+      console.error('[TICKET ERROR] Event not found:', eventId);
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    // Find the ticket type by name and price
-    const ticketType = event.tickets.find(t => t.name === ticketTypeName && t.price === ticketTypePrice);
+    // Find the ticket type by name (price might vary slightly due to conversions)
+    let ticketType = event.tickets.find(t => t.name === ticketName);
     if (!ticketType) {
-      return res.status(404).json({ message: 'Ticket type not found' });
+      // Fallback: find by approximate price if name doesn't match
+      ticketType = event.tickets.find(t => Math.abs(t.price - ticketPrice) < 1);
     }
-
-    // Check if ticket already exists for this payment reference
-    const existingTicket = await Ticket.findOne({ paymentReference: reference });
-    if (existingTicket) {
-      return res.json({
-        success: true,
-        ticketId: existingTicket.ticketId,
-        message: 'Ticket already created for this payment',
-      });
+    if (!ticketType) {
+      console.error('[TICKET ERROR] Ticket type not found:', ticketName, ticketPrice);
+      // Still create the ticket with the data we have
+      ticketType = { name: ticketName || 'General', price: ticketPrice };
     }
 
     // Create ticket record
     const ticket = new Ticket({
-      eventId: req.params.eventId,
+      eventId: eventId,
       eventTitle: event.title,
       eventDate: event.date,
       eventTime: event.time,
       location: event.location,
       ticketTypeName: ticketType.name,
       ticketTypePrice: ticketType.price,
-      email,
-      name,
-      whatsapp,
+      email: buyerEmail,
+      name: buyerName,
+      whatsapp: buyerWhatsapp || '',
       paymentStatus: 'completed',
       paymentReference: reference,
-      paymentTime: new Date(),
+      paymentTime: new Date(paymentData.paid_at || Date.now()),
     });
 
     const createdTicket = await ticket.save();
+    console.log('[TICKET] Created successfully:', createdTicket.ticketId);
 
     // Send confirmation email with ticket PDF
     try {
       await sendTicketEmail(createdTicket);
+      console.log('[TICKET] Email sent for:', createdTicket.ticketId);
     } catch (emailError) {
-      console.error('Email sending error:', emailError);
+      console.error('[TICKET] Email sending error:', emailError);
       // Don't fail the ticket creation if email fails, but log the error
     }
 
@@ -197,8 +254,125 @@ router.post('/purchase/verify/:eventId', async (req, res) => {
       message: 'Ticket created successfully',
     });
   } catch (error) {
-    console.error('Ticket creation error:', error);
-    res.status(500).json({ message: 'Server error during ticket creation' });
+    // Handle duplicate key error (race condition with webhook)
+    if (error.code === 11000 && error.keyPattern?.paymentReference) {
+      console.log('[TICKET] Duplicate payment reference detected, fetching existing ticket');
+      const existingTicket = await Ticket.findOne({ paymentReference: req.body.reference });
+      if (existingTicket) {
+        return res.json({
+          success: true,
+          ticketId: existingTicket.ticketId,
+          message: 'Ticket already created for this payment',
+        });
+      }
+    }
+    console.error('[TICKET ERROR] Ticket creation error:', error);
+    res.status(500).json({ message: 'Server error during ticket creation. Please contact support.' });
+  }
+});
+
+// @desc    Paystack Webhook - Backup ticket creation for failed frontend verifications
+// @route   POST /api/tickets/webhook/paystack
+// @access  Public (verified by Paystack signature)
+router.post('/webhook/paystack', async (req, res) => {
+  try {
+    const crypto = await import('crypto');
+    const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+    
+    // Verify webhook signature
+    if (hash !== req.headers['x-paystack-signature']) {
+      console.log('[WEBHOOK] Invalid signature');
+      return res.status(400).json({ message: 'Invalid signature' });
+    }
+
+    const event = req.body;
+    console.log('[WEBHOOK] Received event:', event.event);
+
+    // Only process successful charges
+    if (event.event !== 'charge.success') {
+      return res.status(200).json({ message: 'Event ignored' });
+    }
+
+    const paymentData = event.data;
+    const reference = paymentData.reference;
+
+    // Check if this is a ticket payment (check metadata for event_id)
+    const customFields = paymentData.metadata?.custom_fields || [];
+    const getField = (variableName) => {
+      const field = customFields.find(f => f.variable_name === variableName);
+      return field?.value || null;
+    };
+
+    const eventId = getField('event_id');
+    if (!eventId) {
+      console.log('[WEBHOOK] Not a ticket payment, ignoring');
+      return res.status(200).json({ message: 'Not a ticket payment' });
+    }
+
+    // Check if ticket already exists
+    const existingTicket = await Ticket.findOne({ paymentReference: reference });
+    if (existingTicket) {
+      console.log('[WEBHOOK] Ticket already exists for:', reference);
+      return res.status(200).json({ message: 'Ticket already exists' });
+    }
+
+    // Extract data from Paystack
+    const buyerName = getField('buyer_name');
+    const buyerEmail = getField('email') || paymentData.customer?.email;
+    const buyerWhatsapp = getField('whatsapp');
+    const ticketName = getField('ticket_type');
+    const ticketPrice = parseFloat(getField('ticket_type_price')) || (paymentData.amount / 100);
+
+    if (!buyerName || !buyerEmail) {
+      console.error('[WEBHOOK] Missing buyer info in metadata');
+      return res.status(200).json({ message: 'Missing buyer info' });
+    }
+
+    // Get event details
+    const eventDoc = await Event.findById(eventId);
+    if (!eventDoc) {
+      console.error('[WEBHOOK] Event not found:', eventId);
+      return res.status(200).json({ message: 'Event not found' });
+    }
+
+    // Create ticket
+    const ticket = new Ticket({
+      eventId: eventId,
+      eventTitle: eventDoc.title,
+      eventDate: eventDoc.date,
+      eventTime: eventDoc.time,
+      location: eventDoc.location,
+      ticketTypeName: ticketName || 'General',
+      ticketTypePrice: ticketPrice,
+      email: buyerEmail,
+      name: buyerName,
+      whatsapp: buyerWhatsapp || '',
+      paymentStatus: 'completed',
+      paymentReference: reference,
+      paymentTime: new Date(paymentData.paid_at || Date.now()),
+    });
+
+    const createdTicket = await ticket.save();
+    console.log('[WEBHOOK] Ticket created via webhook:', createdTicket.ticketId);
+
+    // Send confirmation email
+    try {
+      await sendTicketEmail(createdTicket);
+    } catch (emailError) {
+      console.error('[WEBHOOK] Email error:', emailError);
+    }
+
+    res.status(200).json({ message: 'Ticket created' });
+  } catch (error) {
+    // Handle duplicate key error gracefully (frontend already created the ticket)
+    if (error.code === 11000 && error.keyPattern?.paymentReference) {
+      console.log('[WEBHOOK] Ticket already created by frontend for reference:', req.body?.data?.reference);
+      return res.status(200).json({ message: 'Ticket already exists' });
+    }
+    console.error('[WEBHOOK] Error:', error);
+    res.status(500).json({ message: 'Webhook error' });
   }
 });
 

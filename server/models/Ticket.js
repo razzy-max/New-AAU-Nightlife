@@ -47,7 +47,7 @@ const ticketSchema = new mongoose.Schema({
   },
   whatsapp: {
     type: String,
-    required: true,
+    default: '',
   },
   paymentStatus: {
     type: String,
@@ -68,6 +68,7 @@ const ticketSchema = new mongoose.Schema({
 ticketSchema.index({ ticketId: 1 });
 ticketSchema.index({ eventId: 1 });
 ticketSchema.index({ paymentTime: -1 });
+ticketSchema.index({ paymentReference: 1 }, { unique: true, sparse: true }); // Unique payment reference to prevent duplicates
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
