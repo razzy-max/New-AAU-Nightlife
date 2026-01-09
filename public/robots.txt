@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Disallow admin pages
+Disallow: /admin
+Disallow: /admin/*
+
+# Disallow callback pages
+Disallow: /payment-callback
+Disallow: /award-payment-callback
+Disallow: /ticket/
+
+Sitemap: https://aaunightlife.com/sitemap.xml
