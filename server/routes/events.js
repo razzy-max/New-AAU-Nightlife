@@ -140,7 +140,7 @@ router.post('/', protect, admin, upload.single('image'), [
 // @desc    Update an event
 // @route   PUT /api/events/:id
 // @access  Private/Admin
-router.put('/:id', protect, admin, async (req, res) => {
+router.put('/:id', protect, admin, upload.single('image'), async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
 
@@ -155,6 +155,13 @@ router.put('/:id', protect, admin, async (req, res) => {
           req.body.tickets = [];
           req.body.hasTicketing = false;
         }
+      }
+
+      // Handle image upload - convert to base64 if new file uploaded
+      if (req.file) {
+        const imageBuffer = req.file.buffer;
+        const imageMimeType = req.file.mimetype;
+        req.body.image = `data:${imageMimeType};base64,${imageBuffer.toString('base64')}`;
       }
 
       // Remove old price field if exists
