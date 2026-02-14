@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import QRCode from 'qrcode';
+import html2pdf from 'html2pdf.js';
 import API_BASE_URL from '../config';
 
 function AdminTickets() {
@@ -15,6 +17,11 @@ function AdminTickets() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('paymentTime');
+
+  // PDF Download state
+  const [downloadingTicket, setDownloadingTicket] = useState(null);
+  const [qrCode, setQrCode] = useState(null);
+  const ticketCardRef = useRef(null);
 
   useEffect(() => {
     fetchTickets();
@@ -110,6 +117,48 @@ function AdminTickets() {
     // Reset to page 1 and fetch new data
     fetchTickets();
   };
+
+  const handleDownloadTicket = async (ticket) => {
+    try {
+      // Generate QR code
+      const qrData = `${window.location.origin}/ticket/${ticket.ticketId}`;
+      const qrDataUrl = await QRCode.toDataURL(qrData, {
+        width: 200,
+        margin: 10,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+      setQrCode(qrDataUrl);
+      setDownloadingTicket(ticket);
+    } catch (err) {
+      alert('Error generating ticket PDF: ' + err.message);
+    }
+  };
+
+  // Effect to trigger PDF download when ticket card is ready
+  useEffect(() => {
+    if (downloadingTicket && qrCode && ticketCardRef.current) {
+      const element = ticketCardRef.current;
+      const opt = {
+        margin: 10,
+        filename: `ticket-${downloadingTicket.ticketId}.pdf`,
+        image: { type: 'png', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+      };
+
+      html2pdf()
+        .set(opt)
+        .from(element)
+        .save()
+        .then(() => {
+          setDownloadingTicket(null);
+          setQrCode(null);
+        });
+    }
+  }, [downloadingTicket, qrCode]);
 
   return (
     <div style={{ marginTop: '100px', minHeight: '100vh', paddingBottom: '40px' }}>
@@ -395,6 +444,9 @@ function AdminTickets() {
                       <th style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold' }}>
                         Status
                       </th>
+                      <th style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold' }}>
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -461,6 +513,24 @@ function AdminTickets() {
                               ticket.paymentStatus.slice(1)}
                           </span>
                         </td>
+                        <td style={{ padding: '15px', textAlign: 'center' }}>
+                          <button
+                            onClick={() => handleDownloadTicket(ticket)}
+                            disabled={downloadingTicket?._id === ticket._id}
+                            style={{
+                              padding: '8px 12px',
+                              backgroundColor: downloadingTicket?._id === ticket._id ? '#6c757d' : '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '5px',
+                              cursor: downloadingTicket?._id === ticket._id ? 'wait' : 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {downloadingTicket?._id === ticket._id ? '⏳' : '📥'} PDF
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -510,6 +580,166 @@ function AdminTickets() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Hidden Ticket Card for PDF Generation */}
+        {downloadingTicket && qrCode && (
+          <div
+            style={{
+              position: 'absolute',
+              left: '-9999px',
+              top: 0,
+            }}
+          >
+            <div
+              ref={ticketCardRef}
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: '3px solid #DAA520',
+                width: '500px',
+              }}
+            >
+              {/* Ticket Header */}
+              <div
+                style={{
+                  backgroundColor: '#DAA520',
+                  padding: '20px',
+                  textAlign: 'center',
+                  color: 'black',
+                }}
+              >
+                <h1 style={{ margin: 0, fontFamily: 'Georgia, serif', fontSize: '28px' }}>
+                  EVENT TICKET
+                </h1>
+                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                  {new Date().toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* Ticket Content */}
+              <div style={{ padding: '30px' }}>
+                {/* Event Info */}
+                <div style={{ marginBottom: '25px' }}>
+                  <h2
+                    style={{
+                      color: '#DAA520',
+                      fontSize: '22px',
+                      margin: '0 0 10px 0',
+                      fontFamily: 'Georgia, serif',
+                    }}
+                  >
+                    {downloadingTicket.eventTitle}
+                  </h2>
+                  <p style={{ color: '#666', margin: '0 0 10px 0' }}>
+                    <strong>Date & Time:</strong>{' '}
+                    {downloadingTicket.eventDate
+                      ? new Date(downloadingTicket.eventDate).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      : 'TBA'}{' '}
+                    {downloadingTicket.eventTime ? `at ${downloadingTicket.eventTime}` : ''}
+                  </p>
+                  <p style={{ color: '#666', margin: '0 0 10px 0' }}>
+                    <strong>Venue:</strong> {downloadingTicket.location || 'TBA'}
+                  </p>
+                  <p style={{ color: '#DAA520', fontWeight: 'bold', margin: '0' }}>
+                    <strong>Ticket Type:</strong> {downloadingTicket.ticketTypeName}
+                  </p>
+                </div>
+
+                {/* Ticket ID and QR Code */}
+                <div
+                  style={{
+                    backgroundColor: '#f9f9f9',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    marginBottom: '25px',
+                    textAlign: 'center',
+                    borderTop: '1px solid #DAA520',
+                    borderBottom: '1px solid #DAA520',
+                  }}
+                >
+                  {/* QR Code */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <img
+                      src={qrCode}
+                      alt="QR Code"
+                      style={{
+                        width: '150px',
+                        height: '150px',
+                        margin: '0 auto',
+                        display: 'block',
+                        border: '2px solid #ddd',
+                        padding: '5px',
+                        borderRadius: '5px',
+                      }}
+                    />
+                  </div>
+
+                  {/* Ticket ID */}
+                  <div>
+                    <p style={{ fontSize: '12px', color: '#666', margin: '0 0 5px 0' }}>
+                      TICKET ID
+                    </p>
+                    <p
+                      style={{
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        color: '#333',
+                        margin: 0,
+                        fontFamily: 'monospace',
+                        letterSpacing: '2px',
+                      }}
+                    >
+                      {downloadingTicket.ticketId}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Buyer Info */}
+                <div style={{ borderTop: '1px solid #ddd', paddingTop: '20px' }}>
+                  <p style={{ color: '#333', margin: '0 0 10px 0' }}>
+                    <strong>Ticket Holder:</strong> {downloadingTicket.name}
+                  </p>
+                  <p style={{ color: '#333', margin: '0 0 10px 0' }}>
+                    <strong>Email:</strong> {downloadingTicket.email}
+                  </p>
+                  <p style={{ color: '#333', margin: '0 0 10px 0' }}>
+                    <strong>WhatsApp:</strong> {downloadingTicket.whatsapp}
+                  </p>
+                  <p style={{ color: '#333', margin: '0' }}>
+                    <strong>Price Paid:</strong> ₦{downloadingTicket.ticketTypePrice.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Ticket Footer */}
+              <div
+                style={{
+                  backgroundColor: '#f9f9f9',
+                  padding: '15px',
+                  textAlign: 'center',
+                  borderTop: '1px solid #ddd',
+                  fontSize: '12px',
+                  color: '#666',
+                }}
+              >
+                <p style={{ margin: 0 }}>
+                  Present your ticket at the venue (either printed or on your phone).
+                </p>
+                <p style={{ margin: '5px 0 0 0' }}>
+                  {downloadingTicket.eventDate
+                    ? `Valid for ${new Date(downloadingTicket.eventDate).toLocaleDateString()}`
+                    : 'Check event details for date'}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
