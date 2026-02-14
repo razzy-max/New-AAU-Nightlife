@@ -413,6 +413,7 @@ function AdminTickets() {
                   style={{
                     width: '100%',
                     borderCollapse: 'collapse',
+                    minWidth: '1100px',
                   }}
                 >
                   <thead>
@@ -441,10 +442,10 @@ function AdminTickets() {
                       <th style={{ padding: '15px', textAlign: 'left', fontWeight: 'bold' }}>
                         Payment Time
                       </th>
-                      <th style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold' }}>
+                      <th style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                         Status
                       </th>
-                      <th style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold' }}>
+                      <th style={{ padding: '15px', textAlign: 'center', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '80px' }}>
                         Actions
                       </th>
                     </tr>
@@ -590,16 +591,22 @@ function AdminTickets() {
               position: 'absolute',
               left: '-9999px',
               top: 0,
+              width: '600px',
+              padding: '20px',
+              backgroundColor: '#f5f5f5',
             }}
           >
             <div
               ref={ticketCardRef}
+              id="ticket-card"
               style={{
                 backgroundColor: 'white',
                 borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 overflow: 'hidden',
+                marginBottom: '30px',
                 border: '3px solid #DAA520',
-                width: '500px',
+                pageBreakInside: 'avoid',
               }}
             >
               {/* Ticket Header */}
@@ -731,11 +738,11 @@ function AdminTickets() {
                 }}
               >
                 <p style={{ margin: 0 }}>
-                  Present your ticket at the venue (either printed or on your phone).
+                  Present your ticket at the venue (either printed or on your phone). Screenshot or print this page.
                 </p>
                 <p style={{ margin: '5px 0 0 0' }}>
-                  {downloadingTicket.eventDate
-                    ? `Valid for ${new Date(downloadingTicket.eventDate).toLocaleDateString()}`
+                  Valid for {downloadingTicket.eventDate
+                    ? new Date(downloadingTicket.eventDate).toLocaleDateString()
                     : 'Check event details for date'}
                 </p>
               </div>
