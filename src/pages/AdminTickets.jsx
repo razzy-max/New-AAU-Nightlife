@@ -162,7 +162,7 @@ function AdminTickets() {
 
   return (
     <div style={{ marginTop: '100px', minHeight: '100vh', paddingBottom: '40px' }}>
-      <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ padding: '20px', maxWidth: '1600px', margin: '0 auto' }}>
         {/* Back Button */}
         <div style={{ marginBottom: '20px' }}>
           <button
