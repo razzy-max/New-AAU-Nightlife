@@ -402,18 +402,18 @@ function AdminTickets() {
             style={{
               backgroundColor: 'white',
               borderRadius: '8px',
-              overflow: 'hidden',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
               border: '1px solid #ddd',
+              overflowX: 'auto',
             }}
           >
             {tickets.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
+              <div>
                 <table
                   style={{
                     width: '100%',
                     borderCollapse: 'collapse',
-                    minWidth: '1100px',
+                    minWidth: '1200px',
                   }}
                 >
                   <thead>
