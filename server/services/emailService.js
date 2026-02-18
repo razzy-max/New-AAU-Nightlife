@@ -1,19 +1,19 @@
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 import PDFDocument from 'pdfkit';
 
-// Initialize SendGrid with API key
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Verify SendGrid connection on startup
-console.log('[EMAIL] Verifying SendGrid configuration...');
-if (!process.env.SENDGRID_API_KEY) {
-  console.error('❌ [EMAIL] SendGrid API key not found in environment variables');
+// Verify Resend connection on startup
+console.log('[EMAIL] Verifying Resend configuration...');
+if (!process.env.RESEND_API_KEY) {
+  console.error('❌ [EMAIL] Resend API key not found in environment variables');
   console.error('   Config check:', {
-    sendgridApiKey: !!process.env.SENDGRID_API_KEY,
+    resendApiKey: !!process.env.RESEND_API_KEY,
     nodeEnv: process.env.NODE_ENV,
   });
 } else {
-  console.log('✅ [EMAIL] SendGrid initialized with API key');
+  console.log('✅ [EMAIL] Resend initialized with API key');
 }
 
 // Generate ticket PDF as buffer
@@ -115,7 +115,7 @@ export const generateTicketPDF = async (ticket) => {
   });
 };
 
-// Send ticket email via SendGrid
+// Send ticket email via Resend
 export const sendTicketEmail = async (ticket) => {
   try {
     console.log(`[EMAIL] Starting ticket email for ID: ${ticket.ticketId}`);
@@ -126,11 +126,16 @@ export const sendTicketEmail = async (ticket) => {
     const pdfBuffer = await generateTicketPDF(ticket);
     console.log(`[EMAIL] PDF generated successfully (${pdfBuffer.length} bytes)`);
 
-    // Prepare email data for SendGrid
-    const msg = {
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'tickets@aaunightlife.com';
+
+    console.log('[EMAIL] Preparing to send email via Resend...');
+    console.log(`[EMAIL] From: ${fromEmail}`);
+    console.log(`[EMAIL] To: ${ticket.email}`);
+
+    // Send email with Resend
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
       to: ticket.email,
-      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@aaunightlife.com',
-      replyTo: process.env.EMAIL_USER || 'iraborerasmus@gmail.com',
       subject: `Your Ticket for ${ticket.eventTitle} - Ticket ID: ${ticket.ticketId}`,
       html: `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto;">
@@ -186,32 +191,27 @@ export const sendTicketEmail = async (ticket) => {
       `,
       attachments: [
         {
-          content: pdfBuffer.toString('base64'),
           filename: `ticket-${ticket.ticketId}.pdf`,
-          type: 'application/pdf',
-          disposition: 'attachment',
+          content: pdfBuffer,
         },
       ],
-    };
+    });
 
-    console.log('[EMAIL] Preparing to send email via SendGrid...');
-    console.log(`[EMAIL] From: ${msg.from}`);
-    console.log(`[EMAIL] To: ${msg.to}`);
-    console.log(`[EMAIL] Subject: ${msg.subject}`);
+    if (error) {
+      throw error;
+    }
 
-    // Send email with SendGrid
-    const result = await sgMail.send(msg);
-    console.log(`✅ [EMAIL] Email sent successfully via SendGrid!`);
-    console.log(`✅ [EMAIL] Response status: ${result[0].statusCode}`);
-    return result;
+    console.log(`✅ [EMAIL] Email sent successfully via Resend!`);
+    console.log(`✅ [EMAIL] Email ID: ${data.id}`);
+    return data;
   } catch (error) {
     console.error(`❌ [EMAIL] Failed to send email for ticket ${ticket.ticketId}`);
     console.error(`❌ [EMAIL] Recipient: ${ticket.email}`);
-    console.error(`❌ [EMAIL] Error type: ${error.code || error.name}`);
+    console.error(`❌ [EMAIL] Error type: ${error.name}`);
     console.error(`❌ [EMAIL] Error message: ${error.message}`);
     
     if (error.message.includes('API key')) {
-      console.error('❌ [EMAIL] SendGrid API key issue - check SENDGRID_API_KEY environment variable');
+      console.error('❌ [EMAIL] Resend API key issue - check RESEND_API_KEY environment variable');
     }
     
     console.error(`❌ [EMAIL] Full error:`, error);
