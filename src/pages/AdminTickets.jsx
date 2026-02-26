@@ -23,6 +23,20 @@ function AdminTickets() {
   const [qrCode, setQrCode] = useState(null);
   const ticketCardRef = useRef(null);
 
+  // Manual Ticket Generation state
+  const [manualTicketForm, setManualTicketForm] = useState({
+    name: '',
+    email: '',
+    whatsapp: '',
+    eventId: '',
+    ticketTypeName: '',
+    ticketTypePrice: 0,
+  });
+  const [selectedEventTickets, setSelectedEventTickets] = useState([]);
+  const [manualTicketLoading, setManualTicketLoading] = useState(false);
+  const [manualTicketSuccess, setManualTicketSuccess] = useState(null);
+  const [manualTicketError, setManualTicketError] = useState(null);
+
   useEffect(() => {
     fetchTickets();
     fetchEvents();
@@ -137,6 +151,71 @@ function AdminTickets() {
     }
   };
 
+  // Handle event selection for manual ticket
+  const handleManualEventSelect = (eventId) => {
+    const selectedEvent = events.find(e => e._id === eventId);
+    setManualTicketForm(prev => ({
+      ...prev,
+      eventId,
+      ticketTypeName: '',
+      ticketTypePrice: 0,
+    }));
+    setSelectedEventTickets(selectedEvent?.tickets || []);
+  };
+
+  // Handle ticket type selection for manual ticket
+  const handleManualTicketTypeSelect = (ticketTypeName) => {
+    const ticketType = selectedEventTickets.find(t => t.name === ticketTypeName);
+    setManualTicketForm(prev => ({
+      ...prev,
+      ticketTypeName,
+      ticketTypePrice: ticketType?.price || 0,
+    }));
+  };
+
+  // Handle manual ticket generation
+  const handleGenerateManualTicket = async (e) => {
+    e.preventDefault();
+    setManualTicketLoading(true);
+    setManualTicketError(null);
+    setManualTicketSuccess(null);
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/tickets/admin/manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(manualTicketForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to generate ticket');
+      }
+
+      setManualTicketSuccess(`Ticket generated successfully! Ticket ID: ${data.ticketId}`);
+      setManualTicketForm({
+        name: '',
+        email: '',
+        whatsapp: '',
+        eventId: '',
+        ticketTypeName: '',
+        ticketTypePrice: 0,
+      });
+      setSelectedEventTickets([]);
+      // Refresh tickets list
+      fetchTickets();
+    } catch (err) {
+      setManualTicketError(err.message);
+    } finally {
+      setManualTicketLoading(false);
+    }
+  };
+
   // Effect to trigger PDF download when ticket card is ready
   useEffect(() => {
     if (downloadingTicket && qrCode && ticketCardRef.current) {
@@ -185,6 +264,232 @@ function AdminTickets() {
         {/* Header */}
         <div className="admin-header">
           <h1>🎟️ Ticket Sales Dashboard</h1>
+        </div>
+
+        {/* Manual Ticket Generation Section */}
+        <div
+          style={{
+            backgroundColor: '#fff8e6',
+            padding: '20px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: '2px solid #DAA520',
+          }}
+        >
+          <h3 style={{ color: '#DAA520', marginTop: '0', fontFamily: 'Georgia, serif' }}>
+            💵 Generate Manual Ticket (Cash Payment)
+          </h3>
+          <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
+            Use this form to generate a ticket for customers who paid in cash. The ticket will be created and emailed to the customer.
+          </p>
+
+          {manualTicketSuccess && (
+            <div
+              style={{
+                backgroundColor: '#d4edda',
+                border: '1px solid #c3e6cb',
+                borderRadius: '5px',
+                padding: '15px',
+                marginBottom: '20px',
+                color: '#155724',
+              }}
+            >
+              ✅ {manualTicketSuccess}
+            </div>
+          )}
+
+          {manualTicketError && (
+            <div
+              style={{
+                backgroundColor: '#f8d7da',
+                border: '1px solid #f5c6cb',
+                borderRadius: '5px',
+                padding: '15px',
+                marginBottom: '20px',
+                color: '#721c24',
+              }}
+            >
+              ❌ {manualTicketError}
+            </div>
+          )}
+
+          <form onSubmit={handleGenerateManualTicket}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '15px',
+                marginBottom: '15px',
+              }}
+            >
+              {/* Full Name */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={manualTicketForm.name}
+                  onChange={(e) => setManualTicketForm(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                  placeholder="Enter customer's full name"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    fontFamily: 'Arial, sans-serif',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={manualTicketForm.email}
+                  onChange={(e) => setManualTicketForm(prev => ({ ...prev, email: e.target.value }))}
+                  required
+                  placeholder="Enter customer's email"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    fontFamily: 'Arial, sans-serif',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* WhatsApp */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  value={manualTicketForm.whatsapp}
+                  onChange={(e) => setManualTicketForm(prev => ({ ...prev, whatsapp: e.target.value }))}
+                  placeholder="Enter customer's WhatsApp number"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    fontFamily: 'Arial, sans-serif',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '15px',
+                marginBottom: '20px',
+              }}
+            >
+              {/* Event Selection */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  Select Event *
+                </label>
+                <select
+                  value={manualTicketForm.eventId}
+                  onChange={(e) => handleManualEventSelect(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    fontFamily: 'Arial, sans-serif',
+                  }}
+                >
+                  <option value="">-- Select an Event --</option>
+                  {events.filter(e => e.hasTicketing).map((event) => (
+                    <option key={event._id} value={event._id}>
+                      {event.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Ticket Type Selection */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  Select Ticket Type *
+                </label>
+                <select
+                  value={manualTicketForm.ticketTypeName}
+                  onChange={(e) => handleManualTicketTypeSelect(e.target.value)}
+                  required
+                  disabled={!manualTicketForm.eventId}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    fontFamily: 'Arial, sans-serif',
+                    backgroundColor: !manualTicketForm.eventId ? '#f5f5f5' : 'white',
+                  }}
+                >
+                  <option value="">-- Select a Ticket Type --</option>
+                  {selectedEventTickets.map((ticket, idx) => (
+                    <option key={idx} value={ticket.name}>
+                      {ticket.name} - ₦{ticket.price.toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Display */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  Ticket Price
+                </label>
+                <div
+                  style={{
+                    padding: '10px',
+                    backgroundColor: '#f9f9f9',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    fontWeight: 'bold',
+                    color: '#DAA520',
+                    fontSize: '18px',
+                  }}
+                >
+                  ₦{manualTicketForm.ticketTypePrice.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={manualTicketLoading || !manualTicketForm.name || !manualTicketForm.email || !manualTicketForm.eventId || !manualTicketForm.ticketTypeName}
+              style={{
+                padding: '12px 30px',
+                backgroundColor: manualTicketLoading ? '#6c757d' : '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: manualTicketLoading ? 'wait' : 'pointer',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                opacity: (!manualTicketForm.name || !manualTicketForm.email || !manualTicketForm.eventId || !manualTicketForm.ticketTypeName) ? 0.6 : 1,
+              }}
+            >
+              {manualTicketLoading ? '⏳ Generating...' : '🎟️ Generate Ticket'}
+            </button>
+          </form>
         </div>
 
         {/* Filters */}

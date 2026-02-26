@@ -376,6 +376,71 @@ router.post('/webhook/paystack', async (req, res) => {
   }
 });
 
+// @desc    Create manual ticket (admin - for cash payments)
+// @route   POST /api/tickets/admin/manual
+// @access  Private/Admin
+router.post('/admin/manual', protect, admin, async (req, res) => {
+  try {
+    const { eventId, ticketTypeName, ticketTypePrice, name, email, whatsapp } = req.body;
+
+    // Validate required fields
+    if (!eventId || !ticketTypeName || !name || !email) {
+      return res.status(400).json({ message: 'Missing required fields: eventId, ticketTypeName, name, and email are required' });
+    }
+
+    // Get event details
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Find the ticket type
+    const ticketType = event.tickets.find(t => t.name === ticketTypeName);
+    if (!ticketType) {
+      return res.status(404).json({ message: 'Ticket type not found' });
+    }
+
+    // Create the ticket (manual payment - no payment reference)
+    const ticket = new Ticket({
+      eventId: eventId,
+      eventTitle: event.title,
+      eventDate: event.date,
+      eventTime: event.time,
+      location: event.location,
+      ticketTypeName: ticketType.name,
+      ticketTypePrice: ticketTypePrice || ticketType.price,
+      email: email,
+      name: name,
+      whatsapp: whatsapp || '',
+      paymentStatus: 'completed',
+      paymentReference: `MANUAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      paymentTime: new Date(),
+    });
+
+    const createdTicket = await ticket.save();
+    console.log('[MANUAL TICKET] Created by admin:', createdTicket.ticketId, 'for', name);
+
+    // Send confirmation email with ticket PDF
+    try {
+      await sendTicketEmail(createdTicket);
+      console.log('[MANUAL TICKET] Email sent for:', createdTicket.ticketId);
+    } catch (emailError) {
+      console.error('[MANUAL TICKET] Email sending error:', emailError);
+      // Don't fail the ticket creation if email fails
+    }
+
+    res.json({
+      success: true,
+      ticketId: createdTicket.ticketId,
+      ticket: createdTicket,
+      message: 'Manual ticket created successfully',
+    });
+  } catch (error) {
+    console.error('[MANUAL TICKET ERROR]:', error);
+    res.status(500).json({ message: 'Server error during manual ticket creation' });
+  }
+});
+
 // @desc    Get all tickets (admin dashboard)
 // @route   GET /api/admin/tickets
 // @access  Private/Admin
