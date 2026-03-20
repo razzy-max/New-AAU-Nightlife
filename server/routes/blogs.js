@@ -86,29 +86,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @desc    Get single blog
-// @route   GET /api/blogs/:id
-// @access  Public
-router.get('/:id', async (req, res) => {
-  try {
-    const blog = await Blog.findById(req.params.id);
-
-    if (blog) {
-      // Cache individual blog posts for 15 minutes
-      res.set({
-        'Cache-Control': 'public, max-age=900, s-maxage=600',
-        'ETag': `"blog-${blog._id}-${blog.updatedAt}"`,
-        'Vary': 'Accept-Encoding'
-      });
-      res.json(blog);
-    } else {
-      res.status(404).json({ message: 'Blog not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // @desc    Create a blog
 // @route   POST /api/blogs
 // @access  Private/Admin
@@ -271,6 +248,29 @@ router.get('/featured/list', async (req, res) => {
     });
 
     res.json(blogs);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Get single blog
+// @route   GET /api/blogs/:id
+// @access  Public
+router.get('/:id', async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+
+    if (blog) {
+      // Cache individual blog posts for 15 minutes
+      res.set({
+        'Cache-Control': 'public, max-age=900, s-maxage=600',
+        'ETag': `"blog-${blog._id}-${blog.updatedAt}"`,
+        'Vary': 'Accept-Encoding'
+      });
+      res.json(blog);
+    } else {
+      res.status(404).json({ message: 'Blog not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

@@ -62,23 +62,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @desc    Get single event
-// @route   GET /api/events/:id
-// @access  Public
-router.get('/:id', async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-
-    if (event) {
-      res.json(event);
-    } else {
-      res.status(404).json({ message: 'Event not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // @desc    Create an event
 // @route   POST /api/events
 // @access  Private/Admin
@@ -197,20 +180,6 @@ router.delete('/:id', protect, admin, async (req, res) => {
   }
 });
 
-// @desc    Get featured events
-// @route   GET /api/events/featured/list
-// @access  Public
-router.get('/featured/list', async (req, res) => {
-  try {
-    const events = await Event.find({ featured: true, published: true })
-      .sort({ date: 1 })
-      .limit(3);
-    res.json(events);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // @desc    Get upcoming events
 // @route   GET /api/events/upcoming/list
 // @access  Public
@@ -224,6 +193,23 @@ router.get('/upcoming/list', async (req, res) => {
       .sort({ date: 1 })
       .limit(3);
     res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Get single event
+// @route   GET /api/events/:id
+// @access  Public
+router.get('/:id', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (event) {
+      res.json(event);
+    } else {
+      res.status(404).json({ message: 'Event not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

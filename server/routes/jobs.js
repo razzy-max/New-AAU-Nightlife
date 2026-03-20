@@ -43,23 +43,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @desc    Get single job
-// @route   GET /api/jobs/:id
-// @access  Public
-router.get('/:id', async (req, res) => {
-  try {
-    const job = await Job.findById(req.params.id);
-
-    if (job) {
-      res.json(job);
-    } else {
-      res.status(404).json({ message: 'Job not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // @desc    Create a job
 // @route   POST /api/jobs
 // @access  Private/Admin
@@ -133,6 +116,23 @@ router.get('/featured/list', async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(3);
     res.json(jobs);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Get single job
+// @route   GET /api/jobs/:id
+// @access  Public
+router.get('/:id', async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (job) {
+      res.json(job);
+    } else {
+      res.status(404).json({ message: 'Job not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
