@@ -6,6 +6,22 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { formatTime } from '../utils/formatTime';
 
+const safeSessionGet = (key) => {
+  try {
+    return sessionStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+};
+
+const safeSessionSet = (key, value) => {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (error) {
+    // Ignore storage failures (seen on some Safari/iOS privacy modes)
+  }
+};
+
 // Background prefetching utility
 const prefetchData = async (url) => {
   try {
@@ -34,7 +50,7 @@ function Home() {
   const [subscribeMessage, setSubscribeMessage] = useState('');
   const [cacheBuster, setCacheBuster] = useState(() => {
     // Initialize from sessionStorage if available, otherwise use current time
-    const stored = sessionStorage.getItem('home_cache_buster');
+    const stored = safeSessionGet('home_cache_buster');
     return stored ? parseInt(stored) : Date.now();
   });
 
@@ -218,19 +234,17 @@ function Home() {
   // Fetch homepage data (featured blogs, upcoming events, featured jobs, advertisers)
   useEffect(() => {
     const fetchHomepageData = async () => {
-      try {
-        // Check if we have cached data
-        const cachedBlogs = sessionStorage.getItem('home_blogs_cache');
-        const cachedEvents = sessionStorage.getItem('home_events_cache');
-        const cachedJobs = sessionStorage.getItem('home_jobs_cache');
-        const cachedAdvertisers = sessionStorage.getItem('home_advertisers_cache');
-        const cacheTimestamp = sessionStorage.getItem('home_cache_timestamp');
-        const cachedBuster = sessionStorage.getItem('home_cache_buster');
-        const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+      const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
 
-        // Use cached data if it exists, is fresh, and cacheBuster hasn't changed
-        // Include advertisers in the cache check
-        if (cachedBlogs && cachedEvents && cachedJobs && cachedAdvertisers && cacheTimestamp && 
+      try {
+        const cachedBlogs = safeSessionGet('home_blogs_cache');
+        const cachedEvents = safeSessionGet('home_events_cache');
+        const cachedJobs = safeSessionGet('home_jobs_cache');
+        const cachedAdvertisers = safeSessionGet('home_advertisers_cache');
+        const cacheTimestamp = safeSessionGet('home_cache_timestamp');
+        const cachedBuster = safeSessionGet('home_cache_buster');
+
+        if (cachedBlogs && cachedEvents && cachedJobs && cachedAdvertisers && cacheTimestamp &&
             cacheBuster === parseInt(cachedBuster || '0')) {
           const age = Date.now() - parseInt(cacheTimestamp);
           if (age < cacheMaxAge) {
@@ -242,72 +256,56 @@ function Home() {
             return;
           }
         }
-
-        // Fetch featured blogs
-        const blogsResponse = await fetch(`${API_BASE_URL}/api/blogs/featured/list?_t=${cacheBuster}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        if (blogsResponse.ok) {
-          const blogsData = await blogsResponse.json();
-          setFeaturedPosts(blogsData);
-          sessionStorage.setItem('home_blogs_cache', JSON.stringify(blogsData));
-        }
-
-        // Fetch featured events (like blogs)
-        const eventsResponse = await fetch(`${API_BASE_URL}/api/events/featured/list?_t=${cacheBuster}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        if (eventsResponse.ok) {
-          const eventsData = await eventsResponse.json();
-          setUpcomingEvents(eventsData);
-          sessionStorage.setItem('home_events_cache', JSON.stringify(eventsData));
-        }
-
-        // Fetch featured jobs
-        const jobsResponse = await fetch(`${API_BASE_URL}/api/jobs/featured/list?_t=${cacheBuster}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        if (jobsResponse.ok) {
-          const jobsData = await jobsResponse.json();
-          setFeaturedJobs(jobsData);
-          sessionStorage.setItem('home_jobs_cache', JSON.stringify(jobsData));
-        }
-
-        // Fetch featured advertisers
-        const advertisersResponse = await fetch(`${API_BASE_URL}/api/advertisers/featured?_t=${cacheBuster}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        if (advertisersResponse.ok) {
-          const advertisersData = await advertisersResponse.json();
-          setAdvertisers(advertisersData.data || []);
-          sessionStorage.setItem('home_advertisers_cache', JSON.stringify(advertisersData.data || []));
-        }
-
-        // Update cache metadata
-        sessionStorage.setItem('home_cache_timestamp', Date.now().toString());
-        sessionStorage.setItem('home_cache_buster', cacheBuster.toString());
       } catch (error) {
-        console.error('Error fetching homepage data:', error);
-        // Fallback to empty arrays
-        setFeaturedPosts([]);
-        setUpcomingEvents([]);
-        setFeaturedJobs([]);
-        setAdvertisers([]);
-      } finally {
-        setLoading(false);
+        // Ignore cache parse/storage errors and continue with network fetch.
       }
+
+      const fetchJson = async (url) => {
+        const response = await fetch(url, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed: ${response.status}`);
+        }
+
+        return response.json();
+      };
+
+      const [blogsResult, eventsResult, jobsResult, advertisersResult] = await Promise.allSettled([
+        fetchJson(`${API_BASE_URL}/api/blogs/featured/list?_t=${cacheBuster}`),
+        fetchJson(`${API_BASE_URL}/api/events/featured/list?_t=${cacheBuster}`),
+        fetchJson(`${API_BASE_URL}/api/jobs/featured/list?_t=${cacheBuster}`),
+        fetchJson(`${API_BASE_URL}/api/advertisers/featured?_t=${cacheBuster}`),
+      ]);
+
+      if (blogsResult.status === 'fulfilled') {
+        setFeaturedPosts(blogsResult.value || []);
+        safeSessionSet('home_blogs_cache', JSON.stringify(blogsResult.value || []));
+      }
+
+      if (eventsResult.status === 'fulfilled') {
+        setUpcomingEvents(eventsResult.value || []);
+        safeSessionSet('home_events_cache', JSON.stringify(eventsResult.value || []));
+      }
+
+      if (jobsResult.status === 'fulfilled') {
+        setFeaturedJobs(jobsResult.value || []);
+        safeSessionSet('home_jobs_cache', JSON.stringify(jobsResult.value || []));
+      }
+
+      if (advertisersResult.status === 'fulfilled') {
+        const advertisersData = advertisersResult.value?.data || [];
+        setAdvertisers(advertisersData);
+        safeSessionSet('home_advertisers_cache', JSON.stringify(advertisersData));
+      }
+
+      safeSessionSet('home_cache_timestamp', Date.now().toString());
+      safeSessionSet('home_cache_buster', cacheBuster.toString());
+      setLoading(false);
     };
 
     fetchHomepageData();
