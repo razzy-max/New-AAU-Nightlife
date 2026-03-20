@@ -162,13 +162,60 @@ router.post('/', protect, admin, upload.fields([
 // @desc    Update a blog
 // @route   PUT /api/blogs/:id
 // @access  Private/Admin
-router.put('/:id', protect, admin, async (req, res) => {
+router.put('/:id', protect, admin, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]), async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
 
     if (blog) {
-      console.log(`Updating blog ${req.params.id}:`, req.body);
-      Object.assign(blog, req.body);
+      const {
+        title,
+        excerpt,
+        content,
+        author,
+        category,
+        tags,
+        featured,
+        published,
+      } = req.body;
+
+      // Update text fields only when provided by the client.
+      if (typeof title !== 'undefined') blog.title = title;
+      if (typeof excerpt !== 'undefined') blog.excerpt = excerpt;
+      if (typeof content !== 'undefined') blog.content = content;
+      if (typeof author !== 'undefined') blog.author = author;
+      if (typeof category !== 'undefined') blog.category = category;
+
+      // FormData sends booleans as strings.
+      if (typeof featured !== 'undefined') {
+        blog.featured = featured === 'true' || featured === true;
+      }
+      if (typeof published !== 'undefined') {
+        blog.published = published === 'true' || published === true;
+      }
+
+      // Normalize comma-separated tags into an array.
+      if (typeof tags !== 'undefined') {
+        blog.tags = tags
+          ? tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+          : [];
+      }
+
+      // Replace media only when a new file is uploaded.
+      if (req.files?.image?.[0]) {
+        const imageBuffer = req.files.image[0].buffer;
+        const imageMimeType = req.files.image[0].mimetype;
+        blog.image = `data:${imageMimeType};base64,${imageBuffer.toString('base64')}`;
+      }
+
+      if (req.files?.video?.[0]) {
+        const videoBuffer = req.files.video[0].buffer;
+        const videoMimeType = req.files.video[0].mimetype;
+        blog.video = `data:${videoMimeType};base64,${videoBuffer.toString('base64')}`;
+      }
+
       const updatedBlog = await blog.save();
       console.log(`Blog ${req.params.id} updated successfully. Featured: ${updatedBlog.featured}`);
 

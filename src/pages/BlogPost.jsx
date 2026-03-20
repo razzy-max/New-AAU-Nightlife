@@ -55,7 +55,13 @@ function BlogPost() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/blogs/${id}`);
+        const cacheBuster = sessionStorage.getItem('blogs_cache_buster') || Date.now();
+        const response = await fetch(`${API_BASE_URL}/api/blogs/${id}?_t=${cacheBuster}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         if (!response.ok) {
           throw new Error('Blog post not found');
         }

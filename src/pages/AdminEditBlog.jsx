@@ -123,6 +123,11 @@ function AdminEditBlog() {
       });
 
       if (response.ok) {
+        // Clear client-side blog cache so public pages fetch fresh content.
+        sessionStorage.removeItem('blogs_cache');
+        sessionStorage.removeItem('blogs_cache_timestamp');
+        sessionStorage.removeItem('blogs_cache_buster');
+
         // Trigger all relevant page refreshes if functions are available
         if (window.refreshHomepageData) {
           window.refreshHomepageData();
