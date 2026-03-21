@@ -135,6 +135,18 @@ router.get('/admin/all', protect, admin, async (req, res) => {
   }
 });
 
+// @desc    Get comments count (admin)
+// @route   GET /api/comments/admin/count
+// @access  Private/Admin
+router.get('/admin/count', protect, admin, async (req, res) => {
+  try {
+    const total = await Comment.countDocuments({});
+    res.json({ total });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @desc    Approve multiple comments
 // @route   PUT /api/comments/approve/bulk
 // @access  Private/Admin

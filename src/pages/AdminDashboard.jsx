@@ -38,32 +38,56 @@ function AdminDashboard() {
       const token = localStorage.getItem('adminToken');
       const headers = {
         'Authorization': `Bearer ${token}`,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      };
+      const cacheBuster = Date.now();
+
+      const requests = [
+        fetch(`${API_BASE_URL}/api/blogs?admin=true&pageNumber=1&_t=${cacheBuster}`, { headers }),
+        fetch(`${API_BASE_URL}/api/events?admin=true&pageNumber=1&_t=${cacheBuster}`, { headers }),
+        fetch(`${API_BASE_URL}/api/jobs?admin=true&pageNumber=1&_t=${cacheBuster}`, { headers }),
+        fetch(`${API_BASE_URL}/api/comments/admin/count?_t=${cacheBuster}`, { headers }),
+        fetch(`${API_BASE_URL}/api/tickets/admin/count?_t=${cacheBuster}`, { headers }),
+        fetch(`${API_BASE_URL}/api/subscribers/admin/count?_t=${cacheBuster}`, { headers }),
+      ];
+
+      const responses = await Promise.allSettled(requests);
+
+      const readJson = async (result) => {
+        if (result.status !== 'fulfilled') {
+          return null;
+        }
+
+        const response = result.value;
+        if (!response.ok) {
+          return null;
+        }
+
+        try {
+          return await response.json();
+        } catch (error) {
+          return null;
+        }
       };
 
-      const [blogsRes, eventsRes, jobsRes, commentsRes, ticketsRes, subscribersRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/blogs?pageNumber=1&pageSize=1`, { headers }),
-        fetch(`${API_BASE_URL}/api/events?pageNumber=1&pageSize=1`, { headers }),
-        fetch(`${API_BASE_URL}/api/jobs?pageNumber=1&pageSize=1`, { headers }),
-        fetch(`${API_BASE_URL}/api/comments/admin/all?pageNumber=1&pageSize=1`, { headers }),
-        fetch(`${API_BASE_URL}/api/tickets/admin/list`, { headers }),
-        fetch(`${API_BASE_URL}/api/subscribers/admin/count`, { headers }),
+      const [blogsData, eventsData, jobsData, commentsData, ticketsData, subscribersData] = await Promise.all([
+        readJson(responses[0]),
+        readJson(responses[1]),
+        readJson(responses[2]),
+        readJson(responses[3]),
+        readJson(responses[4]),
+        readJson(responses[5]),
       ]);
 
-      const blogsData = await blogsRes.json();
-      const eventsData = await eventsRes.json();
-      const jobsData = await jobsRes.json();
-      const commentsData = await commentsRes.json();
-      const ticketsData = await ticketsRes.json();
-      const subscribersData = await subscribersRes.json();
-
-      setStats({
-        blogs: blogsData.total || 0,
-        events: eventsData.total || 0,
-        jobs: jobsData.total || 0,
-        comments: commentsData.total || 0,
-        tickets: ticketsData.total || 0,
-        subscribers: subscribersData.active || 0,
-      });
+      setStats((prev) => ({
+        blogs: blogsData?.total ?? prev.blogs,
+        events: eventsData?.total ?? prev.events,
+        jobs: jobsData?.total ?? prev.jobs,
+        comments: commentsData?.total ?? prev.comments,
+        tickets: ticketsData?.total ?? prev.tickets,
+        subscribers: subscribersData?.active ?? prev.subscribers,
+      }));
     } catch (error) {
       console.error('Error fetching stats:', error);
     }

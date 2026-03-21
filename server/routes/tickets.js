@@ -487,6 +487,19 @@ router.get('/admin/list', protect, admin, async (req, res) => {
   }
 });
 
+// @desc    Get tickets count (admin dashboard)
+// @route   GET /api/tickets/admin/count
+// @access  Private/Admin
+router.get('/admin/count', protect, admin, async (req, res) => {
+  try {
+    const total = await Ticket.countDocuments({});
+    res.json({ total });
+  } catch (error) {
+    console.error('Error fetching ticket count:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @desc    Export tickets as CSV (admin)
 // @route   GET /api/admin/tickets/export
 // @access  Private/Admin
