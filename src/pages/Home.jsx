@@ -510,7 +510,7 @@ function Home() {
         </div>
       </section>
       <section ref={advertisersRef} className="section featured-advertisers">
-        <h2 className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Featured Advertisers</h2>
+        <h2 className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Featured Sponsors</h2>
         <p className={`fade-in-up ${advertisersVisible ? 'visible' : ''}`}>Discover amazing World-class businesses and services</p>
         {advertisers.length > 0 ? (
           <div className="advertisers-carousel-container">
