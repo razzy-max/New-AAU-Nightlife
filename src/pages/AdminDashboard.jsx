@@ -54,6 +54,18 @@ function AdminDashboard() {
 
       const responses = await Promise.allSettled(requests);
 
+      // Protected endpoints are comments, tickets, subscribers.
+      const protectedUnauthorized = [responses[3], responses[4], responses[5]].some(
+        (result) => result.status === 'fulfilled' && result.value.status === 401
+      );
+
+      if (protectedUnauthorized) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        navigate('/admin/login');
+        return;
+      }
+
       const readJson = async (result) => {
         if (result.status !== 'fulfilled') {
           return null;
@@ -87,6 +99,12 @@ function AdminDashboard() {
       // Backward-compatible fallbacks for environments where new count endpoints are unavailable.
       if (typeof commentsTotal === 'undefined') {
         const fallback = await fetch(`${API_BASE_URL}/api/comments/admin/all?pageNumber=1&_t=${cacheBuster}`, { headers });
+        if (fallback.status === 401) {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          navigate('/admin/login');
+          return;
+        }
         if (fallback.ok) {
           const data = await fallback.json();
           commentsTotal = data?.total;
@@ -95,6 +113,12 @@ function AdminDashboard() {
 
       if (typeof ticketsTotal === 'undefined') {
         const fallback = await fetch(`${API_BASE_URL}/api/tickets/admin/list?_t=${cacheBuster}`, { headers });
+        if (fallback.status === 401) {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          navigate('/admin/login');
+          return;
+        }
         if (fallback.ok) {
           const data = await fallback.json();
           ticketsTotal = data?.total;
@@ -103,6 +127,12 @@ function AdminDashboard() {
 
       if (typeof subscribersTotal === 'undefined') {
         const fallback = await fetch(`${API_BASE_URL}/api/subscribers/admin/all?limit=1&_t=${cacheBuster}`, { headers });
+        if (fallback.status === 401) {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          navigate('/admin/login');
+          return;
+        }
         if (fallback.ok) {
           const data = await fallback.json();
           subscribersTotal = data?.total;
