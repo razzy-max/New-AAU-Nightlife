@@ -79,13 +79,19 @@ router.get('/admin/all', protect, async (req, res) => {
 // Admin route - Get subscribers count
 router.get('/admin/count', protect, async (req, res) => {
   try {
-    const activeCount = await Subscriber.countDocuments({ status: 'active' });
+    const activeCount = await Subscriber.countDocuments({
+      $or: [
+        { status: 'active' },
+        { status: { $exists: false } }
+      ]
+    });
     const unsubscribedCount = await Subscriber.countDocuments({ status: 'unsubscribed' });
+    const totalCount = await Subscriber.countDocuments({});
     
     res.json({
       active: activeCount,
       unsubscribed: unsubscribedCount,
-      total: activeCount + unsubscribedCount
+      total: totalCount
     });
   } catch (error) {
     console.error('Error fetching subscriber count:', error);

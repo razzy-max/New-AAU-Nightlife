@@ -80,13 +80,42 @@ function AdminDashboard() {
         readJson(responses[5]),
       ]);
 
+      let commentsTotal = commentsData?.total;
+      let ticketsTotal = ticketsData?.total;
+      let subscribersTotal = subscribersData?.total;
+
+      // Backward-compatible fallbacks for environments where new count endpoints are unavailable.
+      if (typeof commentsTotal === 'undefined') {
+        const fallback = await fetch(`${API_BASE_URL}/api/comments/admin/all?pageNumber=1&_t=${cacheBuster}`, { headers });
+        if (fallback.ok) {
+          const data = await fallback.json();
+          commentsTotal = data?.total;
+        }
+      }
+
+      if (typeof ticketsTotal === 'undefined') {
+        const fallback = await fetch(`${API_BASE_URL}/api/tickets/admin/list?_t=${cacheBuster}`, { headers });
+        if (fallback.ok) {
+          const data = await fallback.json();
+          ticketsTotal = data?.total;
+        }
+      }
+
+      if (typeof subscribersTotal === 'undefined') {
+        const fallback = await fetch(`${API_BASE_URL}/api/subscribers/admin/all?limit=1&_t=${cacheBuster}`, { headers });
+        if (fallback.ok) {
+          const data = await fallback.json();
+          subscribersTotal = data?.total;
+        }
+      }
+
       setStats((prev) => ({
         blogs: blogsData?.total ?? prev.blogs,
         events: eventsData?.total ?? prev.events,
         jobs: jobsData?.total ?? prev.jobs,
-        comments: commentsData?.total ?? prev.comments,
-        tickets: ticketsData?.total ?? prev.tickets,
-        subscribers: subscribersData?.active ?? prev.subscribers,
+        comments: commentsTotal ?? prev.comments,
+        tickets: ticketsTotal ?? prev.tickets,
+        subscribers: subscribersTotal ?? prev.subscribers,
       }));
     } catch (error) {
       console.error('Error fetching stats:', error);
