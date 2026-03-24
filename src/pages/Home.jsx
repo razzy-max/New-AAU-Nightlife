@@ -39,12 +39,20 @@ const prefetchData = async (url) => {
 };
 
 function Home() {
+  const getItemsPerView = () => {
+    if (window.innerWidth <= 768) return 1;
+    if (window.innerWidth <= 992) return 2;
+    return 3;
+  };
+
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [advertisers, setAdvertisers] = useState([]);
   const [advertiserIndex, setAdvertiserIndex] = useState(0);
+  const [itemsPerView, setItemsPerView] = useState(() => getItemsPerView());
+  const [isCarouselTransitionEnabled, setIsCarouselTransitionEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [subscribeMessage, setSubscribeMessage] = useState('');
@@ -311,21 +319,57 @@ function Home() {
     fetchHomepageData();
   }, [cacheBuster]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerView(getItemsPerView());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (advertisers.length <= itemsPerView) {
+      setAdvertiserIndex(0);
+    }
+  }, [advertisers.length, itemsPerView]);
+
+  useEffect(() => {
+    if (isCarouselTransitionEnabled) return;
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsCarouselTransitionEnabled(true);
+      });
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [isCarouselTransitionEnabled]);
+
   // Auto-slide advertisers carousel every 4 seconds
   useEffect(() => {
-    if (advertisers.length <= 1) return;
+    if (advertisers.length <= itemsPerView) return;
     
     const interval = setInterval(() => {
-      setAdvertiserIndex(prev => {
-        const itemsPerView = window.innerWidth <= 768 ? 1 : window.innerWidth <= 992 ? 2 : 3;
-        const maxIndex = Math.max(0, advertisers.length - itemsPerView);
-        // Loop back to start when reaching the end
-        return prev >= maxIndex ? 0 : prev + 1;
-      });
+      setAdvertiserIndex(prev => prev + 1);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [advertisers.length]);
+  }, [advertisers.length, itemsPerView]);
+
+  const canSlideAdvertisers = advertisers.length > itemsPerView;
+  const visibleAdvertisers = canSlideAdvertisers
+    ? [...advertisers, ...advertisers.slice(0, itemsPerView)]
+    : advertisers;
+
+  const handleAdvertiserTransitionEnd = () => {
+    if (!canSlideAdvertisers) return;
+
+    if (advertiserIndex >= advertisers.length) {
+      setIsCarouselTransitionEnabled(false);
+      setAdvertiserIndex(0);
+    }
+  };
 
   if (loading) {
     return (
@@ -510,18 +554,25 @@ function Home() {
           <div className="advertisers-carousel-container">
             <button 
               className="carousel-nav-btn prev" 
-              onClick={() => setAdvertiserIndex(prev => Math.max(0, prev - 1))}
-              disabled={advertiserIndex === 0}
+              onClick={() => {
+                if (!canSlideAdvertisers) return;
+                setAdvertiserIndex(prev => (prev === 0 ? advertisers.length - 1 : prev - 1));
+              }}
+              disabled={!canSlideAdvertisers}
             >
               ‹
             </button>
             <div 
               className="advertisers-carousel"
-              style={{ transform: `translateX(-${advertiserIndex * (window.innerWidth <= 768 ? 100 : window.innerWidth <= 992 ? 50 : 33.333)}%)` }}
+              onTransitionEnd={handleAdvertiserTransitionEnd}
+              style={{
+                transform: `translateX(-${advertiserIndex * (100 / itemsPerView)}%)`,
+                transition: isCarouselTransitionEnabled ? 'transform 0.5s ease' : 'none'
+              }}
             >
-              {advertisers.map((advertiser, index) => (
+              {visibleAdvertisers.map((advertiser, index) => (
                 <div 
-                  key={advertiser._id} 
+                  key={`${advertiser._id}-${index}`} 
                   className={`advertiser-card stagger-item ${advertisersVisible ? 'visible' : ''} delay-${Math.min(index + 1, 4)}`}
                 >
                   <div className="advertiser-logo">
@@ -558,12 +609,11 @@ function Home() {
             </div>
             <button 
               className="carousel-nav-btn next" 
-              onClick={() => setAdvertiserIndex(prev => {
-                const itemsPerView = window.innerWidth <= 768 ? 1 : window.innerWidth <= 992 ? 2 : 3;
-                const maxIndex = Math.max(0, advertisers.length - itemsPerView);
-                return Math.min(maxIndex, prev + 1);
-              })}
-              disabled={advertiserIndex >= advertisers.length - (window.innerWidth <= 768 ? 1 : window.innerWidth <= 992 ? 2 : 3)}
+              onClick={() => {
+                if (!canSlideAdvertisers) return;
+                setAdvertiserIndex(prev => prev + 1);
+              }}
+              disabled={!canSlideAdvertisers}
             >
               ›
             </button>

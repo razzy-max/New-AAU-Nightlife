@@ -1852,16 +1852,17 @@ footer {
 
 .advertisers-carousel {
   display: flex;
-  transition: transform 0.5s ease;
+  width: 100%;
+  will-change: transform;
 }
 
 .advertisers-carousel .advertiser-card {
-  flex: 0 0 calc(33.333% - 1.33rem);
-  margin: 0 1rem;
+  flex: 0 0 33.333333%;
+  box-sizing: border-box;
   background: white;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
-  padding: 2rem;
+  padding: 2rem 1.25rem;
   text-decoration: none;
   color: inherit;
   transition: all 0.3s ease;
@@ -2006,14 +2007,13 @@ footer {
 /* Responsive for advertisers */
 @media (max-width: 992px) {
   .advertisers-carousel .advertiser-card {
-    flex: 0 0 calc(50% - 1rem);
+    flex: 0 0 50%;
   }
 }
 
 @media (max-width: 768px) {
   .advertisers-carousel .advertiser-card {
-    flex: 0 0 calc(100% - 2rem);
-    margin: 0 1rem;
+    flex: 0 0 100%;
   }
   
   .carousel-nav-btn {
