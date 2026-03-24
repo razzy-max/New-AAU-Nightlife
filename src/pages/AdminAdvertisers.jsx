@@ -341,7 +341,7 @@ function AdminAdvertisers() {
           >
             🔄 Force Cache Refresh
           </button>
-          <Link to="/admin/dashboard" className="btn btn-secondary">
+          <Link to="/admin" className="btn btn-secondary">
             Back to Dashboard
           </Link>
         </div>
