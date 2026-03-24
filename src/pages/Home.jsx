@@ -351,12 +351,6 @@ function Home() {
           <p className={`hero-subtitle ${isComplete ? 'fade-in' : ''}`}>
             Experience the vibrant nightlife in Ekpoma, AAU
           </p>
-          <Link 
-            to="/events" 
-            className={`explore-btn ${isComplete ? 'slide-up' : ''}`}
-          >
-            Explore Events
-          </Link>
         </div>
       </section>
       <section className="section">
