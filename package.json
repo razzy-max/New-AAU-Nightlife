@@ -11,7 +11,8 @@
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
     "seed": "node server/seed.js",
-    "seed:awards": "node server/seedAwards.js"
+    "seed:awards": "node server/seedAwards.js",
+    "clear:tickets:today": "node server/clearTodayTestTickets.js"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -22,6 +23,7 @@
     "express-validator": "^7.0.1",
     "html2pdf.js": "^0.12.1",
     "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
     "mongodb": "^7.0.0",
     "mongoose": "^7.5.3",
     "multer": "^1.4.5-lts.1",

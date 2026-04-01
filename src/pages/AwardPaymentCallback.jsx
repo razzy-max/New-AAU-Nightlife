@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { getUserToken } from '../utils/userAuth';
 
 function AwardPaymentCallback() {
   const [searchParams] = useSearchParams();
@@ -42,9 +43,13 @@ function AwardPaymentCallback() {
         });
 
         // Step 3: Call backend to verify payment and record vote
+        const userToken = getUserToken();
         const response = await fetch(`${API_BASE_URL}/api/payments/verify`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(userToken ? { Authorization: `Bearer ${userToken}` } : {}),
+          },
           body: JSON.stringify({
             reference,
             candidateId,

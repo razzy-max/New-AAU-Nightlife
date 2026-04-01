@@ -1,8 +1,53 @@
 import { Resend } from 'resend';
 import PDFDocument from 'pdfkit';
+import nodemailer from 'nodemailer';
 
 // Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder_key');
+
+const smtpTransport =
+  process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD
+    ? nodemailer.createTransport({
+        service: process.env.EMAIL_SERVICE,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      })
+    : null;
+
+const sendWithSmtpFallback = async ({ to, subject, html, attachments = [] }) => {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_USER || 'tickets@aaunightlife.com';
+  try {
+    const { error } = await resend.emails.send({
+      from: fromEmail,
+      to,
+      subject,
+      html,
+      attachments,
+    });
+
+    if (error) {
+      throw error;
+    }
+    return;
+  } catch (resendError) {
+    if (!smtpTransport) {
+      throw resendError;
+    }
+
+    await smtpTransport.sendMail({
+      from: `${process.env.EMAIL_FROM_NAME || 'AAU Nightlife'} <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+      attachments: attachments.map((item) => ({
+        filename: item.filename,
+        content: item.content,
+      })),
+    });
+  }
+};
 
 // Verify Resend connection on startup
 console.log('[EMAIL] Verifying Resend configuration...');
@@ -215,6 +260,135 @@ export const sendTicketEmail = async (ticket) => {
     }
     
     console.error(`❌ [EMAIL] Full error:`, error);
+    throw error;
+  }
+};
+
+export const sendPasswordResetEmail = async (email, resetToken, name = 'there') => {
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+
+    const subject = 'Reset your AAU Nightlife password';
+    const html = `
+        <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #DAA520; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; color: black; font-size: 26px;">Password Reset</h1>
+          </div>
+          <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #ddd; border-top: none;">
+            <p style="font-size: 16px; color: #333;">Hi ${name},</p>
+            <p style="color: #666; line-height: 1.6;">
+              We received a request to reset your AAU Nightlife account password. Use the button below to continue.
+            </p>
+            <div style="margin: 24px 0; text-align: center;">
+              <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background-color: #DAA520; color: #111; text-decoration: none; font-weight: bold; border-radius: 6px;">Reset Password</a>
+            </div>
+            <p style="color: #666; line-height: 1.6;">This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>
+          </div>
+        </div>
+      `;
+
+    await sendWithSmtpFallback({
+      to: email,
+      subject,
+      html,
+    });
+  } catch (error) {
+    console.error('[EMAIL] Password reset email failed:', error.message);
+    throw error;
+  }
+};
+
+export const sendEmailVerificationEmail = async (email, verificationToken, name = 'there') => {
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const verifyLink = `${frontendUrl}/verify-email/${verificationToken}`;
+
+    const subject = 'Verify your AAU Nightlife email';
+    const html = `
+        <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #DAA520; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; color: black; font-size: 26px;">Verify Your Email</h1>
+          </div>
+          <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #ddd; border-top: none;">
+            <p style="font-size: 16px; color: #333;">Hi ${name},</p>
+            <p style="color: #666; line-height: 1.6;">
+              Thanks for creating an AAU Nightlife account. Please verify your email address to activate your account.
+            </p>
+            <div style="margin: 24px 0; text-align: center;">
+              <a href="${verifyLink}" style="display: inline-block; padding: 12px 24px; background-color: #DAA520; color: #111; text-decoration: none; font-weight: bold; border-radius: 6px;">Verify Email</a>
+            </div>
+            <p style="color: #666; line-height: 1.6;">This link expires in 24 hours. If you did not create this account, you can ignore this email.</p>
+          </div>
+        </div>
+      `;
+
+    await sendWithSmtpFallback({
+      to: email,
+      subject,
+      html,
+    });
+  } catch (error) {
+    console.error('[EMAIL] Verification email failed:', error.message);
+    throw error;
+  }
+};
+
+export const sendOrderTicketsEmail = async (order, tickets) => {
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const maxAttachmentBytes = 20 * 1024 * 1024;
+    let totalBytes = 0;
+    const attachments = [];
+    const ticketLinks = [];
+
+    for (const ticket of tickets) {
+      const pdfBuffer = await generateTicketPDF(ticket);
+      const fileName = `ticket-${ticket.ticketId}.pdf`;
+      ticketLinks.push(`${frontendUrl}/ticket/${ticket.ticketId}`);
+
+      if (totalBytes + pdfBuffer.length <= maxAttachmentBytes && attachments.length < 10) {
+        attachments.push({ filename: fileName, content: pdfBuffer });
+        totalBytes += pdfBuffer.length;
+      }
+    }
+
+    const hiddenLinks = ticketLinks.slice(attachments.length);
+
+    const subject = `Your ${tickets.length} ticket(s) for ${tickets[0]?.eventTitle || 'AAU Nightlife Event'}`;
+    const html = `
+        <div style="font-family: Georgia, serif; max-width: 650px; margin: 0 auto;">
+          <div style="background-color: #DAA520; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; color: black; font-size: 26px;">Tickets Confirmed</h1>
+          </div>
+          <div style="background-color: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #ddd; border-top: none;">
+            <p style="margin-top: 0; color: #333;">Hi ${order.buyerName}, your order has been confirmed.</p>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 10px;">
+              <strong>Quantity:</strong> ${order.quantity}<br />
+              <strong>Ticket Type:</strong> ${order.ticketTypeName}<br />
+              <strong>Total Paid:</strong> ₦${order.totalAmount.toLocaleString()}
+            </p>
+            <p style="color: #666; margin-bottom: 6px;"><strong>Ticket IDs</strong></p>
+            <ul style="color: #666; line-height: 1.7;">
+              ${tickets.map((ticket) => `<li>${ticket.ticketId}</li>`).join('')}
+            </ul>
+            <p style="color: #666; margin-bottom: 6px;"><strong>Ticket Links</strong></p>
+            <ul style="color: #666; line-height: 1.7; word-break: break-all;">
+              ${ticketLinks.map((link) => `<li><a href="${link}">${link}</a></li>`).join('')}
+            </ul>
+            ${hiddenLinks.length > 0 ? `<p style="color:#a0522d;">Some tickets are provided via links only to keep email size safe.</p>` : ''}
+          </div>
+        </div>
+      `;
+
+    await sendWithSmtpFallback({
+      to: order.buyerEmail,
+      subject,
+      html,
+      attachments,
+    });
+  } catch (error) {
+    console.error('[EMAIL] Multi-ticket order email failed:', error.message);
     throw error;
   }
 };

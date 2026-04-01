@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 import { formatTime } from '../utils/formatTime';
+import { getUserData } from '../utils/userAuth';
 
 function EventDetails() {
   const { id } = useParams();
@@ -13,9 +14,18 @@ function EventDetails() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    const userData = getUserData();
+    if (userData?.email) {
+      setEmail((prev) => prev || userData.email);
+    }
+    if (userData?.name) {
+      setName((prev) => prev || userData.name);
+    }
+
     const fetchEvent = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/events/${id}`);
@@ -45,6 +55,7 @@ function EventDetails() {
       email,
       name,
       whatsapp,
+      quantity,
       event: event?.hasTicketing,
       tickets: event?.tickets?.map(t => ({ id: t._id, name: t.name })),
     });
@@ -54,6 +65,7 @@ function EventDetails() {
     const emailStr = email ? String(email).trim() : '';
     const nameStr = name ? String(name).trim() : '';
     const whatsappStr = whatsapp ? String(whatsapp).trim() : '';
+    const quantityNum = Number.isNaN(parseInt(quantity, 10)) ? 1 : parseInt(quantity, 10);
 
     if (!ticketIdStr) {
       console.error('Ticket ID is empty:', selectedTicketId);
@@ -73,6 +85,10 @@ function EventDetails() {
     if (!whatsappStr) {
       console.error('WhatsApp is empty:', whatsapp);
       alert('Please enter your WhatsApp number');
+      return;
+    }
+    if (quantityNum < 1 || quantityNum > 15) {
+      alert('Please choose a valid quantity between 1 and 15');
       return;
     }
 
@@ -112,7 +128,8 @@ function EventDetails() {
           ticketTypePrice: selectedTicket.price,
           email: emailStr,
           name: nameStr,
-          whatsapp: whatsappStr
+          whatsapp: whatsappStr,
+          quantity: quantityNum,
         }),
       });
 
@@ -135,6 +152,7 @@ function EventDetails() {
         email: emailStr,
         name: nameStr,
         whatsapp: whatsappStr,
+        quantity: quantityNum,
         eventId: id,
         timestamp: Date.now(),
       };
@@ -375,6 +393,28 @@ function EventDetails() {
                 </h3>
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                    Quantity
+                  </label>
+                  <select
+                    value={quantity}
+                    onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #ddd',
+                      borderRadius: '5px',
+                      fontSize: '14px',
+                    }}
+                  >
+                    {Array.from({ length: 15 }, (_, i) => i + 1).map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
                     Email Address
                   </label>
                   <input
@@ -431,6 +471,31 @@ function EventDetails() {
                   />
                 </div>
               </div>
+
+              {event.tickets && event.tickets.length > 0 && selectedTicketId && (() => {
+                const ticket = selectedTicketId.startsWith('ticket-')
+                  ? event.tickets[parseInt(selectedTicketId.replace('ticket-', ''), 10)]
+                  : event.tickets.find((t) => String(t._id) === selectedTicketId);
+                if (!ticket) return null;
+                return (
+                  <div
+                    style={{
+                      backgroundColor: '#f9f9f9',
+                      border: '1px solid #e6e6e6',
+                      borderRadius: '8px',
+                      padding: '14px 16px',
+                      marginBottom: '16px',
+                    }}
+                  >
+                    <p style={{ margin: '0 0 6px 0', fontWeight: 'bold', color: '#333' }}>Order Summary</p>
+                    <p style={{ margin: '0 0 4px 0', color: '#555' }}>Unit Price: ₦{Number(ticket.price).toLocaleString()}</p>
+                    <p style={{ margin: '0 0 4px 0', color: '#555' }}>Quantity: {quantity}</p>
+                    <p style={{ margin: 0, color: '#111', fontWeight: 'bold' }}>
+                      Total: ₦{Number(ticket.price * quantity).toLocaleString()}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {error && (
                 <div style={{ color: 'red', marginBottom: '15px', fontWeight: 'bold' }}>

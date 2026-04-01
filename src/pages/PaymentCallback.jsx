@@ -7,7 +7,7 @@ function PaymentCallback() {
   const navigate = useNavigate();
   const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('Verifying your payment...');
-  const [ticketId, setTicketId] = useState(null);
+  const [orderId, setOrderId] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const verificationAttemptedRef = useRef(false);
 
@@ -47,6 +47,7 @@ function PaymentCallback() {
           email: pendingPurchase?.email || null,
           name: pendingPurchase?.name || null,
           whatsapp: pendingPurchase?.whatsapp || null,
+          quantity: pendingPurchase?.quantity || 1,
         };
 
         // Get eventId from storage or try to extract from reference
@@ -93,12 +94,12 @@ function PaymentCallback() {
 
         // Set success state and redirect to ticket
         setStatus('success');
-        setMessage('Payment successful! Redirecting to your ticket...');
-        setTicketId(data.ticketId);
+        setMessage('Payment successful! Redirecting to your order...');
+        setOrderId(data.orderId);
 
         // Redirect after 2 seconds
         setTimeout(() => {
-          navigate(`/ticket/${data.ticketId}`);
+          navigate(`/order-confirmation/${data.orderId}`);
         }, 2000);
       } catch (error) {
         console.error('Payment verification error:', error);
@@ -138,9 +139,9 @@ function PaymentCallback() {
             <p style={{ marginBottom: '20px', color: '#666' }}>
               {message}
             </p>
-            {ticketId && (
+            {orderId && (
               <p style={{ fontSize: '12px', color: '#999' }}>
-                Ticket ID: {ticketId}
+                Order ID: {orderId}
               </p>
             )}
           </div>

@@ -11,6 +11,7 @@ function AdminDashboard() {
     comments: 0,
     tickets: 0,
     subscribers: 0,
+    users: 0,
   });
   const navigate = useNavigate();
 
@@ -50,12 +51,13 @@ function AdminDashboard() {
         fetch(`${API_BASE_URL}/api/comments/admin/count?_t=${cacheBuster}`, { headers }),
         fetch(`${API_BASE_URL}/api/tickets/admin/count?_t=${cacheBuster}`, { headers }),
         fetch(`${API_BASE_URL}/api/subscribers/admin/count?_t=${cacheBuster}`, { headers }),
+        fetch(`${API_BASE_URL}/api/users/admin/list?_t=${cacheBuster}`, { headers }),
       ];
 
       const responses = await Promise.allSettled(requests);
 
       // Protected endpoints are comments, tickets, subscribers.
-      const protectedUnauthorized = [responses[3], responses[4], responses[5]].some(
+      const protectedUnauthorized = [responses[3], responses[4], responses[5], responses[6]].some(
         (result) => result.status === 'fulfilled' && result.value.status === 401
       );
 
@@ -83,13 +85,14 @@ function AdminDashboard() {
         }
       };
 
-      const [blogsData, eventsData, jobsData, commentsData, ticketsData, subscribersData] = await Promise.all([
+      const [blogsData, eventsData, jobsData, commentsData, ticketsData, subscribersData, usersData] = await Promise.all([
         readJson(responses[0]),
         readJson(responses[1]),
         readJson(responses[2]),
         readJson(responses[3]),
         readJson(responses[4]),
         readJson(responses[5]),
+        readJson(responses[6]),
       ]);
 
       let commentsTotal = commentsData?.total;
@@ -146,6 +149,7 @@ function AdminDashboard() {
         comments: commentsTotal ?? prev.comments,
         tickets: ticketsTotal ?? prev.tickets,
         subscribers: subscribersTotal ?? prev.subscribers,
+        users: usersData?.total ?? prev.users,
       }));
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -211,6 +215,11 @@ function AdminDashboard() {
           <p>Subscribers</p>
           <Link to="/admin/subscribers" className="manage-link">Manage Subscribers</Link>
         </div>
+        <div className="stat-card">
+          <h3>{stats.users}</h3>
+          <p>Users</p>
+          <Link to="/admin/users" className="manage-link">Manage Users</Link>
+        </div>
       </div>
 
       <div className="admin-quick-actions">
@@ -224,6 +233,7 @@ function AdminDashboard() {
           <Link to="/admin/carousel" className="action-btn">Manage Carousel</Link>
           <Link to="/admin/advertisers" className="action-btn">📢 Manage Advertisers</Link>
           <Link to="/admin/subscribers" className="action-btn">View Subscribers</Link>
+          <Link to="/admin/users" className="action-btn">Manage Users</Link>
         </div>
       </div>
     </div>

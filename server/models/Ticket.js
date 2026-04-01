@@ -13,6 +13,16 @@ const ticketSchema = new mongoose.Schema({
     ref: 'Event',
     required: true,
   },
+  orderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order',
+    default: null,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   eventTitle: {
     type: String,
     required: true,
@@ -68,7 +78,9 @@ const ticketSchema = new mongoose.Schema({
 ticketSchema.index({ ticketId: 1 });
 ticketSchema.index({ eventId: 1 });
 ticketSchema.index({ paymentTime: -1 });
-ticketSchema.index({ paymentReference: 1 }, { unique: true, sparse: true }); // Unique payment reference to prevent duplicates
+ticketSchema.index({ paymentReference: 1 }, { sparse: true });
+ticketSchema.index({ orderId: 1 });
+ticketSchema.index({ userId: 1, createdAt: -1 });
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
 

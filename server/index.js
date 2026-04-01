@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,6 +18,7 @@ import Job from './models/Job.js';
 import Carousel from './models/Carousel.js';
 import Comment from './models/Comment.js';
 import Ticket from './models/Ticket.js';
+import Order from './models/Order.js';
 import Subscriber from './models/Subscriber.js';
 import Advertiser from './models/Advertiser.js';
 
@@ -28,11 +30,13 @@ import jobRoutes from './routes/jobs.js';
 import carouselRoutes from './routes/carousel.js';
 import commentRoutes from './routes/comments.js';
 import ticketRoutes from './routes/tickets.js';
+import orderRoutes from './routes/orders.js';
 import subscriberRoutes from './routes/subscribers.js';
 import awardRoutes from './routes/awards.js';
 import votingRoutes from './routes/voting.js';
 import paymentRoutes from './routes/payments.js';
 import advertiserRoutes from './routes/advertisers.js';
+import userRoutes from './routes/users.js';
 
 dotenv.config();
 
@@ -44,6 +48,26 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 connectDB();
+
+const ensureTicketIndexes = async () => {
+  try {
+    const collection = mongoose.connection.db.collection('tickets');
+    const indexes = await collection.indexes();
+    const paymentRefIndex = indexes.find((index) => index.name === 'paymentReference_1');
+
+    if (paymentRefIndex?.unique) {
+      await collection.dropIndex('paymentReference_1');
+      await collection.createIndex({ paymentReference: 1 }, { sparse: true });
+      console.log('[DB] Migrated ticket paymentReference index to non-unique sparse');
+    }
+  } catch (error) {
+    console.error('[DB] Index migration warning:', error.message);
+  }
+};
+
+mongoose.connection.once('open', () => {
+  ensureTicketIndexes();
+});
 
 const app = express();
 
@@ -75,6 +99,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/carousel', carouselRoutes);
 app.use('/api/comments', commentRoutes);
@@ -83,6 +108,7 @@ app.use('/api/awards', awardRoutes);
 app.use('/api/voting', votingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/advertisers', advertiserRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

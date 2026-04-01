@@ -1,8 +1,10 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
 import Candidate from '../models/Candidate.js';
 import Category from '../models/Category.js';
 import Vote from '../models/Vote.js';
+import User from '../models/User.js';
 import { initializePayment, verifyPayment } from '../services/paystackService.js';
 
 const router = express.Router();
@@ -15,6 +17,22 @@ const getClientIP = (req) => {
     req.socket.remoteAddress ||
     'unknown'
   );
+};
+
+const getOptionalUser = async (req) => {
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('_id email');
+    return user || null;
+  } catch {
+    return null;
+  }
 };
 
 // POST /api/payments/initialize - Initialize payment for award votes
@@ -34,6 +52,7 @@ router.post(
 
     try {
       const { candidateId, categoryId, voteCount, email } = req.body;
+      const optionalUser = await getOptionalUser(req);
 
       // Verify candidate exists
       const candidate = await Candidate.findById(candidateId);
@@ -82,6 +101,7 @@ router.post(
           candidateId,
           categoryId,
           voteCount,
+          userId: optionalUser?._id?.toString() || null,
         },
         redirectUrl
       );
@@ -131,6 +151,7 @@ router.post(
       const { reference, candidateId, categoryId, voteCount } = req.body;
       const ipAddress = getClientIP(req);
       const sessionId = req.headers['x-session-id'] || 'anonymous';
+      const optionalUser = await getOptionalUser(req);
 
       console.log('[PAYMENT VERIFY]', {
         reference,
@@ -172,6 +193,7 @@ router.post(
       const vote = new Vote({
         candidate: candidateId,
         category: categoryId,
+        user: optionalUser?._id,
         ipAddress,
         sessionId,
         voteType: 'paid',
