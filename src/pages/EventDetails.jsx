@@ -293,7 +293,9 @@ function EventDetails() {
           <h2 style={{ color: '#DAA520', marginBottom: '15px', fontFamily: 'Georgia, serif' }}>
             About This Event
           </h2>
-          <p style={{ lineHeight: '1.8', color: '#333' }}>{event.description}</p>
+          <p style={{ lineHeight: '1.8', color: '#333', whiteSpace: 'pre-line' }}>
+            {event.description}
+          </p>
         </div>
 
         {/* Tickets Section */}
