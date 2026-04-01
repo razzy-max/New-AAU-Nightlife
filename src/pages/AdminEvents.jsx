@@ -194,6 +194,35 @@ function AdminEvents() {
     }
   };
 
+  const handleSalesLink = async (eventId, rotate = false) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/sales-monitor/link`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rotate }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to generate sales monitor link');
+      }
+
+      const link = data.url || `${window.location.origin}${data.path}`;
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+        alert(`Sales monitor link copied for sharing:\n\n${link}`);
+      } else {
+        prompt('Copy this sales monitor link:', link);
+      }
+    } catch (error) {
+      alert(error.message || 'Unable to generate sales monitor link');
+    }
+  };
+
   if (loading) {
     return <div className="admin-loading">Loading events...</div>;
   }
@@ -295,6 +324,12 @@ function AdminEvents() {
                 <td className="actions">
                   <button onClick={() => navigate(`/admin/events/edit/${event._id}`)} className="edit-btn">
                     Edit
+                  </button>
+                  <button onClick={() => handleSalesLink(event._id, false)} className="add-btn">
+                    Sales Link
+                  </button>
+                  <button onClick={() => handleSalesLink(event._id, true)} className="status-btn not-featured">
+                    Rotate Link
                   </button>
                   <button onClick={() => handleDelete(event._id)} className="delete-btn">
                     Delete

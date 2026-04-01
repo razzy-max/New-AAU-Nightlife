@@ -66,6 +66,15 @@ const eventSchema = new mongoose.Schema({
   tags: [{
     type: String,
   }],
+  salesMonitorToken: {
+    type: String,
+    default: null,
+    select: false,
+  },
+  salesMonitorTokenCreatedAt: {
+    type: Date,
+    default: null,
+  },
 }, {
   timestamps: true,
 });

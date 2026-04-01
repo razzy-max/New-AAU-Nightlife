@@ -2,7 +2,10 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import multer from 'multer';
 import path from 'path';
+import crypto from 'crypto';
+import PDFDocument from 'pdfkit';
 import Event from '../models/Event.js';
+import Ticket from '../models/Ticket.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -23,6 +26,98 @@ const upload = multer({
     }
   }
 });
+
+const normalizeBaseUrl = (value) => {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return withProtocol.replace(/\/+$/, '');
+};
+
+const getFrontendBaseUrl = () => {
+  return (
+    normalizeBaseUrl(process.env.FRONTEND_URL) ||
+    normalizeBaseUrl(process.env.PUBLIC_FRONTEND_URL) ||
+    normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL) ||
+    'http://localhost:5173'
+  );
+};
+
+const buildSalesMonitorPath = (eventId, token) => `/sales-monitor/${eventId}?access=${encodeURIComponent(token)}`;
+
+const parseSalesQuery = (query) => {
+  const params = new URLSearchParams();
+  if (query.status) params.append('status', String(query.status));
+  if (query.startDate) params.append('startDate', String(query.startDate));
+  if (query.endDate) params.append('endDate', String(query.endDate));
+  if (query.sortBy) params.append('sortBy', String(query.sortBy));
+  if (query.search) params.append('search', String(query.search));
+  return params;
+};
+
+const buildTicketFilter = (eventId, query) => {
+  const filter = { eventId };
+
+  if (query.status) {
+    filter.paymentStatus = query.status;
+  }
+
+  if (query.startDate || query.endDate) {
+    filter.paymentTime = {};
+    if (query.startDate) {
+      filter.paymentTime.$gte = new Date(query.startDate);
+    }
+    if (query.endDate) {
+      filter.paymentTime.$lte = new Date(query.endDate);
+    }
+  }
+
+  if (query.search) {
+    const regex = new RegExp(String(query.search).trim(), 'i');
+    filter.$or = [
+      { name: regex },
+      { email: regex },
+      { whatsapp: regex },
+      { ticketId: regex },
+      { ticketTypeName: regex },
+    ];
+  }
+
+  return filter;
+};
+
+const resolveSort = (sortBy = 'paymentTime') => {
+  switch (sortBy) {
+    case 'name':
+      return { name: 1 };
+    case 'ticketTypeName':
+      return { ticketTypeName: 1 };
+    case 'paymentStatus':
+      return { paymentStatus: 1, paymentTime: -1 };
+    case 'paymentTimeAsc':
+      return { paymentTime: 1 };
+    default:
+      return { paymentTime: -1 };
+  }
+};
+
+const validateSalesAccess = async (eventId, accessToken) => {
+  if (!accessToken) {
+    return { ok: false, status: 401, message: 'Missing access token' };
+  }
+
+  const event = await Event.findById(eventId).select('+salesMonitorToken title date time location');
+  if (!event) {
+    return { ok: false, status: 404, message: 'Event not found' };
+  }
+
+  if (!event.salesMonitorToken || event.salesMonitorToken !== accessToken) {
+    return { ok: false, status: 403, message: 'Invalid or expired sales monitor link' };
+  }
+
+  return { ok: true, event };
+};
 
 // @desc    Get all events
 // @route   GET /api/events
@@ -59,6 +154,174 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Generate or rotate sales monitor link for an event
+// @route   POST /api/events/:id/sales-monitor/link
+// @access  Private/Admin
+router.post('/:id/sales-monitor/link', protect, admin, async (req, res) => {
+  try {
+    const rotate = req.body?.rotate === true;
+    const event = await Event.findById(req.params.id).select('+salesMonitorToken title');
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    if (!event.salesMonitorToken || rotate) {
+      event.salesMonitorToken = crypto.randomBytes(24).toString('hex');
+      event.salesMonitorTokenCreatedAt = new Date();
+      await event.save();
+    }
+
+    const path = buildSalesMonitorPath(event._id, event.salesMonitorToken);
+    const url = `${getFrontendBaseUrl()}${path}`;
+
+    return res.json({
+      eventId: event._id,
+      eventTitle: event.title,
+      path,
+      url,
+      tokenCreatedAt: event.salesMonitorTokenCreatedAt,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Read-only sales monitor data for a specific event
+// @route   GET /api/events/:id/sales-monitor
+// @access  Public via secure token
+router.get('/:id/sales-monitor', async (req, res) => {
+  try {
+    const accessToken = req.query.access;
+    const access = await validateSalesAccess(req.params.id, accessToken);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const filter = buildTicketFilter(req.params.id, req.query);
+    const tickets = await Ticket.find(filter).sort(resolveSort(req.query.sortBy));
+
+    const totalRevenue = tickets.reduce((sum, ticket) => sum + Number(ticket.ticketTypePrice || 0), 0);
+
+    return res.json({
+      event: {
+        _id: access.event._id,
+        title: access.event.title,
+        date: access.event.date,
+        time: access.event.time,
+        location: access.event.location,
+      },
+      total: tickets.length,
+      totalRevenue,
+      tickets,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Export read-only sales monitor CSV
+// @route   GET /api/events/:id/sales-monitor/export.csv
+// @access  Public via secure token
+router.get('/:id/sales-monitor/export.csv', async (req, res) => {
+  try {
+    const accessToken = req.query.access;
+    const access = await validateSalesAccess(req.params.id, accessToken);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const filter = buildTicketFilter(req.params.id, req.query);
+    const tickets = await Ticket.find(filter).sort(resolveSort(req.query.sortBy));
+
+    const headers = [
+      'Ticket ID',
+      'Buyer Name',
+      'Email',
+      'WhatsApp',
+      'Ticket Type',
+      'Price (N)',
+      'Status',
+      'Payment Time',
+    ];
+
+    const rows = tickets.map((ticket) => [
+      ticket.ticketId,
+      ticket.name,
+      ticket.email,
+      ticket.whatsapp,
+      ticket.ticketTypeName,
+      ticket.ticketTypePrice,
+      ticket.paymentStatus,
+      new Date(ticket.paymentTime).toLocaleString(),
+    ]);
+
+    const csv = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${String(cell ?? '')}"`).join(',')),
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${access.event.title.replace(/[^a-z0-9]/gi, '-')}-sales.csv"`);
+    return res.send(csv);
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @desc    Export read-only sales monitor PDF
+// @route   GET /api/events/:id/sales-monitor/export.pdf
+// @access  Public via secure token
+router.get('/:id/sales-monitor/export.pdf', async (req, res) => {
+  try {
+    const accessToken = req.query.access;
+    const access = await validateSalesAccess(req.params.id, accessToken);
+    if (!access.ok) {
+      return res.status(access.status).json({ message: access.message });
+    }
+
+    const filter = buildTicketFilter(req.params.id, req.query);
+    const tickets = await Ticket.find(filter).sort(resolveSort(req.query.sortBy));
+    const totalRevenue = tickets.reduce((sum, ticket) => sum + Number(ticket.ticketTypePrice || 0), 0);
+
+    const doc = new PDFDocument({ size: 'A4', margin: 35 });
+    const safeTitle = access.event.title.replace(/[^a-z0-9]/gi, '-');
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}-sales.pdf"`);
+
+    doc.pipe(res);
+
+    doc.fontSize(18).font('Helvetica-Bold').text('Event Ticket Sales Report');
+    doc.moveDown(0.5);
+    doc.fontSize(12).font('Helvetica').text(`Event: ${access.event.title}`);
+    doc.text(`Generated: ${new Date().toLocaleString()}`);
+    doc.text(`Tickets Sold: ${tickets.length}`);
+    doc.text(`Total Revenue: N${totalRevenue.toLocaleString()}`);
+    doc.moveDown(0.8);
+
+    tickets.forEach((ticket, index) => {
+      doc
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .text(`${index + 1}. ${ticket.ticketId} - ${ticket.name}`)
+        .font('Helvetica')
+        .text(`Email: ${ticket.email} | WhatsApp: ${ticket.whatsapp || '-'}`)
+        .text(`Type: ${ticket.ticketTypeName} | Price: N${Number(ticket.ticketTypePrice || 0).toLocaleString()} | Status: ${ticket.paymentStatus}`)
+        .text(`Time: ${new Date(ticket.paymentTime).toLocaleString()}`)
+        .moveDown(0.5);
+
+      if (doc.y > 760) {
+        doc.addPage();
+      }
+    });
+
+    doc.end();
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 

@@ -38,6 +38,7 @@ import AdminSubscribers from './pages/AdminSubscribers';
 import AdminAwards from './pages/AdminAwards';
 import AdminAdvertisers from './pages/AdminAdvertisers';
 import AdminUsers from './pages/AdminUsers';
+import EventSalesMonitor from './pages/EventSalesMonitor';
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+        <Route path="/sales-monitor/:eventId" element={<EventSalesMonitor />} />
         <Route path="/profile" element={<ProtectedUserRoute><Profile /></ProtectedUserRoute>} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
