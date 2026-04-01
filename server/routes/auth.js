@@ -153,7 +153,8 @@ router.post('/register', [
       await sendEmailVerificationEmail(user.email, verificationToken, user.name || user.username || 'there');
 
       res.status(201).json({
-        message: 'Account created. Please verify your email to activate your account.',
+        message:
+          'Account created successfully. We have sent a verification email to your inbox. Please verify your email to activate your account. If you do not see it, check Spam or Promotions.',
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });

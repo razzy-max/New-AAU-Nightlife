@@ -1,5 +1,6 @@
 export const USER_TOKEN_KEY = 'userToken';
 export const USER_DATA_KEY = 'userData';
+export const USER_AUTH_CHANGED_EVENT = 'user-auth-changed';
 
 export const getUserToken = () => localStorage.getItem(USER_TOKEN_KEY);
 
@@ -17,9 +18,11 @@ export const getUserData = () => {
 export const setUserAuth = (payload) => {
   localStorage.setItem(USER_TOKEN_KEY, payload.token);
   localStorage.setItem(USER_DATA_KEY, JSON.stringify(payload));
+  window.dispatchEvent(new Event(USER_AUTH_CHANGED_EVENT));
 };
 
 export const clearUserAuth = () => {
   localStorage.removeItem(USER_TOKEN_KEY);
   localStorage.removeItem(USER_DATA_KEY);
+  window.dispatchEvent(new Event(USER_AUTH_CHANGED_EVENT));
 };

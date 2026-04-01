@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { clearUserAuth, getUserData } from '../utils/userAuth';
+import { clearUserAuth, getUserData, USER_AUTH_CHANGED_EVENT } from '../utils/userAuth';
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +11,11 @@ function Navbar() {
     syncUser();
     window.addEventListener('storage', syncUser);
     window.addEventListener('focus', syncUser);
+    window.addEventListener(USER_AUTH_CHANGED_EVENT, syncUser);
     return () => {
       window.removeEventListener('storage', syncUser);
       window.removeEventListener('focus', syncUser);
+      window.removeEventListener(USER_AUTH_CHANGED_EVENT, syncUser);
     };
   }, []);
 
