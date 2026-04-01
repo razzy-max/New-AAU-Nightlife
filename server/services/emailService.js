@@ -49,6 +49,29 @@ const sendWithSmtpFallback = async ({ to, subject, html, attachments = [] }) => 
   }
 };
 
+const normalizeBaseUrl = (value) => {
+  if (!value) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return withProtocol.replace(/\/+$/, '');
+};
+
+const getFrontendBaseUrl = () => {
+  const configured =
+    normalizeBaseUrl(process.env.FRONTEND_URL) ||
+    normalizeBaseUrl(process.env.PUBLIC_FRONTEND_URL) ||
+    normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL);
+
+  if (configured) return configured;
+
+  const fallback = 'http://localhost:5173';
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[EMAIL] FRONTEND_URL is missing in production. Falling back to localhost links.');
+  }
+  return fallback;
+};
+
 // Verify Resend connection on startup
 console.log('[EMAIL] Verifying Resend configuration...');
 if (!process.env.RESEND_API_KEY) {
@@ -266,7 +289,7 @@ export const sendTicketEmail = async (ticket) => {
 
 export const sendPasswordResetEmail = async (email, resetToken, name = 'there') => {
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = getFrontendBaseUrl();
     const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
 
     const subject = 'Reset your AAU Nightlife password';
@@ -301,7 +324,7 @@ export const sendPasswordResetEmail = async (email, resetToken, name = 'there') 
 
 export const sendEmailVerificationEmail = async (email, verificationToken, name = 'there') => {
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = getFrontendBaseUrl();
     const verifyLink = `${frontendUrl}/verify-email/${verificationToken}`;
 
     const subject = 'Verify your AAU Nightlife email';
@@ -336,7 +359,7 @@ export const sendEmailVerificationEmail = async (email, verificationToken, name 
 
 export const sendOrderTicketsEmail = async (order, tickets) => {
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = getFrontendBaseUrl();
     const maxAttachmentBytes = 20 * 1024 * 1024;
     let totalBytes = 0;
     const attachments = [];
