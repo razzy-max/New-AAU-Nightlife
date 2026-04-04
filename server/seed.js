@@ -20,7 +20,7 @@ const seedData = async () => {
       const adminUser = new User({
         username: 'NightlifeAdmin',
         email: 'admin@aau-nightlife.com',
-        password: 'ANadmin2026', // This will be hashed by the pre-save hook
+        password: 'aau2026nightlife', // This will be hashed by the pre-save hook
         role: 'admin',
       });
       await adminUser.save();

@@ -12,7 +12,8 @@
     "server:dev": "nodemon server/index.js",
     "seed": "node server/seed.js",
     "seed:awards": "node server/seedAwards.js",
-    "clear:tickets:today": "node server/clearTodayTestTickets.js"
+    "clear:tickets:today": "node server/clearTodayTestTickets.js",
+    "admin:update-password": "node server/updateAdminPassword.js"
   },
   "dependencies": {
     "axios": "^1.13.2",

@@ -89,10 +89,6 @@ router.post('/login', [
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (user && (await user.matchPassword(password))) {
-      if (!user.isEmailVerified) {
-        return res.status(403).json({ message: 'Please verify your email before signing in.' });
-      }
-
       await claimGuestOrdersByEmail(user);
       res.json({
         _id: user._id,
