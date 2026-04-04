@@ -6,6 +6,7 @@ import Category from '../models/Category.js';
 import Vote from '../models/Vote.js';
 import User from '../models/User.js';
 import { initializePayment, verifyPayment } from '../services/paystackService.js';
+import sseService from '../services/sseService.js';
 
 const router = express.Router();
 
@@ -203,15 +204,24 @@ router.post(
 
       await vote.save();
 
-      // Update candidate vote count
-      await Candidate.findByIdAndUpdate(candidateId, {
-        $inc: { voteCount: voteCount, paidVotes: voteCount },
-      });
+      // Update candidate vote count and keep updated doc for real-time broadcast
+      const updatedCandidate = await Candidate.findByIdAndUpdate(
+        candidateId,
+        {
+          $inc: { voteCount: voteCount, paidVotes: voteCount },
+        },
+        { new: true }
+      );
 
       // Update category vote count
       await Category.findByIdAndUpdate(categoryId, {
         $inc: { totalVotes: voteCount },
       });
+
+      // Broadcast the vote update to all connected SSE clients
+      if (updatedCandidate) {
+        sseService.broadcastVoteUpdate(updatedCandidate);
+      }
 
       console.log('[PAYMENT SUCCESS]', {
         reference,
