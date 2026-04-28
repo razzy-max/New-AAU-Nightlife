@@ -1,4 +1,0 @@
-[[redirects]]
-  from = "/popularity_poll/*"
-  to = "https://aaunightlife-sug-poll.vercel.app/:splat"
-  status = 200
