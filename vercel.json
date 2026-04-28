@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/popularity_poll/:path*",
+      "destination": "https://aaunightlife-sug-poll.vercel.app/:path*"
+    }
+  ]
+}
