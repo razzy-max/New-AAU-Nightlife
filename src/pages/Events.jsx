@@ -106,7 +106,7 @@ function Events() {
                   <p><strong>Location:</strong> {event.location}</p>
                   <p><strong>Contact:</strong> {event.contactEmail}</p>
                 </div>
-                <Link to={`/events/${event._id}`} style={{ textDecoration: 'none' }}>
+                <Link to={`/events/${event.slug || event._id}`} style={{ textDecoration: 'none' }}>
                   <button className="rsvp-btn">RSVP Now</button>
                 </Link>
               </div>

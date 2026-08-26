@@ -12,6 +12,7 @@
     "server:dev": "nodemon server/index.js",
     "seed": "node server/seed.js",
     "seed:awards": "node server/seedAwards.js",
+    "backfill:event-slugs": "node server/backfillEventSlugs.js",
     "clear:tickets:today": "node server/clearTodayTestTickets.js",
     "admin:update-password": "node server/updateAdminPassword.js"
   },
@@ -34,7 +35,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.0",
-    "resend": "^6.9.2"
+    "resend": "^6.9.2",
+    "slugify": "^1.6.9"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",

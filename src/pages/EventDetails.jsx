@@ -120,7 +120,7 @@ function EventDetails() {
 
       // Step 1: Initiate Paystack payment
       // Send ticket name and price instead of ticketTypeId
-      const purchaseResponse = await fetch(`${API_BASE_URL}/api/tickets/purchase/${id}`, {
+      const purchaseResponse = await fetch(`${API_BASE_URL}/api/tickets/purchase/${event._id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,7 +153,7 @@ function EventDetails() {
         name: nameStr,
         whatsapp: whatsappStr,
         quantity: quantityNum,
-        eventId: id,
+        eventId: event._id,
         timestamp: Date.now(),
       };
       

@@ -7,6 +7,8 @@ import PDFDocument from 'pdfkit';
 import Event from '../models/Event.js';
 import Ticket from '../models/Ticket.js';
 import { protect, admin } from '../middleware/auth.js';
+import { generateUniqueSlug } from '../utils/slug.js';
+import { resolveEventByIdOrSlug } from '../utils/resolveEvent.js';
 
 const router = express.Router();
 
@@ -325,6 +327,40 @@ router.get('/:id/sales-monitor/export.pdf', async (req, res) => {
   }
 });
 
+// @desc    Serve an event's image as a real, publicly fetchable URL
+// @route   GET /api/events/:id/image
+// @access  Public
+router.get('/:id/image', async (req, res) => {
+  try {
+    const event = await resolveEventByIdOrSlug(Event, req.params.id, 'image');
+
+    if (!event || !event.image) {
+      return res.redirect(302, `${getFrontendBaseUrl()}/logo.png`);
+    }
+
+    const base64Match = event.image.match(/^data:([^;]+);base64,(.+)$/);
+    if (base64Match) {
+      const [, mimeType, payload] = base64Match;
+      const buffer = Buffer.from(payload, 'base64');
+      res.set({
+        'Content-Type': mimeType,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'public, max-age=3600',
+      });
+      return res.end(buffer);
+    }
+
+    if (/^https?:\/\//i.test(event.image)) {
+      return res.redirect(302, event.image);
+    }
+
+    // Relative path (e.g. legacy /uploads/...) - resolve against this host
+    return res.redirect(302, `${req.protocol}://${req.get('host')}${event.image}`);
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @desc    Create an event
 // @route   POST /api/events
 // @access  Private/Admin
@@ -374,8 +410,24 @@ router.post('/', protect, admin, upload.single('image'), [
     // Remove old price field if exists
     delete eventData.price;
 
-    const event = new Event(eventData);
-    const createdEvent = await event.save();
+    let createdEvent;
+    let attempts = 0;
+    let slug = await generateUniqueSlug(eventData.title, Event);
+
+    while (!createdEvent) {
+      attempts += 1;
+      try {
+        const event = new Event({ ...eventData, slug });
+        createdEvent = await event.save();
+      } catch (saveError) {
+        if (saveError.code === 11000 && saveError.keyPattern?.slug && attempts < 5) {
+          slug = await generateUniqueSlug(`${eventData.title}-${attempts}`, Event);
+          continue;
+        }
+        throw saveError;
+      }
+    }
+
     res.status(201).json(createdEvent);
   } catch (error) {
     console.error('Error creating event:', error);
@@ -412,9 +464,30 @@ router.put('/:id', protect, admin, upload.single('image'), async (req, res) => {
 
       // Remove old price field if exists
       delete req.body.price;
+      // Slugs are stable once set - never let a raw body request change it
+      delete req.body.slug;
 
       Object.assign(event, req.body);
-      const updatedEvent = await event.save();
+
+      if (!event.slug) {
+        event.slug = await generateUniqueSlug(event.title, Event, event._id);
+      }
+
+      let updatedEvent;
+      let attempts = 0;
+      while (!updatedEvent) {
+        attempts += 1;
+        try {
+          updatedEvent = await event.save();
+        } catch (saveError) {
+          if (saveError.code === 11000 && saveError.keyPattern?.slug && attempts < 5) {
+            event.slug = await generateUniqueSlug(`${event.title}-${attempts}`, Event, event._id);
+            continue;
+          }
+          throw saveError;
+        }
+      }
+
       res.json(updatedEvent);
     } else {
       res.status(404).json({ message: 'Event not found' });
@@ -466,7 +539,7 @@ router.get('/upcoming/list', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const event = await resolveEventByIdOrSlug(Event, req.params.id);
 
     if (event) {
       res.json(event);

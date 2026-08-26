@@ -426,7 +426,7 @@ function Home() {
                 <h3>{event.title}</h3>
                 <p className="event-preview-description">{event.shortDescription || event.description?.substring(0, 100) + '...'}</p>
                 <p className="event-preview-time">{formatTime(event.time)} • {event.location}</p>
-                <Link to={`/events/${event._id}`} className="learn-more-btn">Learn More</Link>
+                <Link to={`/events/${event.slug || event._id}`} className="learn-more-btn">Learn More</Link>
               </div>
             </div>
           )) : (

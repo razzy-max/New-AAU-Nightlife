@@ -6,6 +6,13 @@ const eventSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  slug: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    sparse: true,
+  },
   description: {
     type: String,
     required: true,
