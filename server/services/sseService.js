@@ -12,9 +12,10 @@ class SSEService {
   /**
    * Register a new SSE client
    * @param {Response} res - Express response object
+   * @param {string|null} eventId - Awards event this client is watching, if any
    * @returns {string} clientId
    */
-  registerClient(res) {
+  registerClient(res, eventId = null) {
     const clientId = `client-${Date.now()}-${++this.clientCounter}`;
 
     // Set SSE headers
@@ -25,7 +26,7 @@ class SSEService {
     res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
 
     // Store the client
-    this.clients.set(clientId, res);
+    this.clients.set(clientId, { res, eventId });
 
     console.log(`[SSE] Client ${clientId} connected. Total clients: ${this.clients.size}`);
 
@@ -62,10 +63,10 @@ class SSEService {
    * @param {object} data
    */
   sendToClient(clientId, data) {
-    const res = this.clients.get(clientId);
-    if (res && !res.writableEnded) {
+    const client = this.clients.get(clientId);
+    if (client?.res && !client.res.writableEnded) {
       try {
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
+        client.res.write(`data: ${JSON.stringify(data)}\n\n`);
       } catch (err) {
         console.error(`[SSE] Error sending to client ${clientId}:`, err.message);
         this.unregisterClient(clientId);
@@ -74,17 +75,23 @@ class SSEService {
   }
 
   /**
-   * Broadcast message to all connected clients
+   * Broadcast message to connected clients, optionally scoped to one awards event.
+   * A client with no eventId (watching nothing in particular) still receives everything;
+   * a client watching a specific eventId only receives matching broadcasts.
    * @param {object} data
+   * @param {string|null} eventId
    */
-  broadcast(data) {
+  broadcast(data, eventId = null) {
     const timestamp = new Date().toISOString();
     const message = { ...data, timestamp };
 
     let successCount = 0;
     let failCount = 0;
 
-    this.clients.forEach((res, clientId) => {
+    this.clients.forEach(({ res, eventId: clientEventId }, clientId) => {
+      if (eventId && clientEventId && String(clientEventId) !== String(eventId)) {
+        return;
+      }
       if (res && !res.writableEnded) {
         try {
           res.write(`data: ${JSON.stringify(message)}\n\n`);
@@ -105,12 +112,13 @@ class SSEService {
   /**
    * Broadcast vote update
    * @param {object} candidateData - Updated candidate data
+   * @param {string|null} eventId - Awards event the vote belongs to
    */
-  broadcastVoteUpdate(candidateData) {
+  broadcastVoteUpdate(candidateData, eventId = null) {
     this.broadcast({
       type: 'vote-update',
       candidate: candidateData,
-    });
+    }, eventId);
   }
 
   /**
@@ -125,7 +133,7 @@ class SSEService {
    * Clear all clients (useful on shutdown)
    */
   clearAllClients() {
-    this.clients.forEach((res) => {
+    this.clients.forEach(({ res }) => {
       if (res && !res.writableEnded) {
         try {
           res.end();

@@ -50,8 +50,16 @@ const categorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    awardsEvent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AwardsEvent',
+      required: true,
+      index: true,
+    },
   },
   { timestamps: true }
 );
+
+categorySchema.index({ awardsEvent: 1, status: 1 });
 
 export default mongoose.model('Category', categorySchema);

@@ -65,23 +65,26 @@ function AwardPaymentCallback() {
           throw new Error(data.message || 'Payment verification failed');
         }
 
-        // Get category ID to return to
+        // Get category/event to return to
         const returnCategoryId = sessionStorage.getItem('returnToCategoryId');
-        
+        const returnEventSlug = sessionStorage.getItem('returnToEventSlug');
+
         // Clear session storage
         sessionStorage.removeItem('pendingVote');
         sessionStorage.removeItem('returnToCategoryId');
+        sessionStorage.removeItem('returnToEventSlug');
 
         // Success!
         setStatus('success');
         setMessage(`✓ Payment verified! ${data.data.votesRecorded || voteCount} vote(s) recorded for ${data.data.candidate}`);
 
-        // Redirect after 3 seconds to the same category
+        // Redirect after 3 seconds to the same event/category
         setTimeout(() => {
+          const base = returnEventSlug ? `/awards/${returnEventSlug}` : '/awards';
           if (returnCategoryId) {
-            navigate(`/awards?category=${returnCategoryId}#vote-distribution`);
+            navigate(`${base}?category=${returnCategoryId}#vote-distribution`);
           } else {
-            navigate('/awards#vote-distribution');
+            navigate(`${base}#vote-distribution`);
           }
         }, 3000);
       } catch (error) {

@@ -12,7 +12,9 @@ import AwardPaymentCallback from './pages/AwardPaymentCallback';
 import Jobs from './pages/Jobs';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
-import Awards from './pages/Awards';
+import AwardsDirectory from './pages/AwardsDirectory';
+import EventAwards from './pages/EventAwards';
+import OrganizerPanel from './pages/OrganizerPanel';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -35,7 +37,9 @@ import AdminEditEvent from './pages/AdminEditEvent';
 import AdminEditJob from './pages/AdminEditJob';
 import AdminTickets from './pages/AdminTickets';
 import AdminSubscribers from './pages/AdminSubscribers';
-import AdminAwards from './pages/AdminAwards';
+import AdminAwardsEvents from './pages/AdminAwardsEvents';
+import AdminNewAwardsEvent from './pages/AdminNewAwardsEvent';
+import AdminEditAwardsEvent from './pages/AdminEditAwardsEvent';
 import AdminAdvertisers from './pages/AdminAdvertisers';
 import AdminUsers from './pages/AdminUsers';
 import EventSalesMonitor from './pages/EventSalesMonitor';
@@ -54,7 +58,9 @@ function App() {
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogPost />} />
-        <Route path="/awards" element={<Awards />} />
+        <Route path="/awards" element={<AwardsDirectory />} />
+        <Route path="/awards/:slug" element={<EventAwards />} />
+        <Route path="/organizer/:slug" element={<OrganizerPanel />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -78,7 +84,9 @@ function App() {
         <Route path="/admin/carousel" element={<ProtectedRoute><AdminCarousel /></ProtectedRoute>} />
         <Route path="/admin/comments" element={<ProtectedRoute><AdminComments /></ProtectedRoute>} />
         <Route path="/admin/subscribers" element={<ProtectedRoute><AdminSubscribers /></ProtectedRoute>} />
-        <Route path="/admin/awards" element={<ProtectedRoute><AdminAwards /></ProtectedRoute>} />
+        <Route path="/admin/awards-events" element={<ProtectedRoute><AdminAwardsEvents /></ProtectedRoute>} />
+        <Route path="/admin/awards-events/new" element={<ProtectedRoute><AdminNewAwardsEvent /></ProtectedRoute>} />
+        <Route path="/admin/awards-events/edit/:id" element={<ProtectedRoute><AdminEditAwardsEvent /></ProtectedRoute>} />
         <Route path="/admin/advertisers" element={<ProtectedRoute><AdminAdvertisers /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
       </Routes>

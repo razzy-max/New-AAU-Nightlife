@@ -9,6 +9,7 @@ import Ticket from '../models/Ticket.js';
 import { protect, admin } from '../middleware/auth.js';
 import { generateUniqueSlug } from '../utils/slug.js';
 import { resolveEventByIdOrSlug } from '../utils/resolveEvent.js';
+import { getFrontendBaseUrl } from '../utils/frontendUrl.js';
 
 const router = express.Router();
 
@@ -28,23 +29,6 @@ const upload = multer({
     }
   }
 });
-
-const normalizeBaseUrl = (value) => {
-  if (!value) return null;
-  const trimmed = String(value).trim();
-  if (!trimmed) return null;
-  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  return withProtocol.replace(/\/+$/, '');
-};
-
-const getFrontendBaseUrl = () => {
-  return (
-    normalizeBaseUrl(process.env.FRONTEND_URL) ||
-    normalizeBaseUrl(process.env.PUBLIC_FRONTEND_URL) ||
-    normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL) ||
-    'http://localhost:5173'
-  );
-};
 
 const buildSalesMonitorPath = (eventId, token) => `/sales-monitor/${eventId}?access=${encodeURIComponent(token)}`;
 

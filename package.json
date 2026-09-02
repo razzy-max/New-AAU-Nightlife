@@ -13,6 +13,7 @@
     "seed": "node server/seed.js",
     "seed:awards": "node server/seedAwards.js",
     "backfill:event-slugs": "node server/backfillEventSlugs.js",
+    "cleanup:orphaned-votes": "node server/cleanupOrphanedVotes.js",
     "clear:tickets:today": "node server/clearTodayTestTickets.js",
     "admin:update-password": "node server/updateAdminPassword.js"
   },

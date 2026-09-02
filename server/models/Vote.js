@@ -12,6 +12,11 @@ const voteSchema = new mongoose.Schema(
       ref: 'Category',
       required: true,
     },
+    awardsEvent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AwardsEvent',
+      required: true,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -51,7 +56,8 @@ const voteSchema = new mongoose.Schema(
 );
 
 // Index to prevent duplicate votes from same IP + session within timeframe
-voteSchema.index({ ipAddress: 1, sessionId: 1, createdAt: 1 });
+voteSchema.index({ awardsEvent: 1, ipAddress: 1, sessionId: 1, category: 1 });
 voteSchema.index({ candidate: 1, category: 1 });
+voteSchema.index({ awardsEvent: 1, createdAt: -1 });
 
 export default mongoose.model('Vote', voteSchema);

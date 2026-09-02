@@ -25,6 +25,21 @@
   margin-bottom: 3rem;
   box-shadow: 0 10px 40px rgba(218, 165, 32, 0.2);
   border: 2px solid #DAA520;
+  position: relative;
+  overflow: hidden;
+}
+
+.awards-hero-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.25;
+}
+
+.hero-content {
+  position: relative;
 }
 
 .hero-content h1 {
@@ -32,6 +47,7 @@
   margin: 0 0 1rem 0;
   font-weight: 700;
   color: #DAA520;
+  font-family: 'Georgia', serif;
 }
 
 .hero-content p {
@@ -39,6 +55,15 @@
   margin: 0;
   opacity: 0.95;
   color: white;
+}
+
+.hero-organizer {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #DAA520;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .awards-loading,
@@ -338,98 +363,6 @@
   flex: unset;
 }
 
-.paid-vote-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.quantity-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(218, 165, 32, 0.1) 0%, rgba(218, 165, 32, 0.05) 100%);
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid #DAA520;
-}
-
-.qty-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 2px solid #DAA520;
-  border-radius: 6px;
-  background: white;
-  font-size: 1rem;
-  cursor: pointer;
-  font-weight: bold;
-  color: #DAA520;
-  transition: all 0.2s ease;
-}
-
-.qty-btn:hover {
-  border-color: #DAA520;
-  background: #DAA520;
-  color: #000000;
-  transform: scale(1.05);
-}
-
-.qty-btn:active {
-  transform: scale(0.95);
-}
-
-.qty-input {
-  width: 60px;
-  min-width: 50px;
-  padding: 0.4rem;
-  text-align: center;
-  font-weight: 700;
-  font-size: 1rem;
-  border: 2px solid #DAA520;
-  border-radius: 6px;
-  background: white;
-  color: #DAA520;
-  transition: all 0.2s ease;
-}
-
-.qty-input:focus {
-  outline: none;
-  border-color: #DAA520;
-  box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.1);
-}
-
-.qty-input::-webkit-outer-spin-button,
-.qty-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.qty-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-.qty-display {
-  min-width: 40px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #DAA520;
-}
-
-.cost-display {
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #000000;
-  padding: 0.5rem;
-  background: rgba(218, 165, 32, 0.15);
-  border-radius: 6px;
-  border: 1px solid #DAA520;
-}
-
 .empty-candidates {
   text-align: center;
   padding: 3rem 2rem;
@@ -540,32 +473,5 @@
   .tab-btn {
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
-  }
-
-  .quantity-controls {
-    gap: 0.35rem;
-    padding: 0.5rem;
-  }
-
-  .qty-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-  }
-
-  .qty-input {
-    width: 50px;
-    min-width: 45px;
-    padding: 0.35rem;
-    font-size: 0.9rem;
-  }
-
-  .cost-display {
-    font-size: 1rem;
-    padding: 0.4rem;
-  }
-
-  .paid-vote-section {
-    gap: 0.5rem;
   }
 }

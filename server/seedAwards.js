@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import AwardsEvent from './models/AwardsEvent.js';
 import Category from './models/Category.js';
 import Candidate from './models/Candidate.js';
 import connectDB from './config.js';
@@ -15,8 +16,27 @@ const seedAwards = async () => {
     await Category.deleteMany({});
     await Candidate.deleteMany({});
 
-    // Create categories
+    // Create a demo awards event to hang the seeded categories off of
     const now = new Date();
+    const votingStartsAt = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const votingEndsAt = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000);
+
+    const demoEvent = await AwardsEvent.findOneAndUpdate(
+      { slug: 'demo-awards-event' },
+      {
+        title: 'Demo Awards Event',
+        slug: 'demo-awards-event',
+        description: 'A demo awards event used for local/dev seeding.',
+        organizerName: 'AAU Nightlife',
+        organizerEmail: 'events@aaunightlife.com',
+        published: true,
+        votingStartsAt,
+        votingEndsAt,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    console.log(`✅ Demo awards event ready: ${demoEvent.slug}`);
     now.setHours(9, 0, 0, 0); // 9:00 AM
     
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -43,6 +63,7 @@ const seedAwards = async () => {
         pricingType: 'paid',
         pricePerVote: 150,
         totalVotes: 0,
+        awardsEvent: demoEvent._id,
       },
       {
         name: 'Most Popular',
@@ -53,6 +74,7 @@ const seedAwards = async () => {
         pricingType: 'free',
         pricePerVote: 0,
         totalVotes: 0,
+        awardsEvent: demoEvent._id,
       },
       {
         name: 'Best Event Host',
@@ -63,6 +85,7 @@ const seedAwards = async () => {
         pricingType: 'paid',
         pricePerVote: 200,
         totalVotes: 0,
+        awardsEvent: demoEvent._id,
       },
     ]);
 

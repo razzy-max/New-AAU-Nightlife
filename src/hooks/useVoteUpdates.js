@@ -6,9 +6,10 @@ import { useEffect, useCallback } from 'react';
  *
  * @param {Function} onVoteUpdate - Callback function when vote update is received
  * @param {string} apiBaseUrl - Base URL for API
+ * @param {string|null} eventId - Awards event to scope this connection to
  * @returns {Function} cleanup function
  */
-export const useVoteUpdates = (onVoteUpdate, apiBaseUrl) => {
+export const useVoteUpdates = (onVoteUpdate, apiBaseUrl, eventId = null) => {
   useEffect(() => {
     if (!onVoteUpdate || !apiBaseUrl) {
       console.warn('[SSE Hook] Missing required parameters');
@@ -22,8 +23,11 @@ export const useVoteUpdates = (onVoteUpdate, apiBaseUrl) => {
       try {
         console.log('[SSE] Connecting to vote updates...');
 
-        // Create EventSource connection
-        eventSource = new EventSource(`${apiBaseUrl}/api/voting/updates`);
+        // Create EventSource connection, optionally scoped to one awards event
+        const url = eventId
+          ? `${apiBaseUrl}/api/voting/updates?eventId=${eventId}`
+          : `${apiBaseUrl}/api/voting/updates`;
+        eventSource = new EventSource(url);
 
         // Handle incoming messages
         eventSource.onmessage = (event) => {
@@ -87,7 +91,7 @@ export const useVoteUpdates = (onVoteUpdate, apiBaseUrl) => {
         eventSource.close();
       }
     };
-  }, [onVoteUpdate, apiBaseUrl]);
+  }, [onVoteUpdate, apiBaseUrl, eventId]);
 };
 
 export default useVoteUpdates;

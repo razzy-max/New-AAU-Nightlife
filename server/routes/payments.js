@@ -5,8 +5,10 @@ import Candidate from '../models/Candidate.js';
 import Category from '../models/Category.js';
 import Vote from '../models/Vote.js';
 import User from '../models/User.js';
+import AwardsEvent from '../models/AwardsEvent.js';
 import { initializePayment, verifyPayment } from '../services/paystackService.js';
 import sseService from '../services/sseService.js';
+import { checkEventVotingWindow } from './voting.js';
 
 const router = express.Router();
 
@@ -72,6 +74,16 @@ router.post(
           success: false,
           message: 'This category does not accept paid votes',
         });
+      }
+
+      const awardsEvent = await AwardsEvent.findById(category.awardsEvent);
+      if (!awardsEvent) {
+        return res.status(404).json({ success: false, message: 'Awards event not found' });
+      }
+
+      const windowCheck = checkEventVotingWindow(awardsEvent);
+      if (!windowCheck.ok) {
+        return res.status(400).json({ success: false, message: windowCheck.message });
       }
 
       // Calculate amount in Naira
@@ -161,6 +173,15 @@ router.post(
         voteCount,
       });
 
+      // Reject replays of an already-consumed Paystack reference
+      const existingVote = await Vote.findOne({ transactionId: reference });
+      if (existingVote) {
+        return res.status(400).json({
+          success: false,
+          message: 'This payment has already been recorded',
+        });
+      }
+
       // Verify payment with Paystack
       const paymentResult = await verifyPayment(reference);
 
@@ -190,10 +211,21 @@ router.post(
         });
       }
 
+      const awardsEvent = await AwardsEvent.findById(category.awardsEvent);
+      if (!awardsEvent) {
+        return res.status(404).json({ success: false, message: 'Awards event not found' });
+      }
+
+      const windowCheck = checkEventVotingWindow(awardsEvent);
+      if (!windowCheck.ok) {
+        return res.status(400).json({ success: false, message: windowCheck.message });
+      }
+
       // Create vote record(s)
       const vote = new Vote({
         candidate: candidateId,
         category: categoryId,
+        awardsEvent: awardsEvent._id,
         user: optionalUser?._id,
         ipAddress,
         sessionId,
@@ -218,9 +250,9 @@ router.post(
         $inc: { totalVotes: voteCount },
       });
 
-      // Broadcast the vote update to all connected SSE clients
+      // Broadcast the vote update to connected SSE clients watching this event
       if (updatedCandidate) {
-        sseService.broadcastVoteUpdate(updatedCandidate);
+        sseService.broadcastVoteUpdate(updatedCandidate, awardsEvent._id);
       }
 
       console.log('[PAYMENT SUCCESS]', {
