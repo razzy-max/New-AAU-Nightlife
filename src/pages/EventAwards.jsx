@@ -7,7 +7,30 @@ import PaidVotingModal from '../components/awards/PaidVotingModal';
 import VoteToast from '../components/awards/VoteToast';
 import useVoteUpdates from '../hooks/useVoteUpdates';
 import API_BASE_URL from '../config';
+import '../components/awards/skeleton.css';
 import './EventAwards.css';
+
+function EventAwardsSkeleton() {
+  return (
+    <div className="awards-page">
+      <div className="awards-hero skeleton" style={{ height: '220px', border: 'none' }} />
+      <div className="awards-container">
+        <div className="skeleton" style={{ height: '140px', marginBottom: '2rem' }} />
+        <div className="category-selector">
+          <div className="skeleton" style={{ height: '1.5rem', width: '30%', marginBottom: '1.5rem' }} />
+          <div className="category-grid">
+            <div className="skeleton" style={{ height: '90px' }} />
+            <div className="skeleton" style={{ height: '90px' }} />
+          </div>
+        </div>
+        <div className="candidates-container" style={{ marginTop: '2rem' }}>
+          <div className="skeleton" style={{ height: '320px' }} />
+          <div className="skeleton" style={{ height: '320px' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const EventAwards = () => {
   const { slug } = useParams();
@@ -218,7 +241,7 @@ const EventAwards = () => {
   };
 
   if (loading) {
-    return <div className="awards-loading">Loading Awards...</div>;
+    return <EventAwardsSkeleton />;
   }
 
   if (error || !event) {
@@ -301,8 +324,12 @@ const EventAwards = () => {
                         {index === 0 && candidate.voteCount > 0 && (
                           <span className="candidate-leading-tag">👑 Leading</span>
                         )}
-                        {candidate.image && (
+                        {candidate.image ? (
                           <img src={candidate.image} alt={candidate.name} className="candidate-image" />
+                        ) : (
+                          <div className="candidate-image candidate-image-placeholder">
+                            <span>{candidate.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                          </div>
                         )}
                         <div className="candidate-details">
                           <h4>{candidate.name}</h4>

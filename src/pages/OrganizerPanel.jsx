@@ -7,6 +7,13 @@ import EventSettingsForm from '../components/awards-admin/EventSettingsForm';
 import ActivityFeed from '../components/awards-admin/ActivityFeed';
 import '../components/awards-admin/awards-admin.css';
 
+function getVotingStatus(event) {
+  const now = new Date();
+  if (now < new Date(event.votingStartsAt)) return { label: 'Upcoming', className: 'upcoming' };
+  if (now > new Date(event.votingEndsAt)) return { label: 'Ended', className: 'ended' };
+  return { label: 'Live Now', className: 'active' };
+}
+
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'categories', label: 'Categories' },
@@ -21,6 +28,7 @@ function OrganizerPanel() {
   const [token, setToken] = useState(null);
   const [event, setEvent] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [overviewStats, setOverviewStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -62,6 +70,27 @@ function OrganizerPanel() {
   useEffect(() => {
     if (token) fetchEvent();
   }, [token, fetchEvent]);
+
+  useEffect(() => {
+    if (!event) return;
+    const fetchStats = async () => {
+      try {
+        const [catRes, candRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/awards-events/${slug}/categories`, { headers: { ...authHeaders } }),
+          fetch(`${API_BASE_URL}/api/awards-events/${slug}/candidates`, { headers: { ...authHeaders } }),
+        ]);
+        const [catData, candData] = await Promise.all([catRes.json(), candRes.json()]);
+        setOverviewStats({
+          categoryCount: catData.data?.length || 0,
+          candidateCount: candData.data?.length || 0,
+        });
+      } catch (err) {
+        console.error('Failed to load overview stats:', err);
+      }
+    };
+    fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event, slug]);
 
   if (!token) {
     return (
@@ -114,9 +143,32 @@ function OrganizerPanel() {
         {activeTab === 'overview' && (
           <div className="admin-list-section">
             <h2>Overview</h2>
-            <p><strong>Status:</strong> {event.published ? 'Live on site' : 'Awaiting superadmin approval'}</p>
-            <p><strong>Voting window:</strong> {new Date(event.votingStartsAt).toLocaleString()} &rarr; {new Date(event.votingEndsAt).toLocaleString()}</p>
-            <p><strong>Categories:</strong> {categories.length}</p>
+            <div className="activity-stats-grid">
+              <div className="activity-stat-tile">
+                <div className="activity-stat-value" style={{ fontSize: '1.4rem' }}>
+                  {event.published ? 'Live' : 'Draft'}
+                </div>
+                <div className="activity-stat-label">
+                  {event.published ? getVotingStatus(event).label : 'Awaiting approval'}
+                </div>
+              </div>
+              <div className="activity-stat-tile">
+                <div className="activity-stat-value">{overviewStats ? overviewStats.categoryCount : '—'}</div>
+                <div className="activity-stat-label">Categories</div>
+              </div>
+              <div className="activity-stat-tile">
+                <div className="activity-stat-value">{overviewStats ? overviewStats.candidateCount : '—'}</div>
+                <div className="activity-stat-label">Candidates</div>
+              </div>
+            </div>
+            <p style={{ marginTop: '1.5rem', color: '#555' }}>
+              <strong>Voting window:</strong> {new Date(event.votingStartsAt).toLocaleString()} &rarr; {new Date(event.votingEndsAt).toLocaleString()}
+            </p>
+            {!event.published && (
+              <p style={{ color: '#b8860b', fontSize: '0.9rem' }}>
+                Your event is still a draft — it won't appear publicly until the site admin publishes it.
+              </p>
+            )}
           </div>
         )}
 

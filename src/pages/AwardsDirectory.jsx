@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API_BASE_URL from '../config';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import '../components/awards/skeleton.css';
 import './AwardsDirectory.css';
 
 function getEventStatus(event) {
@@ -14,6 +15,30 @@ function getEventStatus(event) {
 }
 
 const STATUS_LABEL = { live: 'Live Now', upcoming: 'Upcoming', ended: 'Ended' };
+
+function formatRemaining(targetDate) {
+  const diff = new Date(targetDate).getTime() - Date.now();
+  if (diff <= 0) return null;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 0) return `${days}d ${hours}h`;
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
+function DirectoryCardSkeleton() {
+  return (
+    <div className="directory-card">
+      <div className="directory-card-image skeleton" />
+      <div className="directory-card-body">
+        <div className="skeleton" style={{ height: '1.2rem', width: '70%', marginBottom: '0.6rem' }} />
+        <div className="skeleton" style={{ height: '0.8rem', width: '45%', marginBottom: '0.6rem' }} />
+        <div className="skeleton" style={{ height: '0.8rem', width: '60%', marginBottom: '1rem' }} />
+        <div className="skeleton" style={{ height: '1rem', width: '35%' }} />
+      </div>
+    </div>
+  );
+}
 
 function AwardsDirectory() {
   const [events, setEvents] = useState([]);
@@ -41,7 +66,6 @@ function AwardsDirectory() {
     fetchDirectory();
   }, []);
 
-  if (loading) return <div className="awards-loading">Loading Awards...</div>;
   if (error) return <div className="awards-error">{error}</div>;
 
   return (
@@ -54,7 +78,13 @@ function AwardsDirectory() {
       </div>
 
       <div className="awards-directory-container">
-        {events.length === 0 ? (
+        {loading ? (
+          <div className="directory-grid">
+            <DirectoryCardSkeleton />
+            <DirectoryCardSkeleton />
+            <DirectoryCardSkeleton />
+          </div>
+        ) : events.length === 0 ? (
           <div className="empty-directory">
             <p>No live awards events right now. Check back soon!</p>
           </div>
@@ -62,6 +92,13 @@ function AwardsDirectory() {
           <div ref={gridRef} className="directory-grid">
             {events.map((event, index) => {
               const status = getEventStatus(event);
+              const remaining =
+                status === 'live'
+                  ? formatRemaining(event.votingEndsAt)
+                  : status === 'upcoming'
+                  ? formatRemaining(event.votingStartsAt)
+                  : null;
+
               return (
                 <Link
                   to={`/awards/${event.slug || event._id}`}
@@ -85,6 +122,11 @@ function AwardsDirectory() {
                     <p className="directory-card-meta">
                       {event.categoryCount} {event.categoryCount === 1 ? 'category' : 'categories'} · {event.candidateCount} nominees
                     </p>
+                    {remaining && (
+                      <p className="directory-card-remaining">
+                        {status === 'live' ? `Ends in ${remaining}` : `Starts in ${remaining}`}
+                      </p>
+                    )}
                     <span className="directory-card-cta">Vote Now →</span>
                   </div>
                 </Link>
