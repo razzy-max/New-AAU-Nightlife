@@ -39,6 +39,7 @@ const EventAwards = () => {
 
   const [event, setEvent] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [allCandidates, setAllCandidates] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,9 +48,11 @@ const EventAwards = () => {
   const [activeTab, setActiveTab] = useState('vote');
   const [paidModalCandidate, setPaidModalCandidate] = useState(null);
   const [toast, setToast] = useState(null);
-  const [categorySearch, setCategorySearch] = useState('');
-  const [candidateSearch, setCandidateSearch] = useState('');
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [highlightCandidateId, setHighlightCandidateId] = useState(null);
   const hasScrolledRef = useRef(false);
+  const candidateCardRefs = useRef({});
+  const votingSectionRef = useRef(null);
 
   const showToast = (type, message) => setToast({ type, message, key: Date.now() });
   const [sessionId] = useState(() => {
@@ -68,10 +71,22 @@ const EventAwards = () => {
   useEffect(() => {
     if (selectedCategory) {
       fetchCandidates(selectedCategory._id);
-      setCandidateSearch('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory?._id]);
+
+  // Once the target category's candidates are loaded, scroll to and briefly
+  // highlight whichever candidate was picked from a global search result.
+  useEffect(() => {
+    if (!highlightCandidateId) return undefined;
+    const node = candidateCardRefs.current[highlightCandidateId];
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const timer = setTimeout(() => setHighlightCandidateId(null), 2500);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [candidates, highlightCandidateId]);
 
   useEffect(() => {
     if (window.location.hash && !hasScrolledRef.current) {
@@ -101,7 +116,7 @@ const EventAwards = () => {
       }
 
       setEvent(data.data);
-      await fetchCategories(data.data._id);
+      await Promise.all([fetchCategories(data.data._id), fetchAllCandidates(data.data._id)]);
     } catch (err) {
       setError('Failed to fetch this awards event');
       console.error(err);
@@ -139,6 +154,19 @@ const EventAwards = () => {
     }
   };
 
+  // Powers the global search box - every candidate across every category in this event.
+  const fetchAllCandidates = async (awardsEventId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/awards/candidates?awardsEvent=${awardsEventId}`);
+      const data = await response.json();
+      if (data.success) {
+        setAllCandidates(data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch all candidates:', err);
+    }
+  };
+
   const fetchCandidates = async (categoryId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/awards/candidates/category/${categoryId}`);
@@ -166,9 +194,30 @@ const EventAwards = () => {
       setSelectedCategory((prev) => (prev ? { ...prev, totalVotes } : prev));
       return sorted;
     });
+    setAllCandidates((prev) => prev.map((c) => (c._id === updatedCandidate._id ? { ...c, ...updatedCandidate } : c)));
   }, []);
 
   useVoteUpdates(handleVoteUpdate, API_BASE_URL, event?._id);
+
+  const selectCategory = (category) => {
+    setSelectedCategory((prev) => (prev?._id === category._id ? prev : category));
+  };
+
+  const handleSelectCategoryResult = (category) => {
+    setGlobalSearch('');
+    selectCategory(category);
+    setTimeout(() => votingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
+
+  const handleSelectCandidateResult = (candidate) => {
+    const categoryId = candidate.category?._id || candidate.category;
+    const targetCategory = categories.find((c) => c._id === categoryId);
+    if (!targetCategory) return;
+    setGlobalSearch('');
+    setActiveTab('vote');
+    setHighlightCandidateId(candidate._id);
+    selectCategory(targetCategory);
+  };
 
   const handleFreeVote = async (candidateId) => {
     if (votingStatus !== 'active') {
@@ -261,6 +310,14 @@ const EventAwards = () => {
     );
   }
 
+  const searchQuery = globalSearch.trim().toLowerCase();
+  const matchedCategories = searchQuery
+    ? categories.filter((c) => c.name.toLowerCase().includes(searchQuery))
+    : [];
+  const matchedCandidates = searchQuery
+    ? allCandidates.filter((c) => c.name.toLowerCase().includes(searchQuery))
+    : [];
+
   return (
     <div className="awards-page">
       <div className="awards-hero">
@@ -284,53 +341,89 @@ const EventAwards = () => {
           onStatusChange={setVotingStatus}
         />
 
-        <div className="category-selector">
-          <div className="category-selector-header-row">
-            <h2>Select Category</h2>
-            {categories.length > 6 && (
-              <div className="awards-search-box">
-                <span className="awards-search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search categories..."
-                  value={categorySearch}
-                  onChange={(e) => setCategorySearch(e.target.value)}
-                />
-              </div>
+        <div className="global-search-wrapper">
+          <div className="awards-search-box awards-search-box-large">
+            <span className="awards-search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search any candidate or category..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+            />
+            {globalSearch && (
+              <button className="awards-search-clear" onClick={() => setGlobalSearch('')} aria-label="Clear search">
+                ✕
+              </button>
             )}
           </div>
-          {(() => {
-            const filteredCategories = categories.filter((category) =>
-              category.name.toLowerCase().includes(categorySearch.trim().toLowerCase())
-            );
-            if (filteredCategories.length === 0) {
-              return <div className="empty-candidates">No categories match "{categorySearch}"</div>;
-            }
-            return (
-              <div className={`category-grid ${categories.length > 6 ? 'scrollable' : ''}`}>
-                {filteredCategories.map((category) => (
-                  <button
-                    key={category._id}
-                    className={`category-card ${selectedCategory?._id === category._id ? 'active' : ''}`}
-                    onClick={() =>
-                      setSelectedCategory((prev) => (prev?._id === category._id ? prev : category))
-                    }
-                  >
-                    <div className="category-name">{category.name}</div>
-                    <div className="category-badges">
+
+          {searchQuery && (
+            <div className="global-search-results">
+              {matchedCategories.length === 0 && matchedCandidates.length === 0 && (
+                <div className="global-search-empty">No matches for "{globalSearch}"</div>
+              )}
+
+              {matchedCategories.length > 0 && (
+                <div className="global-search-group">
+                  <p className="global-search-group-label">Categories</p>
+                  {matchedCategories.map((category) => (
+                    <button
+                      key={category._id}
+                      className="global-search-result"
+                      onClick={() => handleSelectCategoryResult(category)}
+                    >
+                      <span className="global-search-result-name">{category.name}</span>
                       <span className={`voting-type-badge ${category.pricingType}`}>
                         {category.pricingType === 'free' ? '🆓 FREE' : `💰 ₦${category.pricePerVote}`}
                       </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {matchedCandidates.length > 0 && (
+                <div className="global-search-group">
+                  <p className="global-search-group-label">Candidates</p>
+                  {matchedCandidates.map((candidate) => (
+                    <button
+                      key={candidate._id}
+                      className="global-search-result"
+                      onClick={() => handleSelectCandidateResult(candidate)}
+                    >
+                      <span className="global-search-result-name">{candidate.name}</span>
+                      <span className="global-search-result-meta">
+                        in {candidate.category?.name || 'a category'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="category-selector">
+          <h2>Select Category</h2>
+          <div className={`category-grid ${categories.length > 6 ? 'scrollable' : ''}`}>
+            {categories.map((category) => (
+              <button
+                key={category._id}
+                className={`category-card ${selectedCategory?._id === category._id ? 'active' : ''}`}
+                onClick={() => selectCategory(category)}
+              >
+                <div className="category-name">{category.name}</div>
+                <div className="category-badges">
+                  <span className={`voting-type-badge ${category.pricingType}`}>
+                    {category.pricingType === 'free' ? '🆓 FREE' : `💰 ₦${category.pricePerVote}`}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {selectedCategory && (
-          <div className="voting-section">
+          <div className="voting-section" ref={votingSectionRef}>
             <div className="voting-tabs">
               <button className={`tab-btn ${activeTab === 'vote' ? 'active' : ''}`} onClick={() => setActiveTab('vote')}>
                 🗳️ Vote
@@ -342,33 +435,16 @@ const EventAwards = () => {
 
             {activeTab === 'vote' && (
               <div className="vote-tab-content">
-                <div className="category-selector-header-row">
-                  <h3>Choose your candidate:</h3>
-                  {candidates.length > 6 && (
-                    <div className="awards-search-box">
-                      <span className="awards-search-icon">🔍</span>
-                      <input
-                        type="text"
-                        placeholder="Search candidates..."
-                        value={candidateSearch}
-                        onChange={(e) => setCandidateSearch(e.target.value)}
-                      />
-                    </div>
-                  )}
-                </div>
-                {(() => {
-                  const filteredCandidates = candidates.filter((candidate) =>
-                    candidate.name.toLowerCase().includes(candidateSearch.trim().toLowerCase())
-                  );
-                  if (candidates.length > 0 && filteredCandidates.length === 0) {
-                    return <div className="empty-candidates">No candidates match "{candidateSearch}"</div>;
-                  }
-                  return filteredCandidates.length > 0 ? (
+                <h3>Choose your candidate:</h3>
+                {candidates.length > 0 ? (
                   <div className="candidates-container">
-                    {filteredCandidates.map((candidate) => (
+                    {candidates.map((candidate) => (
                       <div
                         key={candidate._id}
-                        className={`candidate-card ${candidates[0]?._id === candidate._id && candidate.voteCount > 0 ? 'leading' : ''}`}
+                        ref={(el) => {
+                          candidateCardRefs.current[candidate._id] = el;
+                        }}
+                        className={`candidate-card ${candidates[0]?._id === candidate._id && candidate.voteCount > 0 ? 'leading' : ''} ${highlightCandidateId === candidate._id ? 'search-highlighted' : ''}`}
                       >
                         {candidates[0]?._id === candidate._id && candidate.voteCount > 0 && (
                           <span className="candidate-leading-tag">👑 Leading</span>
@@ -409,10 +485,9 @@ const EventAwards = () => {
                       </div>
                     ))}
                   </div>
-                  ) : (
-                    <div className="empty-candidates">No candidates available</div>
-                  );
-                })()}
+                ) : (
+                  <div className="empty-candidates">No candidates available</div>
+                )}
 
                 <div id="vote-distribution" className="progress-section">
                   <h3>Vote Distribution</h3>

@@ -55,6 +55,27 @@ router.get('/categories/:id', async (req, res) => {
 
 // ============ CANDIDATE ROUTES (public reads only) ============
 
+// GET all candidates for an awards event, across every category - powers
+// event-wide search (find a candidate no matter which category they're in)
+router.get('/candidates', async (req, res) => {
+  try {
+    if (!req.query.awardsEvent) {
+      return res.status(400).json({ success: false, message: 'awardsEvent query parameter is required' });
+    }
+    const categoryIds = await Category.find({ awardsEvent: req.query.awardsEvent }).distinct('_id');
+    const candidates = await Candidate.find({ category: { $in: categoryIds } }).populate('category', 'name');
+    res.status(200).json({
+      success: true,
+      data: candidates,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 // GET candidates by category
 router.get('/candidates/category/:categoryId', async (req, res) => {
   try {
