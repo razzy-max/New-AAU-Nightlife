@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import API_BASE_URL from '../../config';
-
-function toLocalInputValue(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toISOString().slice(0, 16);
-}
+import { localInputToISOString, isoToLocalInputValue } from '../../utils/datetimeLocal';
 
 function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdated }) {
   const [form, setForm] = useState({
@@ -13,8 +9,8 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
     organizerName: event.organizerName || '',
     organizerEmail: event.organizerEmail || '',
     organizerPhone: event.organizerPhone || '',
-    votingStartsAt: toLocalInputValue(event.votingStartsAt),
-    votingEndsAt: toLocalInputValue(event.votingEndsAt),
+    votingStartsAt: isoToLocalInputValue(event.votingStartsAt),
+    votingEndsAt: isoToLocalInputValue(event.votingEndsAt),
   });
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [published, setPublished] = useState(event.published);
@@ -25,7 +21,13 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
     setSaving(true);
     try {
       const body = new FormData();
-      Object.entries(form).forEach(([key, value]) => body.append(key, value));
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === 'votingStartsAt' || key === 'votingEndsAt') {
+          body.append(key, localInputToISOString(value));
+        } else {
+          body.append(key, value);
+        }
+      });
       if (isSuperadmin) {
         body.append('published', published);
       }

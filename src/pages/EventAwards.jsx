@@ -247,6 +247,12 @@ const EventAwards = () => {
       </div>
 
       <div className="awards-container">
+        <CountdownTimer
+          startDate={event.votingStartsAt}
+          endDate={event.votingEndsAt}
+          onStatusChange={setVotingStatus}
+        />
+
         <div className="category-selector">
           <h2>Select Category</h2>
           <div className="category-grid">
@@ -269,12 +275,6 @@ const EventAwards = () => {
 
         {selectedCategory && (
           <div className="voting-section">
-            <CountdownTimer
-              startDate={selectedCategory.startDate}
-              endDate={selectedCategory.endDate}
-              onStatusChange={setVotingStatus}
-            />
-
             <div className="voting-tabs">
               <button className={`tab-btn ${activeTab === 'vote' ? 'active' : ''}`} onClick={() => setActiveTab('vote')}>
                 🗳️ Vote

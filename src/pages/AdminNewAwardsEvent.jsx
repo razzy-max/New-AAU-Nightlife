@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
+import { localInputToISOString } from '../utils/datetimeLocal';
 
 const backBtnStyle = {
   padding: '10px 20px',
@@ -57,7 +58,12 @@ function AdminNewAwardsEvent() {
       const token = localStorage.getItem('adminToken');
       const body = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) body.append(key, value);
+        if (value === null || value === undefined) return;
+        if (key === 'votingStartsAt' || key === 'votingEndsAt') {
+          body.append(key, localInputToISOString(value));
+        } else {
+          body.append(key, value);
+        }
       });
 
       const response = await fetch(`${API_BASE_URL}/api/awards-events`, {

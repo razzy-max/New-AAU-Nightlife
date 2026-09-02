@@ -29,14 +29,6 @@ const categorySchema = new mongoose.Schema(
         message: 'Price per vote must be greater than 0 for paid categories',
       },
     },
-    startDate: {
-      type: Date,
-      required: [true, 'Please provide a start date'],
-    },
-    endDate: {
-      type: Date,
-      required: [true, 'Please provide an end date'],
-    },
     status: {
       type: String,
       enum: ['upcoming', 'active', 'ended', 'paused'],

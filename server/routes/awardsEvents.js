@@ -226,13 +226,11 @@ router.get('/:eventId/categories', requireEventAccess, async (req, res) => {
 // @route   POST /api/awards-events/:eventId/categories
 router.post('/:eventId/categories', requireEventAccess, async (req, res) => {
   try {
-    const { name, description, startDate, endDate, status, pricingType, pricePerVote } = req.body;
+    const { name, description, status, pricingType, pricePerVote } = req.body;
 
     const category = new Category({
       name,
       description,
-      startDate,
-      endDate,
       status: status || 'upcoming',
       pricingType: pricingType || 'free',
       pricePerVote,

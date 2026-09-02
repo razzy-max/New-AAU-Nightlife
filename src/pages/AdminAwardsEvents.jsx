@@ -131,13 +131,9 @@ function AdminAwardsEvents() {
                 <td><strong>{event.title}</strong></td>
                 <td>{event.organizerName}</td>
                 <td>
-                  <button
-                    className={`status-badge ${event.published ? 'active' : 'upcoming'}`}
-                    style={{ border: 'none', cursor: 'pointer' }}
-                    onClick={() => handleTogglePublished(event._id, event.published)}
-                  >
+                  <span className={`status-badge ${event.published ? 'active' : 'upcoming'}`}>
                     {event.published ? 'Published' : 'Draft'}
-                  </button>
+                  </span>
                 </td>
                 <td>
                   {new Date(event.votingStartsAt).toLocaleDateString()} - {new Date(event.votingEndsAt).toLocaleDateString()}
@@ -147,6 +143,9 @@ function AdminAwardsEvents() {
                 <td className="actions">
                   <button className="btn-small edit" onClick={() => navigate(`/admin/awards-events/edit/${event._id}`)}>
                     Manage
+                  </button>
+                  <button className="btn-small edit" onClick={() => handleTogglePublished(event._id, event.published)}>
+                    {event.published ? 'Unpublish' : 'Publish'}
                   </button>
                   <button className="btn-small edit" onClick={() => handleOrganizerLink(event._id, false)}>
                     Get Link

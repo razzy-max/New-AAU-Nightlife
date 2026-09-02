@@ -4,8 +4,6 @@ import API_BASE_URL from '../../config';
 const emptyForm = {
   name: '',
   description: '',
-  startDate: '',
-  endDate: '',
   status: 'upcoming',
   pricingType: 'free',
   pricePerVote: 100,
@@ -76,8 +74,6 @@ function CategoriesManager({ eventId, authHeaders, onCategoriesChanged }) {
     setForm({
       name: category.name,
       description: category.description,
-      startDate: category.startDate ? category.startDate.slice(0, 16) : '',
-      endDate: category.endDate ? category.endDate.slice(0, 16) : '',
       status: category.status,
       pricingType: category.pricingType || 'free',
       pricePerVote: category.pricePerVote || 100,
@@ -126,35 +122,18 @@ function CategoriesManager({ eventId, authHeaders, onCategoriesChanged }) {
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Start Date & Time *</label>
-              <input
-                type="datetime-local"
-                required
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label>End Date & Time *</label>
-              <input
-                type="datetime-local"
-                required
-                value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-              />
-            </div>
-          </div>
-
           <div className="form-group">
             <label>Status</label>
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="upcoming">Upcoming</option>
-              <option value="active">Active</option>
-              <option value="ended">Ended</option>
+              <option value="upcoming">Upcoming (hidden from voting)</option>
+              <option value="active">Active (open for voting)</option>
               <option value="paused">Paused</option>
+              <option value="ended">Ended</option>
             </select>
+            <small>
+              This is just a manual switch for this one category. The actual voting window (when the
+              whole event opens and closes) is set once in Settings and applies to every category.
+            </small>
           </div>
 
           <div className="form-group">

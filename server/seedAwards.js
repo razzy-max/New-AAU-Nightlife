@@ -37,28 +37,11 @@ const seedAwards = async () => {
     );
 
     console.log(`✅ Demo awards event ready: ${demoEvent.slug}`);
-    now.setHours(9, 0, 0, 0); // 9:00 AM
-    
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    tomorrow.setHours(9, 0, 0, 0); // 9:00 AM
-    
-    const startTime = new Date(now);
-    startTime.setHours(9, 0, 0, 0); // 9:00 AM
-    
-    const endTime = new Date(now);
-    endTime.setDate(endTime.getDate() + 7);
-    endTime.setHours(17, 0, 0, 0); // 5:00 PM
-    
-    const endTime2 = new Date(now);
-    endTime2.setDate(endTime2.getDate() + 14);
-    endTime2.setHours(17, 0, 0, 0); // 5:00 PM
 
     const categories = await Category.insertMany([
       {
         name: 'Best Dressed',
         description: 'Award for the best dressed personality at AAU Nightlife',
-        startDate: startTime,
-        endDate: endTime,
         status: 'active',
         pricingType: 'paid',
         pricePerVote: 150,
@@ -68,8 +51,6 @@ const seedAwards = async () => {
       {
         name: 'Most Popular',
         description: 'Award for the most popular student on campus',
-        startDate: startTime,
-        endDate: endTime,
         status: 'active',
         pricingType: 'free',
         pricePerVote: 0,
@@ -79,8 +60,6 @@ const seedAwards = async () => {
       {
         name: 'Best Event Host',
         description: 'Award for the best event organizer and host',
-        startDate: tomorrow,
-        endDate: endTime2,
         status: 'upcoming',
         pricingType: 'paid',
         pricePerVote: 200,
