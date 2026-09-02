@@ -1,12 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getUserToken } from '../utils/userAuth';
+import './AwardPaymentCallback.css';
+
+const CONFETTI_COUNT = 14;
+const confettiPieces = Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+  id: i,
+  rot: `${Math.round((i / CONFETTI_COUNT) * 360)}deg`,
+  dist: `${90 + Math.round(Math.random() * 60)}px`,
+  delay: `${(i % 5) * 0.03}s`,
+  color: i % 3 === 0 ? '#000000' : '#DAA520',
+}));
 
 function AwardPaymentCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState('verifying');
-  const [message, setMessage] = useState('Verifying your payment...');
+  const [message, setMessage] = useState('Confirming your payment with Paystack...');
+  const [voteSummary, setVoteSummary] = useState(null);
+  const [redirectIn, setRedirectIn] = useState(4);
   const verificationAttemptedRef = useRef(false);
 
   useEffect(() => {
@@ -16,33 +28,23 @@ function AwardPaymentCallback() {
       }
       verificationAttemptedRef.current = true;
 
-      try {
-        // Step 1: Extract reference from URL
-        const reference = searchParams.get('reference');
-        console.log('[CALLBACK] Reference from URL:', reference);
+      let redirectTarget = '/awards';
 
+      try {
+        const reference = searchParams.get('reference');
         if (!reference) {
-          throw new Error('No payment reference found in URL');
+          throw new Error('No payment reference found in the URL');
         }
 
-        // Step 2: Get pending vote from session
         const pendingVoteStr = sessionStorage.getItem('pendingVote');
         if (!pendingVoteStr) {
-          throw new Error('No pending vote found. Payment session may have expired.');
+          throw new Error('No pending vote found. Your payment session may have expired.');
         }
 
         const pendingVote = JSON.parse(pendingVoteStr);
         const { candidateId, categoryId, voteCount } = pendingVote;
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-        console.log('[CALLBACK] Verifying payment with:', {
-          reference,
-          candidateId,
-          categoryId,
-          voteCount,
-        });
-
-        // Step 3: Call backend to verify payment and record vote
         const userToken = getUserToken();
         const response = await fetch(`${API_BASE_URL}/api/payments/verify`, {
           method: 'POST',
@@ -50,103 +52,109 @@ function AwardPaymentCallback() {
             'Content-Type': 'application/json',
             ...(userToken ? { Authorization: `Bearer ${userToken}` } : {}),
           },
-          body: JSON.stringify({
-            reference,
-            candidateId,
-            categoryId,
-            voteCount,
-          }),
+          body: JSON.stringify({ reference, candidateId, categoryId, voteCount }),
         });
 
         const data = await response.json();
-        console.log('[CALLBACK] Verification response:', data);
-
         if (!response.ok || !data.success) {
           throw new Error(data.message || 'Payment verification failed');
         }
 
-        // Get category/event to return to
         const returnCategoryId = sessionStorage.getItem('returnToCategoryId');
         const returnEventSlug = sessionStorage.getItem('returnToEventSlug');
 
-        // Clear session storage
         sessionStorage.removeItem('pendingVote');
         sessionStorage.removeItem('returnToCategoryId');
         sessionStorage.removeItem('returnToEventSlug');
 
-        // Success!
-        setStatus('success');
-        setMessage(`✓ Payment verified! ${data.data.votesRecorded || voteCount} vote(s) recorded for ${data.data.candidate}`);
+        const base = returnEventSlug ? `/awards/${returnEventSlug}` : '/awards';
+        redirectTarget = returnCategoryId
+          ? `${base}?category=${returnCategoryId}#vote-distribution`
+          : `${base}#vote-distribution`;
 
-        // Redirect after 3 seconds to the same event/category
-        setTimeout(() => {
-          const base = returnEventSlug ? `/awards/${returnEventSlug}` : '/awards';
-          if (returnCategoryId) {
-            navigate(`${base}?category=${returnCategoryId}#vote-distribution`);
-          } else {
-            navigate(`${base}#vote-distribution`);
-          }
-        }, 3000);
+        setVoteSummary({
+          candidate: data.data.candidate,
+          votesRecorded: data.data.votesRecorded || voteCount,
+        });
+        setStatus('success');
+        setMessage('Your payment was verified and your votes have been recorded.');
       } catch (error) {
         console.error('[CALLBACK] Error:', error);
         setStatus('error');
         setMessage(error.message || 'Payment verification failed');
+        return;
       }
+
+      const timer = setInterval(() => {
+        setRedirectIn((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            navigate(redirectTarget);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     };
 
     verifyPayment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, navigate]);
 
   return (
-    <div style={{ marginTop: '100px', minHeight: '100vh', paddingBottom: '40px' }}>
-      <div style={{ maxWidth: '500px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+    <div className="payment-callback-page">
+      <div className={`payment-callback-card status-${status}`}>
         {status === 'verifying' && (
-          <div>
-            <div className="loading-spinner" style={{ marginBottom: '20px' }}></div>
-            <h2 style={{ color: '#DAA520', fontFamily: 'Georgia, serif' }}>
-              Verifying Payment
-            </h2>
-            <p>{message}</p>
-          </div>
+          <>
+            <div className="callback-spinner" />
+            <h2>Verifying Payment</h2>
+            <p className="callback-message">{message}</p>
+          </>
         )}
 
         {status === 'success' && (
-          <div>
-            <h2 style={{ color: '#28a745', fontFamily: 'Georgia, serif', marginBottom: '10px' }}>
-              ✓ Success!
-            </h2>
-            <p style={{ marginBottom: '20px', color: '#666' }}>
-              {message}
-            </p>
-            <p style={{ color: '#999', fontSize: '14px' }}>
-              Redirecting to awards page...
-            </p>
-          </div>
+          <>
+            {confettiPieces.map((p) => (
+              <span
+                key={p.id}
+                className="confetti-piece"
+                style={{ '--rot': p.rot, '--dist': p.dist, animationDelay: p.delay, background: p.color }}
+              />
+            ))}
+            <div className="callback-icon-circle success">
+              <svg className="callback-checkmark" viewBox="0 0 84 84">
+                <circle cx="42" cy="42" r="38" />
+                <path d="M24 44l12 12 24-26" />
+              </svg>
+            </div>
+            <h2>Vote Cast Successfully!</h2>
+            <p className="callback-message">{message}</p>
+
+            {voteSummary && (
+              <div className="callback-vote-summary">
+                <div className="candidate">{voteSummary.candidate}</div>
+                <div className="count">{voteSummary.votesRecorded} vote(s) recorded</div>
+              </div>
+            )}
+
+            <p className="callback-redirect-note">Taking you back to the event in {redirectIn}s...</p>
+          </>
         )}
 
         {status === 'error' && (
-          <div>
-            <h2 style={{ color: '#dc3545', fontFamily: 'Georgia, serif', marginBottom: '10px' }}>
-              ✗ Verification Failed
-            </h2>
-            <p style={{ marginBottom: '20px', color: '#666' }}>
-              {message}
-            </p>
-            <button
-              onClick={() => navigate('/awards')}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#6366f1',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '16px',
-              }}
-            >
+          <>
+            <div className="callback-icon-circle error">
+              <svg className="callback-error-icon" viewBox="0 0 84 84">
+                <circle cx="42" cy="42" r="38" />
+                <path d="M28 28l28 28M56 28l-28 28" />
+              </svg>
+            </div>
+            <h2>Verification Failed</h2>
+            <p className="callback-message">{message}</p>
+            <button className="callback-return-btn" onClick={() => navigate('/awards')}>
               Return to Awards
             </button>
-          </div>
+          </>
         )}
       </div>
     </div>

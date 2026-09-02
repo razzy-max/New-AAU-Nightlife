@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import CountdownTimer from '../components/awards/CountdownTimer';
 import ProgressBar from '../components/awards/ProgressBar';
 import Leaderboard from '../components/awards/Leaderboard';
 import PaidVotingModal from '../components/awards/PaidVotingModal';
+import VoteToast from '../components/awards/VoteToast';
 import useVoteUpdates from '../hooks/useVoteUpdates';
 import API_BASE_URL from '../config';
 import './EventAwards.css';
@@ -22,7 +23,10 @@ const EventAwards = () => {
   const [votingStatus, setVotingStatus] = useState('inactive');
   const [activeTab, setActiveTab] = useState('vote');
   const [paidModalCandidate, setPaidModalCandidate] = useState(null);
+  const [toast, setToast] = useState(null);
   const hasScrolledRef = useRef(false);
+
+  const showToast = (type, message) => setToast({ type, message, key: Date.now() });
   const [sessionId] = useState(() => {
     const stored = sessionStorage.getItem('voteSessionId');
     if (stored) return stored;
@@ -123,30 +127,25 @@ const EventAwards = () => {
     }
   };
 
-  const handleVoteUpdate = (updatedCandidate) => {
+  // Kept stable (no external deps) so the SSE connection in useVoteUpdates
+  // doesn't tear down and reconnect on every render/vote.
+  const handleVoteUpdate = useCallback((updatedCandidate) => {
     setCandidates((prev) => {
       const updated = prev.map((candidate) =>
         candidate._id === updatedCandidate._id ? updatedCandidate : candidate
       );
-      return updated.sort((a, b) => b.voteCount - a.voteCount);
+      const sorted = updated.sort((a, b) => b.voteCount - a.voteCount);
+      const totalVotes = sorted.reduce((sum, candidate) => sum + candidate.voteCount, 0);
+      setSelectedCategory((prev) => (prev ? { ...prev, totalVotes } : prev));
+      return sorted;
     });
-
-    setSelectedCategory((prev) => {
-      if (!prev) return prev;
-      const totalVotes = candidates.reduce(
-        (sum, candidate) =>
-          sum + (candidate._id === updatedCandidate._id ? updatedCandidate.voteCount : candidate.voteCount),
-        0
-      );
-      return { ...prev, totalVotes };
-    });
-  };
+  }, []);
 
   useVoteUpdates(handleVoteUpdate, API_BASE_URL, event?._id);
 
   const handleFreeVote = async (candidateId) => {
     if (votingStatus !== 'active') {
-      alert('Voting is not active for this category');
+      showToast('error', 'Voting is not active for this category right now.');
       return;
     }
 
@@ -169,14 +168,14 @@ const EventAwards = () => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Vote recorded successfully!');
+        showToast('success', `Your vote for "${candidateName}" has been recorded. Thanks for voting!`);
         fetchCandidates(selectedCategory._id);
       } else {
-        alert(data.message || 'Failed to record vote');
+        showToast('error', data.message || 'Failed to record your vote. Please try again.');
       }
     } catch (err) {
       console.error('Voting error:', err);
-      alert('Failed to record vote');
+      showToast('error', 'Failed to record your vote. Please check your connection and try again.');
     }
   };
 
@@ -195,7 +194,7 @@ const EventAwards = () => {
 
       const initData = await initResponse.json();
       if (!initData.success) {
-        alert(initData.message || 'Failed to initialize payment');
+        showToast('error', initData.message || 'Failed to initialize payment. Please try again.');
         return;
       }
 
@@ -214,7 +213,7 @@ const EventAwards = () => {
       window.location.href = initData.data.authorizationUrl;
     } catch (err) {
       console.error('Payment error:', err);
-      alert('Failed to process payment');
+      showToast('error', 'Failed to start the payment process. Please try again.');
     }
   };
 
@@ -238,7 +237,12 @@ const EventAwards = () => {
   return (
     <div className="awards-page">
       <div className="awards-hero">
-        {event.coverImage && <img src={event.coverImage} alt="" className="awards-hero-cover" />}
+        {event.coverImage && (
+          <>
+            <img src={event.coverImage} alt="" className="awards-hero-cover" />
+            <div className="awards-hero-scrim" />
+          </>
+        )}
         <div className="hero-content">
           <h1>🏆 {event.title}</h1>
           <p>{event.description}</p>
@@ -289,8 +293,14 @@ const EventAwards = () => {
                 <h3>Choose your candidate:</h3>
                 {candidates.length > 0 ? (
                   <div className="candidates-container">
-                    {candidates.map((candidate) => (
-                      <div key={candidate._id} className="candidate-card">
+                    {candidates.map((candidate, index) => (
+                      <div
+                        key={candidate._id}
+                        className={`candidate-card ${index === 0 && candidate.voteCount > 0 ? 'leading' : ''}`}
+                      >
+                        {index === 0 && candidate.voteCount > 0 && (
+                          <span className="candidate-leading-tag">👑 Leading</span>
+                        )}
                         {candidate.image && (
                           <img src={candidate.image} alt={candidate.name} className="candidate-image" />
                         )}
@@ -353,6 +363,8 @@ const EventAwards = () => {
           onCancel={() => setPaidModalCandidate(null)}
         />
       )}
+
+      <VoteToast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 };

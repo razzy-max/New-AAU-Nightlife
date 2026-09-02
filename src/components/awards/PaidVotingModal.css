@@ -4,20 +4,26 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: 4vh 1rem;
+  overflow-y: auto;
 }
 
 .paid-voting-modal {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 2px solid #DAA520;
   max-width: 500px;
   width: 100%;
+  max-height: 92vh;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.3s ease;
 }
@@ -38,50 +44,55 @@
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
-  color: white;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  color: #DAA520;
+  border-bottom: 2px solid #DAA520;
 }
 
 .modal-header h2 {
   margin: 0;
+  font-family: 'Georgia', serif;
   font-size: 1.5rem;
   font-weight: 700;
 }
 
 .modal-close {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(218, 165, 32, 0.15);
+  border: 1px solid rgba(218, 165, 32, 0.4);
   border-radius: 50%;
   width: 40px;
   height: 40px;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #DAA520;
   transition: all 0.3s ease;
 }
 
 .modal-close:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #DAA520;
+  color: #000000;
   transform: rotate(90deg);
 }
 
 .modal-body {
   padding: 2rem;
+  overflow-y: auto;
 }
 
 .candidate-info {
   margin-bottom: 2rem;
   padding: 1rem;
-  background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  background: rgba(218, 165, 32, 0.08);
   border-radius: 12px;
+  border: 1px solid rgba(218, 165, 32, 0.25);
 }
 
 .candidate-info .label {
   margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: #6b7280;
   font-weight: 600;
   text-transform: uppercase;
@@ -90,9 +101,10 @@
 
 .candidate-info .candidate-name {
   margin: 0;
+  font-family: 'Georgia', serif;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ec4899;
+  color: #b8860b;
 }
 
 .form-group {
@@ -111,7 +123,7 @@
 .form-group input[type="number"] {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #DAA520;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
@@ -122,8 +134,8 @@
 .form-group input[type="email"]:focus,
 .form-group input[type="number"]:focus {
   outline: none;
-  border-color: #ec4899;
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+  border-color: #DAA520;
+  box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.15);
 }
 
 .form-group small {
@@ -143,20 +155,20 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #DAA520;
   border-radius: 8px;
   background: white;
   font-size: 1.25rem;
   cursor: pointer;
   font-weight: bold;
-  color: #6b7280;
+  color: #b8860b;
   transition: all 0.3s ease;
 }
 
 .qty-btn:hover:not(:disabled) {
-  border-color: #ec4899;
-  color: #ec4899;
-  background: rgba(236, 72, 153, 0.05);
+  border-color: #DAA520;
+  color: #000000;
+  background: #DAA520;
 }
 
 .qty-btn:disabled {
@@ -177,11 +189,11 @@
 }
 
 .pricing-breakdown {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  background: linear-gradient(135deg, #fdf8ec 0%, #f7ecd0 100%);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border-left: 4px solid #ec4899;
+  border-left: 4px solid #DAA520;
 }
 
 .price-row {
@@ -199,10 +211,10 @@
 
 .price-row.total {
   padding-top: 0.75rem;
-  border-top: 2px solid rgba(236, 72, 153, 0.2);
+  border-top: 2px solid rgba(218, 165, 32, 0.3);
   font-weight: 700;
   font-size: 1.1rem;
-  color: #ec4899;
+  color: #b8860b;
 }
 
 .modal-footer {
@@ -236,15 +248,15 @@
 }
 
 .btn-confirm {
-  background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
-  color: white;
+  background: linear-gradient(135deg, #DAA520 0%, #b8860b 100%);
+  color: #000000;
   border: none;
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.35);
 }
 
 .btn-confirm:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(236, 72, 153, 0.4);
+  box-shadow: 0 6px 25px rgba(218, 165, 32, 0.45);
 }
 
 .btn-cancel:disabled,

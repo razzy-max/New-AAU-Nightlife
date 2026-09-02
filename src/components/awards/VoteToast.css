@@ -1,0 +1,111 @@
+.vote-toast {
+  position: fixed;
+  top: 100px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  max-width: 380px;
+  padding: 1.1rem 1.3rem;
+  border-radius: 14px;
+  background: #0d0d0d;
+  border: 1px solid rgba(218, 165, 32, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(218, 165, 32, 0.08);
+  animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vote-toast.success .vote-toast-icon {
+  color: #DAA520;
+  background: rgba(218, 165, 32, 0.15);
+  box-shadow: 0 0 20px rgba(218, 165, 32, 0.35);
+}
+
+.vote-toast.error .vote-toast-icon {
+  color: #ef6f6f;
+  background: rgba(239, 111, 111, 0.15);
+}
+
+.vote-toast-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.vote-toast-title {
+  margin: 0 0 0.15rem 0;
+  font-family: 'Georgia', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #DAA520;
+}
+
+.vote-toast.error .vote-toast-title {
+  color: #ef6f6f;
+}
+
+.vote-toast-message {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+.vote-toast-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.vote-toast-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.vote-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #DAA520, #b8860b);
+  animation: toast-progress 4s linear forwards;
+}
+
+@keyframes toast-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@media (max-width: 640px) {
+  .vote-toast {
+    top: auto;
+    bottom: 24px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+}

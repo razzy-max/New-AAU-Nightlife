@@ -1,36 +1,43 @@
 .countdown-timer {
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
   border-radius: 16px;
-  border: 2px solid rgba(99, 102, 241, 0.2);
-  backdrop-filter: blur(10px);
+  border: 2px solid rgba(218, 165, 32, 0.4);
   margin-bottom: 2rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-timer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(218, 165, 32, 0.18), transparent 60%);
+  pointer-events: none;
 }
 
 .countdown-timer.upcoming {
-  border-color: rgba(249, 115, 22, 0.3);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, rgba(251, 146, 60, 0.05) 100%);
+  border-color: rgba(218, 165, 32, 0.35);
 }
 
 .countdown-timer.active {
-  border-color: rgba(34, 197, 94, 0.3);
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(74, 222, 128, 0.05) 100%);
-  box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
-  animation: pulse-active 2s infinite;
+  border-color: #DAA520;
+  box-shadow: 0 0 40px rgba(218, 165, 32, 0.35);
+  animation: pulse-active 2.4s infinite;
 }
 
 .countdown-timer.ended {
-  border-color: rgba(239, 68, 68, 0.3);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(248, 113, 113, 0.05) 100%);
+  border-color: rgba(150, 150, 150, 0.3);
+  filter: saturate(0.6);
 }
 
 @keyframes pulse-active {
   0%, 100% {
-    box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+    box-shadow: 0 0 30px rgba(218, 165, 32, 0.25);
   }
   50% {
-    box-shadow: 0 0 50px rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 55px rgba(218, 165, 32, 0.5);
   }
 }
 
@@ -40,28 +47,47 @@
   align-items: center;
   gap: 1.5rem;
   text-align: center;
+  position: relative;
 }
 
 .status-badge {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.1rem;
+  background: rgba(218, 165, 32, 0.12);
+  color: #DAA520;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(218, 165, 32, 0.4);
 }
 
 .countdown-timer.active .status-badge {
-  background: linear-gradient(135deg, #22c55e, #4ade80);
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  background: #DAA520;
+  color: #000000;
+  box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+}
+
+.countdown-timer.active .status-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #000000;
+  animation: blink-dot 1.4s infinite;
 }
 
 .countdown-timer.ended .status-badge {
-  background: linear-gradient(135deg, #ef4444, #f87171);
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: #999999;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
 }
 
 .countdown-display {
@@ -73,34 +99,32 @@
 }
 
 .time-unit {
-  background: rgba(255, 255, 255, 0.8);
-  padding: 1rem;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(218, 165, 32, 0.25);
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
   min-width: 70px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .time-value {
+  font-family: 'Georgia', serif;
   font-size: 1.875rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #DAA520;
 }
 
 .time-label {
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
   font-weight: 600;
   text-transform: uppercase;
   margin-top: 0.25rem;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .time-separator {
   font-size: 1.5rem;
-  color: #d1d5db;
+  color: rgba(218, 165, 32, 0.5);
   font-weight: 300;
   animation: blink 1s infinite;
 }
@@ -115,10 +139,10 @@
 }
 
 .countdown-text {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  color: #1f2937;
-  margin-top: 1rem;
+  color: #ffffff;
+  margin-top: 0.5rem;
 }
 
 @media (max-width: 640px) {
