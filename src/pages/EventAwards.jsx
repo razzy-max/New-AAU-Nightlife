@@ -47,6 +47,8 @@ const EventAwards = () => {
   const [activeTab, setActiveTab] = useState('vote');
   const [paidModalCandidate, setPaidModalCandidate] = useState(null);
   const [toast, setToast] = useState(null);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [candidateSearch, setCandidateSearch] = useState('');
   const hasScrolledRef = useRef(false);
 
   const showToast = (type, message) => setToast({ type, message, key: Date.now() });
@@ -66,8 +68,10 @@ const EventAwards = () => {
   useEffect(() => {
     if (selectedCategory) {
       fetchCandidates(selectedCategory._id);
+      setCandidateSearch('');
     }
-  }, [selectedCategory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory?._id]);
 
   useEffect(() => {
     if (window.location.hash && !hasScrolledRef.current) {
@@ -281,23 +285,48 @@ const EventAwards = () => {
         />
 
         <div className="category-selector">
-          <h2>Select Category</h2>
-          <div className="category-grid">
-            {categories.map((category) => (
-              <button
-                key={category._id}
-                className={`category-card ${selectedCategory?._id === category._id ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                <div className="category-name">{category.name}</div>
-                <div className="category-badges">
-                  <span className={`voting-type-badge ${category.pricingType}`}>
-                    {category.pricingType === 'free' ? '🆓 FREE' : `💰 ₦${category.pricePerVote}`}
-                  </span>
-                </div>
-              </button>
-            ))}
+          <div className="category-selector-header-row">
+            <h2>Select Category</h2>
+            {categories.length > 6 && (
+              <div className="awards-search-box">
+                <span className="awards-search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                />
+              </div>
+            )}
           </div>
+          {(() => {
+            const filteredCategories = categories.filter((category) =>
+              category.name.toLowerCase().includes(categorySearch.trim().toLowerCase())
+            );
+            if (filteredCategories.length === 0) {
+              return <div className="empty-candidates">No categories match "{categorySearch}"</div>;
+            }
+            return (
+              <div className={`category-grid ${categories.length > 6 ? 'scrollable' : ''}`}>
+                {filteredCategories.map((category) => (
+                  <button
+                    key={category._id}
+                    className={`category-card ${selectedCategory?._id === category._id ? 'active' : ''}`}
+                    onClick={() =>
+                      setSelectedCategory((prev) => (prev?._id === category._id ? prev : category))
+                    }
+                  >
+                    <div className="category-name">{category.name}</div>
+                    <div className="category-badges">
+                      <span className={`voting-type-badge ${category.pricingType}`}>
+                        {category.pricingType === 'free' ? '🆓 FREE' : `💰 ₦${category.pricePerVote}`}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {selectedCategory && (
@@ -313,15 +342,35 @@ const EventAwards = () => {
 
             {activeTab === 'vote' && (
               <div className="vote-tab-content">
-                <h3>Choose your candidate:</h3>
-                {candidates.length > 0 ? (
+                <div className="category-selector-header-row">
+                  <h3>Choose your candidate:</h3>
+                  {candidates.length > 6 && (
+                    <div className="awards-search-box">
+                      <span className="awards-search-icon">🔍</span>
+                      <input
+                        type="text"
+                        placeholder="Search candidates..."
+                        value={candidateSearch}
+                        onChange={(e) => setCandidateSearch(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+                {(() => {
+                  const filteredCandidates = candidates.filter((candidate) =>
+                    candidate.name.toLowerCase().includes(candidateSearch.trim().toLowerCase())
+                  );
+                  if (candidates.length > 0 && filteredCandidates.length === 0) {
+                    return <div className="empty-candidates">No candidates match "{candidateSearch}"</div>;
+                  }
+                  return filteredCandidates.length > 0 ? (
                   <div className="candidates-container">
-                    {candidates.map((candidate, index) => (
+                    {filteredCandidates.map((candidate) => (
                       <div
                         key={candidate._id}
-                        className={`candidate-card ${index === 0 && candidate.voteCount > 0 ? 'leading' : ''}`}
+                        className={`candidate-card ${candidates[0]?._id === candidate._id && candidate.voteCount > 0 ? 'leading' : ''}`}
                       >
-                        {index === 0 && candidate.voteCount > 0 && (
+                        {candidates[0]?._id === candidate._id && candidate.voteCount > 0 && (
                           <span className="candidate-leading-tag">👑 Leading</span>
                         )}
                         {candidate.image ? (
@@ -360,9 +409,10 @@ const EventAwards = () => {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="empty-candidates">No candidates available</div>
-                )}
+                  ) : (
+                    <div className="empty-candidates">No candidates available</div>
+                  );
+                })()}
 
                 <div id="vote-distribution" className="progress-section">
                   <h3>Vote Distribution</h3>
