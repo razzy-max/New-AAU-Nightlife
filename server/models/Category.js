@@ -29,10 +29,14 @@ const categorySchema = new mongoose.Schema(
         message: 'Price per vote must be greater than 0 for paid categories',
       },
     },
+    // The event's own voting window is the real on/off switch (see AwardsEvent).
+    // This is just a manual override for pausing one specific category early -
+    // it defaults to 'active' so a category works as soon as the event goes live,
+    // without needing a second switch flipped.
     status: {
       type: String,
-      enum: ['upcoming', 'active', 'ended', 'paused'],
-      default: 'upcoming',
+      enum: ['active', 'paused'],
+      default: 'active',
     },
     totalVotes: {
       type: Number,

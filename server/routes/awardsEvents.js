@@ -231,7 +231,7 @@ router.post('/:eventId/categories', requireEventAccess, async (req, res) => {
     const category = new Category({
       name,
       description,
-      status: status || 'upcoming',
+      status: status || 'active',
       pricingType: pricingType || 'free',
       pricePerVote,
       awardsEvent: req.awardsEvent._id,

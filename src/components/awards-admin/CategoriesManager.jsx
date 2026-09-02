@@ -4,7 +4,7 @@ import API_BASE_URL from '../../config';
 const emptyForm = {
   name: '',
   description: '',
-  status: 'upcoming',
+  status: 'active',
   pricingType: 'free',
   pricePerVote: 100,
 };
@@ -125,14 +125,12 @@ function CategoriesManager({ eventId, authHeaders, onCategoriesChanged }) {
           <div className="form-group">
             <label>Status</label>
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="upcoming">Upcoming (hidden from voting)</option>
               <option value="active">Active (open for voting)</option>
-              <option value="paused">Paused</option>
-              <option value="ended">Ended</option>
+              <option value="paused">Paused (temporarily closed)</option>
             </select>
             <small>
-              This is just a manual switch for this one category. The actual voting window (when the
-              whole event opens and closes) is set once in Settings and applies to every category.
+              Categories are open by default the moment the event's voting window starts. Only switch
+              this to Paused if you need to close this one specific category early.
             </small>
           </div>
 
