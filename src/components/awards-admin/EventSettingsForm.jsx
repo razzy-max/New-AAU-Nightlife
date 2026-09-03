@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import API_BASE_URL from '../../config';
 import { localInputToISOString, isoToLocalInputValue } from '../../utils/datetimeLocal';
+import './awards-admin.css';
 
 function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdated }) {
   const [form, setForm] = useState({
@@ -13,8 +14,26 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
     votingEndsAt: isoToLocalInputValue(event.votingEndsAt),
   });
   const [coverImageFile, setCoverImageFile] = useState(null);
+  const [coverImagePreview, setCoverImagePreview] = useState(null);
   const [published, setPublished] = useState(event.published);
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(null);
+
+  useEffect(() => {
+    if (!saveMessage) return undefined;
+    const timer = setTimeout(() => setSaveMessage(null), 3500);
+    return () => clearTimeout(timer);
+  }, [saveMessage]);
+
+  useEffect(() => {
+    if (!coverImageFile) {
+      setCoverImagePreview(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(coverImageFile);
+    setCoverImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [coverImageFile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,14 +62,15 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
 
       const data = await response.json();
       if (data.success) {
-        alert('Event settings saved');
+        setCoverImageFile(null);
+        setSaveMessage({ type: 'success', text: 'Settings saved.' });
         onUpdated?.(data.data);
       } else {
-        alert(data.message || 'Failed to save settings');
+        setSaveMessage({ type: 'error', text: data.message || 'Failed to save settings.' });
       }
     } catch (err) {
       console.error('Error saving event settings:', err);
-      alert('Failed to save settings');
+      setSaveMessage({ type: 'error', text: 'Failed to save settings.' });
     } finally {
       setSaving(false);
     }
@@ -58,13 +78,16 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
 
   return (
     <div className="admin-tab-content" style={{ gridTemplateColumns: '1fr' }}>
-      <div className="admin-form-section">
-        <h2>Event Settings</h2>
-
-        <div className="form-group">
-          <label>Status</label>
+      <form onSubmit={handleSubmit} className="settings-form">
+        {saveMessage && (
+          <div className={`settings-save-banner ${saveMessage.type}`}>{saveMessage.text}</div>
+        )}
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Status</h3>
+          </div>
           {isSuperadmin ? (
-            <label className="radio-option" style={{ marginTop: '0.25rem' }}>
+            <label className="radio-option">
               <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
               <span className="radio-label">{published ? 'Live on site' : 'Draft (hidden from public)'}</span>
             </label>
@@ -75,7 +98,10 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
           )}
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Basic Info</h3>
+          </div>
           <div className="form-group">
             <label>Event Title *</label>
             <input
@@ -85,7 +111,6 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
           </div>
-
           <div className="form-group">
             <label>Description *</label>
             <textarea
@@ -95,15 +120,31 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
           </div>
+        </div>
 
-          <div className="form-group">
-            <label>Cover Image</label>
-            {event.coverImage && !coverImageFile && (
-              <img src={event.coverImage} alt="" style={{ maxWidth: '200px', borderRadius: '8px', marginBottom: '0.5rem' }} />
-            )}
-            <input type="file" accept="image/*" onChange={(e) => setCoverImageFile(e.target.files[0] || null)} />
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Cover Image</h3>
           </div>
+          <div className="settings-cover-row">
+            <div className="settings-cover-preview">
+              {coverImagePreview || event.coverImage ? (
+                <img src={coverImagePreview || event.coverImage} alt="" />
+              ) : (
+                <span className="settings-cover-placeholder">🏆</span>
+              )}
+            </div>
+            <div>
+              <input type="file" accept="image/*" onChange={(e) => setCoverImageFile(e.target.files[0] || null)} />
+              <p className="settings-hint">Shown as the banner on your event's public page.</p>
+            </div>
+          </div>
+        </div>
 
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Organizer Contact</h3>
+          </div>
           <div className="form-row">
             <div className="form-group">
               <label>Organizer / Department Name *</label>
@@ -124,7 +165,6 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
               />
             </div>
           </div>
-
           <div className="form-group">
             <label>Organizer Phone</label>
             <input
@@ -133,7 +173,16 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
               onChange={(e) => setForm({ ...form, organizerPhone: e.target.value })}
             />
           </div>
+        </div>
 
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Voting Window</h3>
+          </div>
+          <p className="settings-hint">
+            This is the only schedule for the whole event — every category opens and closes with it.
+            Individual categories can only be manually paused, not separately timed.
+          </p>
           <div className="form-row">
             <div className="form-group">
               <label>Voting Starts *</label>
@@ -154,14 +203,14 @@ function EventSettingsForm({ event, eventId, authHeaders, isSuperadmin, onUpdate
               />
             </div>
           </div>
+        </div>
 
-          <div className="form-actions">
-            <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="form-actions">
+          <button type="submit" className="btn-primary" disabled={saving}>
+            {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -125,7 +125,7 @@ function AwardsDirectory() {
                     {remaining && (
                       <p className="directory-card-remaining">
                         {status === 'live' ? `Ends in ${remaining}` : `Starts in ${remaining}`}
-                      </p>
+                       </p>
                     )}
                     <span className="directory-card-cta">Vote Now →</span>
                   </div>

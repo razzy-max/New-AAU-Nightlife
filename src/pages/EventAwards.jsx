@@ -55,11 +55,14 @@ const EventAwards = () => {
   const votingSectionRef = useRef(null);
 
   const showToast = (type, message) => setToast({ type, message, key: Date.now() });
+  // Persisted in localStorage (not sessionStorage) so the one-free-vote-per-category
+  // rule actually survives closing the tab/browser - sessionStorage resets on every
+  // new browser session, which silently defeated the duplicate-vote check entirely.
   const [sessionId] = useState(() => {
-    const stored = sessionStorage.getItem('voteSessionId');
+    const stored = localStorage.getItem('voteSessionId');
     if (stored) return stored;
     const newId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('voteSessionId', newId);
+    localStorage.setItem('voteSessionId', newId);
     return newId;
   });
 

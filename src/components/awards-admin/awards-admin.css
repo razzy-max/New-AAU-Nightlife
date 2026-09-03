@@ -7,6 +7,30 @@
   border: 1px solid #DAA520;
 }
 
+.candidate-admin-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #000000, #1a1a1a);
+  color: #DAA520;
+  font-family: 'Georgia', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.candidate-photo-preview {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+}
+
+.candidate-photo-preview .settings-cover-placeholder {
+  font-family: 'Georgia', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #DAA520;
+}
+
 .activity-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -116,4 +140,250 @@
   border: 2px solid #DAA520;
   border-radius: 12px;
   background: #fff8e6;
+}
+
+/* Sectioned settings form (used in both the admin edit page and organizer panel) */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #DAA520;
+}
+
+.settings-section {
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(218, 165, 32, 0.25);
+}
+
+.settings-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-section-header {
+  margin-bottom: 1rem;
+}
+
+.settings-section-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #b8860b;
+  border-left: 3px solid #DAA520;
+  padding-left: 0.6rem;
+}
+
+.settings-hint {
+  font-size: 0.85rem;
+  color: #777777;
+  margin: 0.25rem 0 1rem 0;
+  line-height: 1.5;
+}
+
+.settings-cover-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.settings-cover-preview {
+  width: 140px;
+  height: 90px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 2px solid #DAA520;
+  background: linear-gradient(135deg, #000000, #1a1a1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.settings-cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-cover-placeholder {
+  font-size: 1.75rem;
+}
+
+.settings-save-banner {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.settings-save-banner.success {
+  background: rgba(218, 165, 32, 0.12);
+  border: 1px solid #DAA520;
+  color: #8a6c14;
+}
+
+.settings-save-banner.error {
+  background: rgba(204, 90, 90, 0.1);
+  border: 1px solid #cc5a5a;
+  color: #a03b3b;
+}
+
+/* Awards events admin list */
+.event-row-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #000000, #1a1a1a);
+  border: 1px solid #DAA520;
+}
+
+.event-row-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status-badge-toggle {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.status-badge-toggle:hover {
+  opacity: 0.8;
+}
+
+.admin-row-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-row-menu-trigger {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.admin-row-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 2px solid #DAA520;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  z-index: 30;
+  min-width: 190px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-row-menu button {
+  padding: 0.65rem 1rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #000000;
+}
+
+.admin-row-menu button:hover {
+  background: rgba(218, 165, 32, 0.1);
+}
+
+.admin-row-menu button + button {
+  border-top: 1px solid rgba(218, 165, 32, 0.2);
+}
+
+.admin-row-menu button.danger {
+  color: #cc5a5a;
+}
+
+.admin-row-menu button.danger:hover {
+  background: rgba(204, 90, 90, 0.08);
+}
+
+.admin-table-empty {
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.admin-table-empty p {
+  color: #999999;
+  margin-bottom: 1rem;
+}
+
+/* Admin edit-event hero band */
+.admin-event-hero {
+  background: linear-gradient(135deg, #000000, #1a1a1a);
+  border: 1px solid #DAA520;
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-event-hero-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  border: 2px solid #DAA520;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(218, 165, 32, 0.1);
+  font-size: 1.5rem;
+}
+
+.admin-event-hero-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-event-hero-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-event-hero-text .eyebrow {
+  color: #DAA520;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.admin-event-hero .admin-event-hero-text h1 {
+  font-family: 'Georgia', serif;
+  color: #ffffff;
+  text-shadow: none;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.admin-event-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.9rem;
+  flex-wrap: wrap;
 }

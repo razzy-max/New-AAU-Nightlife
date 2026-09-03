@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
+import '../components/awards/skeleton.css';
+import '../components/awards-admin/awards-admin.css';
 
 const backBtnStyle = {
   padding: '12px 24px',
@@ -17,9 +19,21 @@ function AdminAwardsEvents() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchEvents = async () => {
@@ -58,6 +72,7 @@ function AdminAwardsEvents() {
   };
 
   const handleOrganizerLink = async (eventId, rotate = false) => {
+    setOpenMenuId(null);
     try {
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/awards-events/${eventId}/organizer-link`, {
@@ -80,6 +95,7 @@ function AdminAwardsEvents() {
   };
 
   const handleDelete = async (eventId) => {
+    setOpenMenuId(null);
     if (!confirm('Delete this awards event and all of its categories, candidates and votes?')) return;
     try {
       const token = localStorage.getItem('adminToken');
@@ -92,10 +108,6 @@ function AdminAwardsEvents() {
       console.error('Error deleting event:', err);
     }
   };
-
-  if (loading) {
-    return <div className="admin-loading">Loading awards events...</div>;
-  }
 
   return (
     <div className="admin-events">
@@ -112,57 +124,88 @@ function AdminAwardsEvents() {
         </div>
       </div>
 
-      <div className="admin-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Organizer</th>
-              <th>Status</th>
-              <th>Voting Window</th>
-              <th>Categories</th>
-              <th>Candidates</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event) => (
-              <tr key={event._id}>
-                <td><strong>{event.title}</strong></td>
-                <td>{event.organizerName}</td>
-                <td>
-                  <span className={`status-badge ${event.published ? 'active' : 'upcoming'}`}>
-                    {event.published ? 'Published' : 'Draft'}
-                  </span>
-                </td>
-                <td>
-                  {new Date(event.votingStartsAt).toLocaleDateString()} - {new Date(event.votingEndsAt).toLocaleDateString()}
-                </td>
-                <td>{event.categoryCount}</td>
-                <td>{event.candidateCount}</td>
-                <td className="actions">
-                  <button className="btn-small edit" onClick={() => navigate(`/admin/awards-events/edit/${event._id}`)}>
-                    Manage
-                  </button>
-                  <button className="btn-small edit" onClick={() => handleTogglePublished(event._id, event.published)}>
-                    {event.published ? 'Unpublish' : 'Publish'}
-                  </button>
-                  <button className="btn-small edit" onClick={() => handleOrganizerLink(event._id, false)}>
-                    Get Link
-                  </button>
-                  <button className="btn-small edit" onClick={() => handleOrganizerLink(event._id, true)}>
-                    Rotate Link
-                  </button>
-                  <button className="btn-small delete" onClick={() => handleDelete(event._id)}>
-                    Delete
-                  </button>
-                </td>
+      {loading ? (
+        <div className="admin-table">
+          <div className="skeleton" style={{ height: '48px', marginBottom: '2px' }} />
+          <div className="skeleton" style={{ height: '64px', marginBottom: '2px' }} />
+          <div className="skeleton" style={{ height: '64px', marginBottom: '2px' }} />
+          <div className="skeleton" style={{ height: '64px' }} />
+        </div>
+      ) : (
+        <div className="admin-table">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Title</th>
+                <th>Organizer</th>
+                <th>Status</th>
+                <th>Voting Window</th>
+                <th>Categories</th>
+                <th>Candidates</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {events.length === 0 && <p style={{ padding: '1rem' }}>No awards events yet.</p>}
-      </div>
+            </thead>
+            <tbody>
+              {events.map((event) => (
+                <tr key={event._id}>
+                  <td>
+                    <div className="event-row-thumb">
+                      {event.coverImage ? (
+                        <img src={event.coverImage} alt="" />
+                      ) : (
+                        <span>🏆</span>
+                      )}
+                    </div>
+                  </td>
+                  <td><strong>{event.title}</strong></td>
+                  <td>{event.organizerName}</td>
+                  <td>
+                    <button
+                      className={`status-badge ${event.published ? 'active' : 'upcoming'} status-badge-toggle`}
+                      onClick={() => handleTogglePublished(event._id, event.published)}
+                      title="Click to toggle"
+                    >
+                      {event.published ? 'Published' : 'Draft'}
+                    </button>
+                  </td>
+                  <td>
+                    {new Date(event.votingStartsAt).toLocaleDateString()} - {new Date(event.votingEndsAt).toLocaleDateString()}
+                  </td>
+                  <td>{event.categoryCount}</td>
+                  <td>{event.candidateCount}</td>
+                  <td className="actions">
+                    <button className="btn-small edit" onClick={() => navigate(`/admin/awards-events/edit/${event._id}`)}>
+                      Manage
+                    </button>
+                    <div className="admin-row-menu-wrapper" ref={openMenuId === event._id ? menuRef : null}>
+                      <button
+                        className="btn-small edit admin-row-menu-trigger"
+                        onClick={() => setOpenMenuId(openMenuId === event._id ? null : event._id)}
+                      >
+                        ⋯
+                      </button>
+                      {openMenuId === event._id && (
+                        <div className="admin-row-menu">
+                          <button onClick={() => handleOrganizerLink(event._id, false)}>Copy Organizer Link</button>
+                          <button onClick={() => handleOrganizerLink(event._id, true)}>Rotate Link</button>
+                          <button className="danger" onClick={() => handleDelete(event._id)}>Delete Event</button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {events.length === 0 && (
+            <div className="admin-table-empty">
+              <p>No awards events yet.</p>
+              <Link to="/admin/awards-events/new" className="add-btn">Create your first one</Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

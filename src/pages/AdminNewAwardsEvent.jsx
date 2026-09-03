@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 import { localInputToISOString } from '../utils/datetimeLocal';
+import '../components/awards-admin/awards-admin.css';
 
 const backBtnStyle = {
   padding: '10px 20px',
@@ -24,8 +25,19 @@ function AdminNewAwardsEvent() {
     votingEndsAt: '',
     coverImage: null,
   });
+  const [coverPreview, setCoverPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (!formData.coverImage) {
+      setCoverPreview(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(formData.coverImage);
+    setCoverPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [formData.coverImage]);
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -95,60 +107,86 @@ function AdminNewAwardsEvent() {
       </div>
 
       <div className="admin-header">
-        <h1>Create New Awards Event</h1>
+        <h1>🏆 Create New Awards Event</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-group">
-          <label htmlFor="title">Event Title *</label>
-          <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required />
-          {errors.title && <span className="error">{errors.title}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description">Description *</label>
-          <textarea id="description" name="description" rows="4" value={formData.description} onChange={handleChange} required />
-          {errors.description && <span className="error">{errors.description}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="coverImage">Cover Image</label>
-          <input type="file" id="coverImage" name="coverImage" accept="image/*" onChange={handleChange} />
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="organizerName">Organizer / Department Name *</label>
-            <input type="text" id="organizerName" name="organizerName" value={formData.organizerName} onChange={handleChange} required />
-            {errors.organizerName && <span className="error">{errors.organizerName}</span>}
+      <form onSubmit={handleSubmit} className="settings-form" style={{ maxWidth: '760px' }}>
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Basic Info</h3>
           </div>
           <div className="form-group">
-            <label htmlFor="organizerEmail">Organizer Email *</label>
-            <input type="email" id="organizerEmail" name="organizerEmail" value={formData.organizerEmail} onChange={handleChange} required />
-            {errors.organizerEmail && <span className="error">{errors.organizerEmail}</span>}
+            <label htmlFor="title">Event Title *</label>
+            <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required />
+            {errors.title && <span className="error">{errors.title}</span>}
+          </div>
+          <div className="form-group">
+            <label htmlFor="description">Description *</label>
+            <textarea id="description" name="description" rows="4" value={formData.description} onChange={handleChange} required />
+            {errors.description && <span className="error">{errors.description}</span>}
           </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="organizerPhone">Organizer Phone</label>
-          <input type="text" id="organizerPhone" name="organizerPhone" value={formData.organizerPhone} onChange={handleChange} />
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="votingStartsAt">Voting Starts *</label>
-            <input type="datetime-local" id="votingStartsAt" name="votingStartsAt" value={formData.votingStartsAt} onChange={handleChange} required />
-            {errors.votingStartsAt && <span className="error">{errors.votingStartsAt}</span>}
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Cover Image</h3>
           </div>
-          <div className="form-group">
-            <label htmlFor="votingEndsAt">Voting Ends *</label>
-            <input type="datetime-local" id="votingEndsAt" name="votingEndsAt" value={formData.votingEndsAt} onChange={handleChange} required />
-            {errors.votingEndsAt && <span className="error">{errors.votingEndsAt}</span>}
+          <div className="settings-cover-row">
+            <div className="settings-cover-preview">
+              {coverPreview ? <img src={coverPreview} alt="" /> : <span className="settings-cover-placeholder">🏆</span>}
+            </div>
+            <div>
+              <input type="file" id="coverImage" name="coverImage" accept="image/*" onChange={handleChange} />
+              <p className="settings-hint">Optional — shown as the banner on the event's public page.</p>
+            </div>
           </div>
         </div>
 
-        <p style={{ fontSize: '13px', color: '#666' }}>
-          The event will be saved as a draft. Use "Publish" from the Awards Events list once categories and candidates are ready.
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Organizer Contact</h3>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="organizerName">Organizer / Department Name *</label>
+              <input type="text" id="organizerName" name="organizerName" value={formData.organizerName} onChange={handleChange} required />
+              {errors.organizerName && <span className="error">{errors.organizerName}</span>}
+            </div>
+            <div className="form-group">
+              <label htmlFor="organizerEmail">Organizer Email *</label>
+              <input type="email" id="organizerEmail" name="organizerEmail" value={formData.organizerEmail} onChange={handleChange} required />
+              {errors.organizerEmail && <span className="error">{errors.organizerEmail}</span>}
+            </div>
+          </div>
+          <div className="form-group">
+            <label htmlFor="organizerPhone">Organizer Phone</label>
+            <input type="text" id="organizerPhone" name="organizerPhone" value={formData.organizerPhone} onChange={handleChange} />
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <h3>Voting Window</h3>
+          </div>
+          <p className="settings-hint">
+            One schedule governs the whole event — every category opens and closes with it automatically.
+          </p>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="votingStartsAt">Voting Starts *</label>
+              <input type="datetime-local" id="votingStartsAt" name="votingStartsAt" value={formData.votingStartsAt} onChange={handleChange} required />
+              {errors.votingStartsAt && <span className="error">{errors.votingStartsAt}</span>}
+            </div>
+            <div className="form-group">
+              <label htmlFor="votingEndsAt">Voting Ends *</label>
+              <input type="datetime-local" id="votingEndsAt" name="votingEndsAt" value={formData.votingEndsAt} onChange={handleChange} required />
+              {errors.votingEndsAt && <span className="error">{errors.votingEndsAt}</span>}
+            </div>
+          </div>
+        </div>
+
+        <p className="settings-hint">
+          The event saves as a draft. Publish it from the Awards Events list once categories and candidates are ready.
         </p>
 
         <div className="form-actions">

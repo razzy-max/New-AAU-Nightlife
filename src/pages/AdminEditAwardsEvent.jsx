@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config';
 import CategoriesManager from '../components/awards-admin/CategoriesManager';
@@ -6,6 +6,7 @@ import CandidatesManager from '../components/awards-admin/CandidatesManager';
 import EventSettingsForm from '../components/awards-admin/EventSettingsForm';
 import ActivityFeed from '../components/awards-admin/ActivityFeed';
 import '../components/awards-admin/awards-admin.css';
+import '../components/awards/skeleton.css';
 
 const backBtnStyle = {
   padding: '12px 24px',
@@ -32,6 +33,8 @@ function AdminEditAwardsEvent() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('categories');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const token = localStorage.getItem('adminToken');
   const authHeaders = { Authorization: `Bearer ${token}` };
@@ -53,7 +56,16 @@ function AdminEditAwardsEvent() {
     fetchEvent();
   }, [fetchEvent]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleOrganizerLink = async (rotate = false) => {
+    setMenuOpen(false);
     try {
       const response = await fetch(`${API_BASE_URL}/api/awards-events/${id}/organizer-link`, {
         method: 'POST',
@@ -75,7 +87,15 @@ function AdminEditAwardsEvent() {
   };
 
   if (loading) {
-    return <div className="admin-loading">Loading event...</div>;
+    return (
+      <div className="admin-awards">
+        <div style={{ marginTop: '100px', marginBottom: '20px', padding: '10px' }}>
+          <div className="skeleton" style={{ height: '40px', width: '220px' }} />
+        </div>
+        <div className="skeleton" style={{ height: '110px', marginBottom: '1.5rem', borderRadius: '14px' }} />
+        <div className="skeleton" style={{ height: '48px', marginBottom: '2rem', borderRadius: '12px' }} />
+      </div>
+    );
   }
 
   if (!event) {
@@ -90,17 +110,31 @@ function AdminEditAwardsEvent() {
         </button>
       </div>
 
-      <h1>🏆 {event.title}</h1>
-      <p style={{ marginBottom: '1.5rem' }}>
-        <span className={`status-badge ${event.published ? 'active' : 'upcoming'}`}>
-          {event.published ? 'Published' : 'Draft'}
-        </span>
-        {' '}Organized by {event.organizerName}
-      </p>
-
-      <div className="admin-actions" style={{ marginBottom: '1.5rem' }}>
-        <button className="add-btn" onClick={() => handleOrganizerLink(false)}>Get Organizer Link</button>
-        <button className="add-btn" onClick={() => handleOrganizerLink(true)} style={{ marginLeft: '10px' }}>Rotate Link</button>
+      <div className="admin-event-hero">
+        <div className="admin-event-hero-thumb">
+          {event.coverImage ? <img src={event.coverImage} alt="" /> : <span>🏆</span>}
+        </div>
+        <div className="admin-event-hero-text">
+          <p className="eyebrow">Admin · Managing</p>
+          <h1>{event.title}</h1>
+          <div className="admin-event-hero-meta">
+            <span className={`status-badge ${event.published ? 'active' : 'upcoming'}`}>
+              {event.published ? 'Published' : 'Draft'}
+            </span>
+            <span>Organized by {event.organizerName}</span>
+          </div>
+        </div>
+        <div className="admin-row-menu-wrapper" ref={menuRef}>
+          <button className="btn-primary" onClick={() => setMenuOpen((v) => !v)}>
+            Organizer Link ▾
+          </button>
+          {menuOpen && (
+            <div className="admin-row-menu">
+              <button onClick={() => handleOrganizerLink(false)}>Copy Organizer Link</button>
+              <button onClick={() => handleOrganizerLink(true)}>Rotate Link</button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="admin-tabs">
